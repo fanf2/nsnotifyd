@@ -195,7 +195,7 @@ main(int argc, char *argv[]) {
 			s = -1;
 			continue;
 		}
-		printf(";; listening on %s\n\n", ai_sockstr(ai));
+		printf("Listening on %s\n", ai_sockstr(ai));
 		break;
 	}
 	if(s < 0)
@@ -255,7 +255,8 @@ main(int argc, char *argv[]) {
 		uint32_t newserial = soa_serial(zone);
 		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
 
-		if(serial_lt(serial, newserial))
+		if(serial_lt(serial, newserial)) {
+			printf("running %s\n", argv[0]);
 			switch(fork()) {
 			case(-1):
 				warn("fork");
@@ -273,6 +274,7 @@ main(int argc, char *argv[]) {
 					warnx("%s exited with status %d",
 					    argv[0], WEXITSTATUS(r));
 			}
+		}
 
 		h->rcode = ns_r_noerror;
 	reply:
