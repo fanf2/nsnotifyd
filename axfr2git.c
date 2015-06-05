@@ -29,6 +29,17 @@ usage(void) {
 	exit(1);
 }
 
+static void
+print_header(HEADER *h) {
+	printf(";; id=%d opcode=%s rcode=%s\n", ntohs(h->id),
+	    opcode[h->opcode], p_rcode(h->rcode));
+	printf(";; qr=%d aa=%d tc=%d rd=%d ra=%d zz=%d ad=%d cd=%d\n",
+	    h->qr, h->aa, h->tc, h->rd, h->ra, h->unused, h->ad, h->cd);
+	printf(";; qdcount=%d ancount=%d nscount=%d arcount=%d\n",
+	    ntohs(h->qdcount), ntohs(h->ancount),
+	    ntohs(h->nscount), ntohs(h->arcount));
+}
+
 int
 main(int argc, char *argv[]) {
 	int r;
@@ -103,45 +114,76 @@ main(int argc, char *argv[]) {
 	else
 		printf(";; listening on %s/%s\n\n", hostbuf, servbuf);
 
-	byte pkt[NS_MAXMSG];
+	byte msg[NS_MAXMSG];
 	char qname[NS_MAXDNAME];
 	struct sockaddr_storage sa_buf;
 	struct sockaddr *sa = (void *) &sa_buf;
 	socklen_t sa_len;
-	ssize_t pktlen;
+	byte *eom;
 
 	for(;;) {
+		memset(msg, 0, sizeof(HEADER));
 		sa_len = sizeof(sa_buf);
-		pktlen = recvfrom(s, pkt, sizeof(pkt), 0, sa, &sa_len);
-		if(pktlen < 0) {
+		r = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
+		if(r < 0) {
 			warn("recv");
 			continue;
 		}
+		eom = msg + r;
+
 		r = getnameinfo(sa, sa_len,
 			hostbuf, sizeof(hostbuf),
 			servbuf, sizeof(servbuf),
 			NI_NUMERICHOST | NI_NUMERICSERV);
 		if(r) errx(1, "%s", gai_strerror(r));
-		HEADER *h = (void *) pkt;
 		printf(";; client %s/%s\n", hostbuf, servbuf);
-		printf(";; id=%d opcode=%s rcode=%s\n", ntohs(h->id),
-		    opcode[h->opcode], p_rcode(h->rcode));
-		printf(";; qr=%d aa=%d tc=%d rd=%d ra=%d zz=%d ad=%d cd=%d\n",
-		    h->qr, h->aa, h->tc, h->rd, h->ra, h->unused, h->ad, h->cd);
-		printf(";; qdcount=%d ancount=%d nscount=%d arcount=%d\n",
-		    ntohs(h->qdcount), ntohs(h->ancount),
-		    ntohs(h->nscount), ntohs(h->arcount));
-		byte *p = pkt + sizeof(HEADER);
-		r = ns_name_uncompress(pkt, pkt + pktlen, p, qname, sizeof(qname));
-		if(r < 0) {
-			printf("!! FORMERR\n\n");
-			continue;
-		}
-		int qtype, qclass;
+
+		HEADER *h = (void *) msg;
+		byte *p = msg + sizeof(HEADER);
+
+		if(eom < p || h->qdcount != htons(1))
+			goto formerr;
+		print_header(h);
+
+		r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
+		if(r < 0)
+			goto formerr;
 		p += r;
+
+		int qtype, qclass;
 		NS_GET16(qtype, p);
 		NS_GET16(qclass, p);
 		printf("%s. %s %s ?\n", qname, p_class(qclass), p_type(qtype));
+
+		if(h->opcode != ns_o_notify ||
+		    qclass != ns_c_in || qtype != ns_t_soa ||
+		    strcmp(qname, zone) != 0)
+			goto refused;
+
+		h->rcode = ns_r_noerror;
+
+	reply:
+		h->qr = 1;
+		// echo opcode
+		h->aa = 1;
+		h->tc = 0;
+		// echo rd
+		h->ra = 0;
+		h->unused = 0;
+		h->ad = 0;
+		// echo cd
+		h->ancount = 0;
+		h->nscount = 0;
+		h->arcount = 0;
+		print_header(h);
 		printf("\n");
+		continue;
+	formerr:
+		h->rcode = ns_r_formerr;
+		h->qdcount = 0;
+		goto reply;
+	refused:
+		h->rcode = ns_r_refused;
+		goto reply;
 	}
 }
