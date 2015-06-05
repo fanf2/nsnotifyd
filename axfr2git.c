@@ -81,7 +81,7 @@ main(int argc, char *argv[]) {
 		err(1, "stat %s/.git", repo);
 
 	struct addrinfo hints, *res, *res0;
-	char hostbuf[NI_MAXHOST], servbuf[NI_MAXSERV];
+	char host[NI_MAXHOST], serv[NI_MAXSERV];
 	int s = -1;
 
 	memset(&hints, 0, sizeof(hints));
@@ -93,18 +93,17 @@ main(int argc, char *argv[]) {
 
 	for(res = res0; res != NULL; res = res->ai_next) {
 		r = getnameinfo(res->ai_addr, res->ai_addrlen,
-			hostbuf, sizeof(hostbuf),
-			servbuf, sizeof(servbuf),
+			host, sizeof(host), serv, sizeof(serv),
 			NI_NUMERICHOST | NI_NUMERICSERV);
 		if(r) errx(1, "%s", gai_strerror(r));
 
 		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if(s < 0) {
-			warn("socket %s/%s", hostbuf, servbuf);
+			warn("socket %s/%s", host, serv);
 			continue;
 		}
 		if(bind(s, res->ai_addr, res->ai_addrlen) < 0) {
-			warn("bind %s/%s", hostbuf, servbuf);
+			warn("bind %s/%s", host, serv);
 			continue;
 		}
 		break;
@@ -112,7 +111,7 @@ main(int argc, char *argv[]) {
 	if(s < 0)
 		errx(1, "could not listen on %s/%s", addr, port);
 	else
-		printf(";; listening on %s/%s\n\n", hostbuf, servbuf);
+		printf(";; listening on %s/%s\n\n", host, serv);
 
 	byte msg[NS_MAXMSG];
 	char qname[NS_MAXDNAME];
@@ -132,11 +131,10 @@ main(int argc, char *argv[]) {
 		eom = msg + r;
 
 		r = getnameinfo(sa, sa_len,
-			hostbuf, sizeof(hostbuf),
-			servbuf, sizeof(servbuf),
+			host, sizeof(host), serv, sizeof(serv),
 			NI_NUMERICHOST | NI_NUMERICSERV);
 		if(r) errx(1, "%s", gai_strerror(r));
-		printf(";; client %s/%s\n", hostbuf, servbuf);
+		printf(";; client %s/%s\n", host, serv);
 
 		HEADER *h = (void *) msg;
 		byte *p = msg + sizeof(HEADER);
@@ -178,7 +176,7 @@ main(int argc, char *argv[]) {
 		print_header(h);
 		r = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(r < 0)
-			warn("sendto %s/%s\n", hostbuf, servbuf);
+			warn("sendto %s/%s\n", host, serv);
 		printf("\n");
 		continue;
 	formerr:
