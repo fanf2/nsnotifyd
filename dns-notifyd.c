@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 
 #include <arpa/nameser.h>
@@ -27,12 +28,6 @@ static const char * const opcode[] = {
 };
 
 static void
-usage(void) {
-	fprintf(stderr, "usage: axfr2git [-46] [-a addr] -p port zone file\n");
-	exit(1);
-}
-
-static void
 sigactions(void) {
 	struct sigaction sa;
 	int r;
@@ -40,8 +35,6 @@ sigactions(void) {
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = SIG_IGN;
 	sa.sa_flags = SA_RESTART;
-	r = sigaction(SIGCHLD, &sa, NULL);
-	if(r < 0) err(1, "sigaction(SIGCHLD)");
 	r = sigaction(SIGPIPE, &sa, NULL);
 	if(r < 0) err(1, "sigaction(SIGPIPE)");
 }
@@ -109,13 +102,19 @@ serial_lt(uint32_t s1, uint32_t s2) {
 		(i1 > i2 && i1 - i2 > smax) ));
 }
 
+static void
+usage(void) {
+	fprintf(stderr, "usage: dns-notifyd [-46] [-a addr] -p port zone command...\n");
+	exit(1);
+}
+
 int
 main(int argc, char *argv[]) {
 	int r;
 	int family = PF_UNSPEC;
 	const char *addr = "127.0.0.1";
 	const char *port = NULL;
-	const char *zone, *file;
+	const char *zone;
 
 	while((r = getopt(argc, argv, "46a:p:")) != -1)
 		switch(r) {
@@ -137,17 +136,10 @@ main(int argc, char *argv[]) {
 	argc -= optind;
 	argv += optind;
 
-	if(argc != 2 || addr == NULL || port == NULL)
+	if(argc < 2 || addr == NULL || port == NULL)
 		usage();
 
-	zone = argv[0];
-	file = argv[1];
-
-	const char *dir = dirname(file);
-	if(dir == NULL)
-		err(1, "dirname %s", file);
-	if(chdir(dir))
-		err(1, "chdir %s", dir);
+	zone = *argv++; argc--;
 
 	uint32_t serial = soa_serial(zone);
 	printf("%s. IN SOA (... %d ...)\n", zone, serial);
@@ -234,9 +226,24 @@ main(int argc, char *argv[]) {
 
 		uint32_t newserial = soa_serial(zone);
 		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
-		if(serial_lt(serial, newserial)) {
-			printf("UPDATE\n");
-		}
+		if(serial_lt(serial, newserial))
+			switch(fork()) {
+			case(-1):
+				warn("fork");
+				break;
+			case(0):
+				execvp(argv[0], argv);
+				err(1, "exec %s", argv[0]);
+			default:
+				if(wait(&r) < 0)
+					warn("wait");
+				else if(!WIFEXITED(r))
+					warnx("%s died with signal %d",
+					    argv[0], WTERMSIG(r));
+				else if(WEXITSTATUS(r) != 0)
+					warnx("%s exited with status %d",
+					    argv[0], WEXITSTATUS(r));
+			}
 
 		h->rcode = ns_r_noerror;
 	reply:
