@@ -10,8 +10,10 @@
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
 #include <err.h>
+#include <libgen.h>
 #include <netdb.h>
 #include <resolv.h>
+#include <signal.h>
 #include <unistd.h>
 
 typedef unsigned char byte;
@@ -25,7 +27,7 @@ static const char * const opcode[] = {
 
 static void
 usage(void) {
-	fprintf(stderr, "usage: axfr2git [-46] [-a addr] -p port zone repo\n");
+	fprintf(stderr, "usage: axfr2git [-46] [-a addr] -p port zone file\n");
 	exit(1);
 }
 
@@ -46,7 +48,7 @@ main(int argc, char *argv[]) {
 	int family = PF_UNSPEC;
 	const char *addr = "127.0.0.1";
 	const char *port = NULL;
-	const char *zone, *repo;
+	const char *zone, *file;
 
 	while((r = getopt(argc, argv, "46a:p:")) != -1)
 		switch(r) {
@@ -72,13 +74,13 @@ main(int argc, char *argv[]) {
 		usage();
 
 	zone = argv[0];
-	repo = argv[1];
+	file = argv[1];
 
-	struct stat st;
-	if(chdir(repo))
-		err(1, "chdir %s", repo);
-	if(stat(".git", &st) < 0)
-		err(1, "stat %s/.git", repo);
+	const char *dir = dirname(file);
+	if(dir == NULL)
+		err(1, "dirname %s", file);
+	if(chdir(dir))
+		err(1, "chdir %s", dir);
 
 	struct addrinfo hints, *res, *res0;
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
