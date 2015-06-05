@@ -249,7 +249,7 @@ main(int argc, char *argv[]) {
 		_res.options &= ~RES_RECURSE;
 		union res_sockaddr_union res_addr;
 		memcpy(&res_addr, sa, sa_len);
-		res_addr.sin.sin_port = 53;
+		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
 		uint32_t newserial = soa_serial(zone);
 		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
