@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,15 @@
 #include <signal.h>
 #include <syslog.h>
 #include <unistd.h>
+
+#define	log_emerg(...)   syslog(LOG_EMERG,   __VA_ARGS__)
+#define	log_alert(...)   syslog(LOG_ALERT,   __VA_ARGS__)
+#define	log_crit(...)    syslog(LOG_CRIT,    __VA_ARGS__)
+#define	log_err(...)     syslog(LOG_ERR,     __VA_ARGS__)
+#define	log_warning(...) syslog(LOG_WARNING, __VA_ARGS__)
+#define	log_notice(...)  syslog(LOG_NOTICE,  __VA_ARGS__)
+#define	log_info(...)    syslog(LOG_INFO,    __VA_ARGS__)
+#define	log_debug(...)   syslog(LOG_DEBUG,   __VA_ARGS__)
 
 typedef unsigned char byte;
 
@@ -127,7 +137,7 @@ main(int argc, char *argv[]) {
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *zone;
-	bool debug = false;
+	int debug = false;
 
 	while((r = getopt(argc, argv, "46a:dl:p:")) != -1)
 		switch(r) {
@@ -161,7 +171,7 @@ main(int argc, char *argv[]) {
 	openlog(basename(argv[0]), debug ? LOG_PERROR : LOG_PID, facility);
 
 	res_init();
-	if(debug) _res.options |= RES_DEBUG;
+	if(debug > 1) _res.options |= RES_DEBUG;
 
 	argc -= optind;
 	argv += optind;
@@ -174,7 +184,7 @@ main(int argc, char *argv[]) {
 	uint32_t serial, newserial;
 	const char *e = soa_serial(zone, &serial);
 	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
-	printf("%s. IN SOA %d\n", zone, serial);
+	log_info("%s. IN SOA %d", zone, serial);
 
 	sigactions();
 
@@ -207,7 +217,7 @@ main(int argc, char *argv[]) {
 			s = -1;
 			continue;
 		}
-		printf("Listening on %s\n", ai_sockstr(ai));
+		log_info("listening on %s", ai_sockstr(ai));
 		break;
 	}
 	if(s < 0)
@@ -226,10 +236,10 @@ main(int argc, char *argv[]) {
 		sa_len = sizeof(sa_buf);
 		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
 		if(len < 0) {
-			warn("recv");
+			log_err("recv: %s", strerror(errno));
 			continue;
 		}
-		if(debug) {
+		if(debug > 1) {
 			printf(";; client %s\n", sockstr(sa, sa_len));
 			printf(";; message legnth %d\n", r);
 			res_pquery(&_res, msg, len, stderr);
@@ -264,30 +274,33 @@ main(int argc, char *argv[]) {
 		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
 		e = soa_serial(zone, &newserial);
-		if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
+		if(e != NULL) {
+			log_err("%s IN SOA ? %s", zone, e);
+			continue;
+		}
 
 		if(!serial_lt(serial, newserial)) {
-			printf("%s %s. IN SOA %d unchanged\n",
+			log_info("%s %s. IN SOA %d unchanged",
 			       sockstr(sa, sa_len), zone, newserial);
 		} else {
-			printf("%s %s. IN SOA %d updated; running %s\n",
+			log_info("%s %s. IN SOA %d updated; running %s",
 			       sockstr(sa, sa_len), zone, newserial, argv[0]);
 			serial = newserial;
 			switch(fork()) {
 			case(-1):
-				warn("fork");
+				log_err("fork: %s", strerror(errno));
 				break;
 			case(0):
 				execvp(argv[0], argv);
 				err(1, "exec %s", argv[0]);
 			default:
 				if(wait(&r) < 0)
-					warn("wait");
+					log_err("wait: %s", strerror(errno));
 				else if(!WIFEXITED(r))
-					warnx("%s died with signal %d",
+					log_err("%s died with signal %d",
 					    argv[0], WTERMSIG(r));
 				else if(WEXITSTATUS(r) != 0)
-					warnx("%s exited with status %d",
+					log_err("%s exited with status %d",
 					    argv[0], WEXITSTATUS(r));
 			}
 		}
@@ -306,19 +319,20 @@ main(int argc, char *argv[]) {
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
-		if(debug)
+		if(debug > 1)
 			res_pquery(&_res, msg, p - msg, stdout);
 		len = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(len < 0)
-			warn("sendto %s\n", sockstr(sa, sa_len));
+			log_err("sendto %s: %s",
+				sockstr(sa, sa_len), strerror(errno));
 		continue;
 	formerr:
-		printf("%s formerr\n", sockstr(sa, sa_len));
+		log_info("%s formerr", sockstr(sa, sa_len));
 		h->rcode = ns_r_formerr;
 		h->qdcount = 0;
 		goto reply;
 	refused:
-		printf("%s %s. %s %s refused\n", sockstr(sa, sa_len),
+		log_info("%s %s. %s %s refused", sockstr(sa, sa_len),
 		       qname, p_class(qclass), p_type(qtype));
 		h->rcode = ns_r_refused;
 		goto reply;
