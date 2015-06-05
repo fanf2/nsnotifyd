@@ -255,8 +255,12 @@ main(int argc, char *argv[]) {
 		printf("%s %s. IN SOA (... %d ...)\n",
 		       sockstr(sa, sa_len), zone, newserial);
 
-		if(serial_lt(serial, newserial)) {
-			printf("running %s\n", argv[0]);
+		if(!serial_lt(serial, newserial)) {
+			printf("%s %s. IN SOA %d unchanged\n",
+			       sockstr(sa, sa_len), zone, newserial);
+		} else {
+			printf("%s %s. IN SOA %d updated; running %s\n",
+			       sockstr(sa, sa_len), zone, newserial, argv[0]);
 			switch(fork()) {
 			case(-1):
 				warn("fork");
