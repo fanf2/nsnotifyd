@@ -238,7 +238,6 @@ main(int argc, char *argv[]) {
 		int qtype, qclass;
 		NS_GET16(qtype, p);
 		NS_GET16(qclass, p);
-		printf("%s. %s %s ?\n", qname, p_class(qclass), p_type(qtype));
 
 		if(h->opcode != ns_o_notify ||
 		    qclass != ns_c_in || qtype != ns_t_soa ||
@@ -253,7 +252,8 @@ main(int argc, char *argv[]) {
 		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
 		uint32_t newserial = soa_serial(zone);
-		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
+		printf("%s %s. IN SOA (... %d ...)\n",
+		       sockstr(sa, sa_len), zone, newserial);
 
 		if(serial_lt(serial, newserial)) {
 			printf("running %s\n", argv[0]);
@@ -295,13 +295,15 @@ main(int argc, char *argv[]) {
 		len = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(len < 0)
 			warn("sendto %s\n", sockstr(sa, sa_len));
-		printf("\n");
 		continue;
 	formerr:
+		printf("%s formerr\n", sockstr(sa, sa_len));
 		h->rcode = ns_r_formerr;
 		h->qdcount = 0;
 		goto reply;
 	refused:
+		printf("%s %s. %s %s refused\n", sockstr(sa, sa_len),
+		       qname, p_class(qclass), p_type(qtype));
 		h->rcode = ns_r_refused;
 		goto reply;
 	}
