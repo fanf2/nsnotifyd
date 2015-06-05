@@ -1,4 +1,4 @@
-TARGETS = axfr2git
+TARGETS = dns-notifyd
 
 all: ${TARGETS}
 
