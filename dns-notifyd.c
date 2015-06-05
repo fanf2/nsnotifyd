@@ -64,7 +64,7 @@ soa_serial(const char *zone) {
 	r = dn_skipname(p, eom);
 	p += r + 4; // qname qtype qclass
 	HEADER *h = (void *) msg;
-	int type, class, ttl, rdlength, serial;
+	uint32_t type, class, ttl, rdlength, serial;
 	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
 		if(p >= eom)
 			errx(1, "%s IN SOA: truncated reply", zone);
@@ -206,22 +206,23 @@ main(int argc, char *argv[]) {
 	struct sockaddr_storage sa_buf;
 	struct sockaddr *sa = (void *) &sa_buf;
 	socklen_t sa_len;
+	ssize_t len;
 	byte *eom;
 
 	for(;;) {
 		memset(msg, 0, sizeof(HEADER));
 		sa_len = sizeof(sa_buf);
-		r = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
-		if(r < 0) {
+		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
+		if(len < 0) {
 			warn("recv");
 			continue;
 		}
 		if(debug) {
 			printf(";; client %s\n", sockstr(sa, sa_len));
 			printf(";; message legnth %d\n", r);
-			res_pquery(&_res, msg, r, stderr);
+			res_pquery(&_res, msg, len, stderr);
 		}
-		eom = msg + r;
+		eom = msg + len;
 
 		HEADER *h = (void *) msg;
 		byte *p = msg + sizeof(HEADER);
@@ -253,6 +254,7 @@ main(int argc, char *argv[]) {
 		res_setservers(&_res, &res_addr, 1);
 		uint32_t newserial = soa_serial(zone);
 		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
+
 		if(serial_lt(serial, newserial))
 			switch(fork()) {
 			case(-1):
@@ -286,9 +288,10 @@ main(int argc, char *argv[]) {
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
-		res_pquery(&_res, msg, p - msg, stdout);
-		r = sendto(s, msg, p - msg, 0, sa, sa_len);
-		if(r < 0)
+		if(debug)
+			res_pquery(&_res, msg, p - msg, stdout);
+		len = sendto(s, msg, p - msg, 0, sa, sa_len);
+		if(len < 0)
 			warn("sendto %s\n", sockstr(sa, sa_len));
 		printf("\n");
 		continue;
