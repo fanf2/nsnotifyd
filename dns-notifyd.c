@@ -209,10 +209,10 @@ main(int argc, char *argv[]) {
 	if(user != NULL) {
 		errno = 0;
 		pw = getpwnam(user);
-		if(pw == NULL && errno)
-			err(1, "getpwnam");
+		if(pw == NULL && errno == 0)
+			errx(1, "getpwnam %s: Unknown user", user);
 		if(pw == NULL)
-			errx(1, "unknown user %s", user);
+			err(1, "getpwnam %s", user);
 	}
 
 	struct addrinfo hints, *ai;
@@ -263,7 +263,7 @@ main(int argc, char *argv[]) {
 	if(pidfile != NULL) {
 		FILE *fp = fopen(pidfile, "w");
 		if(fp == NULL) {
-			log_err("open: %m");
+			log_err("open %s: %m", pidfile);
 		} else {
 			fprintf(fp, "%d\n", getpid());
 			fclose(fp);
@@ -272,12 +272,11 @@ main(int argc, char *argv[]) {
 
 	if(pw != NULL) {
 		if(setgid(pw->pw_gid) < 0)
-			log_err("setgid(%u): %m", pw->pw_gid);
+			log_err("setgid %s: %m", user);
 		if(initgroups(pw->pw_name, pw->pw_gid) < 0)
-			log_err("initgroups(%s, %u): %m",
-				pw->pw_name, pw->pw_gid);
+			log_err("initgroups %s: %m", user);
 		if(setuid(pw->pw_uid) < 0)
-			log_err("setuid(%u): %m", pw->pw_uid);
+			log_err("setuid %s: %m", user);
 	}
 
 	byte msg[NS_PACKETSZ];
