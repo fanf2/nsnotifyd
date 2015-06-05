@@ -32,6 +32,8 @@
 #define	log_info(...)    syslog(LOG_INFO,    __VA_ARGS__)
 #define	log_debug(...)   syslog(LOG_DEBUG,   __VA_ARGS__)
 
+#define ERR strerror(errno)
+
 typedef unsigned char byte;
 
 static void
@@ -113,7 +115,7 @@ serial_lt(uint32_t s1, uint32_t s2) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: dns-notifyd [-46d] [-l facility] [-a addr] [-p port]\n"
+"usage: dns-notifyd [-46d] [-l facility] [-P pidfile] [-a addr] [-p port]\n"
 "		zone command...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
@@ -121,6 +123,7 @@ usage(void) {
 "			(default 127.0.0.1)\n"
 "	-d		debugging mode\n"
 "	-l facility	syslog facility name\n"
+"	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
 "			(default 53)\n"
 "	zone		the zone for which to accept notifies\n"
@@ -134,12 +137,13 @@ main(int argc, char *argv[]) {
 	int r, i;
 	int family = PF_UNSPEC;
 	int facility = LOG_DAEMON;
+	const char *pidfile = NULL;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *zone;
 	int debug = false;
 
-	while((r = getopt(argc, argv, "46a:dl:p:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -160,6 +164,9 @@ main(int argc, char *argv[]) {
 			if(facilitynames[i].c_name == NULL)
 				errx(1, "%s: Unknown syslog facility", optarg);
 			facility = facilitynames[i].c_val;
+			continue;
+		case('P'):
+			pidfile = optarg;
 			continue;
 		case('p'):
 			port = optarg;
@@ -229,6 +236,16 @@ main(int argc, char *argv[]) {
 	if(!debug && daemon(1, 0) < 0)
 		err(1, "daemon");
 
+	if(pidfile) {
+		FILE *fp = fopen(pidfile, "w");
+		if(fp == NULL) {
+			log_err("open: %s", ERR);
+		} else {
+			fprintf(fp, "%d\n", getpid());
+			fclose(fp);
+		}
+	}
+
 	byte msg[NS_PACKETSZ];
 	char qname[NS_MAXDNAME];
 	struct sockaddr_storage sa_buf;
@@ -242,7 +259,7 @@ main(int argc, char *argv[]) {
 		sa_len = sizeof(sa_buf);
 		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
 		if(len < 0) {
-			log_err("recv: %s", strerror(errno));
+			log_err("recv: %s", ERR);
 			continue;
 		}
 		if(debug > 1) {
@@ -292,14 +309,14 @@ main(int argc, char *argv[]) {
 			serial = newserial;
 			switch(fork()) {
 			case(-1):
-				log_err("fork: %s", strerror(errno));
+				log_err("fork: %s", ERR);
 				break;
 			case(0):
 				execvp(argv[0], argv);
 				err(1, "exec %s", argv[0]);
 			default:
 				if(wait(&r) < 0)
-					log_err("wait: %s", strerror(errno));
+					log_err("wait: %s", ERR);
 				else if(!WIFEXITED(r))
 					log_err("%s died with signal %d",
 					    argv[0], WTERMSIG(r));
@@ -331,7 +348,7 @@ main(int argc, char *argv[]) {
 		len = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(len < 0)
 			log_err("sendto %s: %s",
-				sockstr(sa, sa_len), strerror(errno));
+				sockstr(sa, sa_len), ERR);
 		continue;
 	formerr:
 		log_info("%s formerr", sockstr(sa, sa_len));
