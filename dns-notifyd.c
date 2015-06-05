@@ -187,7 +187,7 @@ main(int argc, char *argv[]) {
 	uint32_t serial, newserial;
 	const char *e = soa_serial(zone, &serial);
 	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
-	log_info("%s. IN SOA %d", zone, serial);
+	log_info("%s IN SOA %d", zone, serial);
 
 	sigactions();
 
@@ -281,15 +281,12 @@ main(int argc, char *argv[]) {
 		res_setservers(&_res, &res_addr, 1);
 		e = soa_serial(zone, &newserial);
 		if(e != NULL) {
-			log_err("%s IN SOA ? %s", zone, e);
-			newserial = serial;
-		}
-
-		if(!serial_lt(serial, newserial)) {
-			log_info("%s %s. IN SOA %d unchanged",
+			log_err("%s %s IN SOA ? %s", zone, e);
+		} else if(!serial_lt(serial, newserial)) {
+			log_info("%s %s IN SOA %d unchanged",
 			       sockstr(sa, sa_len), zone, newserial);
 		} else {
-			log_info("%s %s. IN SOA %d updated; running %s",
+			log_info("%s %s IN SOA %d updated; running %s",
 			       sockstr(sa, sa_len), zone, newserial, argv[0]);
 			serial = newserial;
 			switch(fork()) {
