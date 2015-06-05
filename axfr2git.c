@@ -56,6 +56,50 @@ print_header(HEADER *h) {
 	    ntohs(h->nscount), ntohs(h->arcount));
 }
 
+static uint32_t
+soa_serial(const char *zone) {
+	byte msg[NS_MAXMSG];
+	char name[NS_MAXDNAME];
+	int len, r;
+
+	len = res_query(zone, ns_c_in, ns_t_soa, msg, sizeof(msg));
+	if(len < 0)
+		errx(1, "%s IN SOA: %s", zone, hstrerror(h_errno));
+	byte *eom = msg + len, *p = msg + sizeof(HEADER);
+	r = dn_skipname(p, eom);
+	p += r + 4; // qname qtype qclass
+	HEADER *h = (void *) msg;
+	int type, class, ttl, rdlength, serial;
+	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
+		if(p >= eom)
+			errx(1, "%s IN SOA: truncated reply", zone);
+		r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
+		if(r < 0)
+			errx(1, "%s IN SOA: bad owner", zone);
+		p += r;
+		if(eom - p < 10)
+			errx(1, "%s IN SOA: truncated RR", zone);
+		NS_GET16(type, p);
+		NS_GET16(class, p);
+		NS_GET32(ttl, p);
+		NS_GET16(rdlength, p);
+		if(eom - p < rdlength)
+			errx(1, "%s IN SOA: truncated RDATA", zone);
+		if(strcmp(name, zone) == 0 && class == ns_c_in && type == ns_t_soa) {
+			r = dn_skipname(p, eom);
+			if(r < 0) errx(1, "%s IN SOA: bad mname", zone);
+			p += r;
+			r = dn_skipname(p, eom);
+			if(r < 0) errx(1, "%s IN SOA: bad rname", zone);
+			p += r;
+			NS_GET32(serial, p);
+			return(serial);
+		}
+		p += rdlength;
+	}
+	errx(1, "%s IN SOA: missing answer", zone);
+}
+
 int
 main(int argc, char *argv[]) {
 	int r;
@@ -95,6 +139,9 @@ main(int argc, char *argv[]) {
 		err(1, "dirname %s", file);
 	if(chdir(dir))
 		err(1, "chdir %s", dir);
+
+	uint8_t serial = soa_serial(zone);
+	printf("%s SOA serial %d\n", zone, serial);
 
 	sigactions();
 
