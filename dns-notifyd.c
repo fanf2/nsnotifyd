@@ -202,6 +202,8 @@ main(int argc, char *argv[]) {
 		if(r) errx(1, "%s", gai_strerror(r));
 		printf(";; client %s/%s\n", host, serv);
 
+		res_pquery(&_res, msg, eom-msg, stdout);
+
 		HEADER *h = (void *) msg;
 		byte *p = msg + sizeof(HEADER);
 
