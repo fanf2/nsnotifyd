@@ -36,6 +36,13 @@
 
 typedef unsigned char byte;
 
+static bool quit;
+
+static void
+sigexit(int sig) {
+	quit = sig;
+}
+
 static void
 sigactions(void) {
 	struct sigaction sa;
@@ -46,6 +53,12 @@ sigactions(void) {
 	sa.sa_flags = SA_RESTART;
 	r = sigaction(SIGPIPE, &sa, NULL);
 	if(r < 0) err(1, "sigaction(SIGPIPE)");
+	sa.sa_handler = sigexit;
+	sa.sa_flags = 0;
+	r = sigaction(SIGINT, &sa, NULL);
+	if(r < 0) err(1, "sigaction(SIGINT)");
+	r = sigaction(SIGTERM, &sa, NULL);
+	if(r < 0) err(1, "sigaction(SIGTERM)");
 }
 
 static const char *
@@ -227,7 +240,7 @@ main(int argc, char *argv[]) {
 			s = -1;
 			continue;
 		}
-		log_info("listening on %s", ai_sockstr(ai));
+		log_notice("listening on %s", ai_sockstr(ai));
 		break;
 	}
 	if(s < 0)
@@ -259,6 +272,11 @@ main(int argc, char *argv[]) {
 		sa_len = sizeof(sa_buf);
 		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
 		if(len < 0) {
+			if(quit) {
+				log_notice("exiting");
+				if(pidfile) unlink(pidfile);
+				exit(0);
+			}
 			log_err("recv: %s", ERR);
 			continue;
 		}
