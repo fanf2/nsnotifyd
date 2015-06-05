@@ -176,6 +176,9 @@ main(int argc, char *argv[]) {
 		h->nscount = 0;
 		h->arcount = 0;
 		print_header(h);
+		r = sendto(s, msg, p - msg, 0, sa, sa_len);
+		if(r < 0)
+			warn("sendto %s/%s\n", hostbuf, servbuf);
 		printf("\n");
 		continue;
 	formerr:
