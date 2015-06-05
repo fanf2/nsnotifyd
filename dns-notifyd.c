@@ -246,7 +246,7 @@ main(int argc, char *argv[]) {
 			continue;
 		}
 		if(debug > 1) {
-			log_debug("%s message length %ld",
+			log_debug("%s query length %ld",
 				  sockstr(sa, sa_len), len);
 			res_pquery(&_res, msg, len, stderr);
 		}
@@ -323,8 +323,11 @@ main(int argc, char *argv[]) {
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
-		if(debug > 1)
+		if(debug > 1) {
+			log_debug("%s reply length %ld",
+				  sockstr(sa, sa_len), p - msg);
 			res_pquery(&_res, msg, p - msg, stdout);
+		}
 		len = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(len < 0)
 			log_err("sendto %s: %s",
