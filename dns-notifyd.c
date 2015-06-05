@@ -128,7 +128,7 @@ main(int argc, char *argv[]) {
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *zone;
-	bool debug;
+	bool debug = false;
 
 	while((r = getopt(argc, argv, "46a:dp:")) != -1)
 		switch(r) {
