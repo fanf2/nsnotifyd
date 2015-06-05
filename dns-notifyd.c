@@ -173,6 +173,9 @@ main(int argc, char *argv[]) {
 	res_init();
 	if(debug > 1) _res.options |= RES_DEBUG;
 
+	_res.retrans = 3;
+	_res.retry = 2;
+
 	argc -= optind;
 	argv += optind;
 
@@ -223,6 +226,9 @@ main(int argc, char *argv[]) {
 	if(s < 0)
 		errx(1, "could not listen on %s/%s", addr, port);
 
+	if(!debug && daemon(1, 0) < 0)
+		err(1, "daemon");
+
 	byte msg[NS_PACKETSZ];
 	char qname[NS_MAXDNAME];
 	struct sockaddr_storage sa_buf;
@@ -240,8 +246,8 @@ main(int argc, char *argv[]) {
 			continue;
 		}
 		if(debug > 1) {
-			printf(";; client %s\n", sockstr(sa, sa_len));
-			printf(";; message legnth %d\n", r);
+			log_debug("%s message length %ld",
+				  sockstr(sa, sa_len), len);
 			res_pquery(&_res, msg, len, stderr);
 		}
 		eom = msg + len;
@@ -276,7 +282,7 @@ main(int argc, char *argv[]) {
 		e = soa_serial(zone, &newserial);
 		if(e != NULL) {
 			log_err("%s IN SOA ? %s", zone, e);
-			continue;
+			newserial = serial;
 		}
 
 		if(!serial_lt(serial, newserial)) {
