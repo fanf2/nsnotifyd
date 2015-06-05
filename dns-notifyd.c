@@ -1,4 +1,3 @@
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +10,7 @@
 #include <netinet/in.h>
 
 #define BIND_8_COMPAT
+#define SYSLOG_NAMES
 
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
@@ -19,6 +19,7 @@
 #include <netdb.h>
 #include <resolv.h>
 #include <signal.h>
+#include <syslog.h>
 #include <unistd.h>
 
 typedef unsigned char byte;
@@ -102,12 +103,14 @@ serial_lt(uint32_t s1, uint32_t s2) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: dns-notifyd [-46d] [-a addr] [-p port] zone command...\n"
+"usage: dns-notifyd [-46d] [-l facility] [-a addr] [-p port]\n"
+"		zone command...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
-"	-d		debugging mode\n"
 "	-a addr		listen on this IP address or host name\n"
 "			(default 127.0.0.1)\n"
+"	-d		debugging mode\n"
+"	-l facility	syslog facility name\n"
 "	-p port		listen on this port number or service name\n"
 "			(default 53)\n"
 "	zone		the zone for which to accept notifies\n"
@@ -118,14 +121,15 @@ usage(void) {
 
 int
 main(int argc, char *argv[]) {
-	int r;
+	int r, i;
 	int family = PF_UNSPEC;
+	int facility = LOG_DAEMON;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *zone;
 	bool debug = false;
 
-	while((r = getopt(argc, argv, "46a:dp:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:p:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -133,11 +137,19 @@ main(int argc, char *argv[]) {
 		case('6'):
 			family = PF_INET6;
 			continue;
+		case('a'):
+			addr = optarg;
+			continue;
 		case('d'):
 			debug++;
 			continue;
-		case('a'):
-			addr = optarg;
+		case('l'):
+			for(i = 0; facilitynames[i].c_name != NULL; i++)
+				if(strcmp(facilitynames[i].c_name, optarg) == 0)
+					break;
+			if(facilitynames[i].c_name == NULL)
+				errx(1, "%s: Unknown syslog facility", optarg);
+			facility = facilitynames[i].c_val;
 			continue;
 		case('p'):
 			port = optarg;
@@ -145,6 +157,12 @@ main(int argc, char *argv[]) {
 		default:
 			usage();
 		}
+
+	openlog(basename(argv[0]), debug ? LOG_PERROR : LOG_PID, facility);
+
+	res_init();
+	if(debug) _res.options |= RES_DEBUG;
+
 	argc -= optind;
 	argv += optind;
 
@@ -152,9 +170,6 @@ main(int argc, char *argv[]) {
 		usage();
 
 	zone = *argv++; argc--;
-
-	res_init();
-	if(debug) _res.options |= RES_DEBUG;
 
 	uint32_t serial, newserial;
 	const char *e = soa_serial(zone, &serial);
