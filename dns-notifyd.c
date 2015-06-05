@@ -51,48 +51,43 @@ ai_sockstr(struct addrinfo *ai) {
 	return(sockstr(ai->ai_addr, ai->ai_addrlen));
 }
 
-static uint32_t
-soa_serial(const char *zone) {
+static const char *
+soa_serial(const char *zone, uint32_t *serial) {
 	byte msg[NS_PACKETSZ];
 	char name[NS_MAXDNAME];
 	int len, r;
 
 	len = res_query(zone, ns_c_in, ns_t_soa, msg, sizeof(msg));
-	if(len < 0)
-		errx(1, "%s IN SOA: %s", zone, hstrerror(h_errno));
+	if(len < 0) return(hstrerror(h_errno));
 	byte *eom = msg + len, *p = msg + sizeof(HEADER);
 	r = dn_skipname(p, eom);
 	p += r + 4; // qname qtype qclass
 	HEADER *h = (void *) msg;
-	uint32_t type, class, ttl, rdlength, serial;
+	uint32_t type, class, ttl, rdlength;
 	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
-		if(p >= eom)
-			errx(1, "%s IN SOA: truncated reply", zone);
+		if(p >= eom) return("truncated reply");
 		r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
-		if(r < 0)
-			errx(1, "%s IN SOA: bad owner", zone);
+		if(r < 0) return("bad owner");
 		p += r;
-		if(eom - p < 10)
-			errx(1, "%s IN SOA: truncated RR", zone);
+		if(eom - p < 10) return("truncated RR");
 		NS_GET16(type, p);
 		NS_GET16(class, p);
 		NS_GET32(ttl, p);
 		NS_GET16(rdlength, p);
-		if(eom - p < rdlength)
-			errx(1, "%s IN SOA: truncated RDATA", zone);
+		if(eom - p < rdlength) return("truncated RDATA");
 		if(strcmp(name, zone) == 0 && class == ns_c_in && type == ns_t_soa) {
 			r = dn_skipname(p, eom);
-			if(r < 0) errx(1, "%s IN SOA: bad mname", zone);
+			if(r < 0) return("bad SOA MNAME");
 			p += r;
 			r = dn_skipname(p, eom);
-			if(r < 0) errx(1, "%s IN SOA: bad rname", zone);
+			if(r < 0) return("bad SOA RNAME");
 			p += r;
-			NS_GET32(serial, p);
-			return(serial);
+			NS_GET32(*serial, p);
+			return(NULL);
 		}
 		p += rdlength;
 	}
-	errx(1, "%s IN SOA: missing answer", zone);
+	return("missing answer");
 }
 
 /* RFC 1982 */
@@ -161,7 +156,9 @@ main(int argc, char *argv[]) {
 	res_init();
 	if(debug) _res.options |= RES_DEBUG;
 
-	uint32_t serial = soa_serial(zone);
+	uint32_t serial, newserial;
+	const char *e = soa_serial(zone, &serial);
+	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
 	printf("%s. IN SOA %d\n", zone, serial);
 
 	sigactions();
@@ -251,7 +248,8 @@ main(int argc, char *argv[]) {
 		memcpy(&res_addr, sa, sa_len);
 		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
-		uint32_t newserial = soa_serial(zone);
+		e = soa_serial(zone, &newserial);
+		if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
 
 		if(!serial_lt(serial, newserial)) {
 			printf("%s %s. IN SOA %d unchanged\n",
