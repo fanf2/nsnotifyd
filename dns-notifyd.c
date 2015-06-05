@@ -18,6 +18,7 @@
 #include <err.h>
 #include <libgen.h>
 #include <netdb.h>
+#include <pwd.h>
 #include <resolv.h>
 #include <signal.h>
 #include <syslog.h>
@@ -31,8 +32,6 @@
 #define	log_notice(...)  syslog(LOG_NOTICE,  __VA_ARGS__)
 #define	log_info(...)    syslog(LOG_INFO,    __VA_ARGS__)
 #define	log_debug(...)   syslog(LOG_DEBUG,   __VA_ARGS__)
-
-#define ERR strerror(errno)
 
 typedef unsigned char byte;
 
@@ -128,8 +127,8 @@ serial_lt(uint32_t s1, uint32_t s2) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: dns-notifyd [-46d] [-l facility] [-P pidfile] [-a addr] [-p port]\n"
-"		zone command...\n"
+"usage: dns-notifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
+"		 [-a addr] [-p port] zone command...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-a addr		listen on this IP address or host name\n"
@@ -138,7 +137,7 @@ usage(void) {
 "	-l facility	syslog facility name\n"
 "	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
-"			(default 53)\n"
+"	-u user		drop privileges to user\n"
 "	zone		the zone for which to accept notifies\n"
 "	command...	the command to run when the zone changes\n"
 		);
@@ -151,12 +150,13 @@ main(int argc, char *argv[]) {
 	int family = PF_UNSPEC;
 	int facility = LOG_DAEMON;
 	const char *pidfile = NULL;
+	const char *user = NULL;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *zone;
 	int debug = false;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:u:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -184,6 +184,9 @@ main(int argc, char *argv[]) {
 		case('p'):
 			port = optarg;
 			continue;
+		case('u'):
+			user = optarg;
+			continue;
 		default:
 			usage();
 		}
@@ -192,24 +195,25 @@ main(int argc, char *argv[]) {
 
 	res_init();
 	if(debug > 1) _res.options |= RES_DEBUG;
-
 	_res.retrans = 3;
 	_res.retry = 2;
 
 	argc -= optind;
 	argv += optind;
-
 	if(argc < 2 || addr == NULL || port == NULL)
 		usage();
 
 	zone = *argv++; argc--;
 
-	uint32_t serial, newserial;
-	const char *e = soa_serial(zone, &serial);
-	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
-	log_info("%s IN SOA %d", zone, serial);
-
-	sigactions();
+	struct passwd *pw = NULL;
+	if(user != NULL) {
+		errno = 0;
+		pw = getpwnam(user);
+		if(pw == NULL && errno)
+			err(1, "getpwnam");
+		if(pw == NULL)
+			errx(1, "unknown user %s", user);
+	}
 
 	struct addrinfo hints, *ai;
 	int s = -1;
@@ -246,17 +250,34 @@ main(int argc, char *argv[]) {
 	if(s < 0)
 		errx(1, "could not listen on %s/%s", addr, port);
 
+	uint32_t serial, newserial;
+	const char *e = soa_serial(zone, &serial);
+	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
+	log_info("%s IN SOA %d", zone, serial);
+
+	sigactions();
+
 	if(!debug && daemon(1, 0) < 0)
 		err(1, "daemon");
 
-	if(pidfile) {
+	if(pidfile != NULL) {
 		FILE *fp = fopen(pidfile, "w");
 		if(fp == NULL) {
-			log_err("open: %s", ERR);
+			log_err("open: %m");
 		} else {
 			fprintf(fp, "%d\n", getpid());
 			fclose(fp);
 		}
+	}
+
+	if(pw != NULL) {
+		if(setgid(pw->pw_gid) < 0)
+			log_err("setgid(%u): %m", pw->pw_gid);
+		if(initgroups(pw->pw_name, pw->pw_gid) < 0)
+			log_err("initgroups(%s, %u): %m",
+				pw->pw_name, pw->pw_gid);
+		if(setuid(pw->pw_uid) < 0)
+			log_err("setuid(%u): %m", pw->pw_uid);
 	}
 
 	byte msg[NS_PACKETSZ];
@@ -274,10 +295,10 @@ main(int argc, char *argv[]) {
 		if(len < 0) {
 			if(quit) {
 				log_notice("exiting");
-				if(pidfile) unlink(pidfile);
+				if(pidfile != NULL) unlink(pidfile);
 				exit(0);
 			}
-			log_err("recv: %s", ERR);
+			log_err("recv: %m");
 			continue;
 		}
 		if(debug > 1) {
@@ -327,14 +348,14 @@ main(int argc, char *argv[]) {
 			serial = newserial;
 			switch(fork()) {
 			case(-1):
-				log_err("fork: %s", ERR);
+				log_err("fork: %m");
 				break;
 			case(0):
 				execvp(argv[0], argv);
 				err(1, "exec %s", argv[0]);
 			default:
 				if(wait(&r) < 0)
-					log_err("wait: %s", ERR);
+					log_err("wait: %m");
 				else if(!WIFEXITED(r))
 					log_err("%s died with signal %d",
 					    argv[0], WTERMSIG(r));
@@ -365,8 +386,7 @@ main(int argc, char *argv[]) {
 		}
 		len = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(len < 0)
-			log_err("sendto %s: %s",
-				sockstr(sa, sa_len), ERR);
+			log_err("sendto %s: %m", sockstr(sa, sa_len));
 		continue;
 	formerr:
 		log_info("%s formerr", sockstr(sa, sa_len));
