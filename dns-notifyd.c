@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,13 +23,6 @@
 
 typedef unsigned char byte;
 
-static const char * const opcode[] = {
-	"QUERY",    "1",        "2",        "3",
-	"NOTIFY",   "UPDATE",   "6",        "7",
-	"8",        "9",        "10",       "11",
-	"12",       "13",       "14",       "15",
-};
-
 static void
 sigactions(void) {
 	struct sigaction sa;
@@ -41,15 +35,20 @@ sigactions(void) {
 	if(r < 0) err(1, "sigaction(SIGPIPE)");
 }
 
-static void
-print_header(HEADER *h) {
-	printf(";; id=%d opcode=%s rcode=%s\n", ntohs(h->id),
-	    opcode[h->opcode], p_rcode(h->rcode));
-	printf(";; qr=%d aa=%d tc=%d rd=%d ra=%d zz=%d ad=%d cd=%d\n",
-	    h->qr, h->aa, h->tc, h->rd, h->ra, h->unused, h->ad, h->cd);
-	printf(";; qdcount=%d ancount=%d nscount=%d arcount=%d\n",
-	    ntohs(h->qdcount), ntohs(h->ancount),
-	    ntohs(h->nscount), ntohs(h->arcount));
+static const char *
+sockstr(struct sockaddr *sa, socklen_t sa_len) {
+	char host[NI_MAXHOST], serv[NI_MAXSERV];
+	static char hostserv[NI_MAXHOST + NI_MAXSERV];
+	int r = getnameinfo(sa, sa_len,
+			    host, sizeof(host), serv, sizeof(serv),
+			    NI_NUMERICHOST | NI_NUMERICSERV);
+	if(r) errx(1, "getnameinfo: %s", gai_strerror(r));
+	snprintf(hostserv, sizeof(hostserv), "%s/%s", host, serv);
+	return(hostserv);
+}
+static const char *
+ai_sockstr(struct addrinfo *ai) {
+	return(sockstr(ai->ai_addr, ai->ai_addrlen));
 }
 
 static uint32_t
@@ -96,6 +95,7 @@ soa_serial(const char *zone) {
 	errx(1, "%s IN SOA: missing answer", zone);
 }
 
+/* RFC 1982 */
 static bool
 serial_lt(uint32_t s1, uint32_t s2) {
 	int64_t i1 = s1, i2 = s2, smax = 0x80000000;
@@ -166,47 +166,40 @@ main(int argc, char *argv[]) {
 
 	sigactions();
 
-	struct addrinfo hints, *res, *res0;
-	char host[NI_MAXHOST], serv[NI_MAXSERV];
+	struct addrinfo hints, *ai;
 	int s = -1;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_DGRAM;
-	r = getaddrinfo(addr, port, &hints, &res0);
+	r = getaddrinfo(addr, port, &hints, &ai);
 	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
 
-	for(res = res0; res != NULL; res = res->ai_next) {
-		r = getnameinfo(res->ai_addr, res->ai_addrlen,
-			host, sizeof(host), serv, sizeof(serv),
-			NI_NUMERICHOST | NI_NUMERICSERV);
-		if(r) errx(1, "%s/%s: %s", host, serv, gai_strerror(r));
-
-		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+	for(; ai != NULL; ai = ai->ai_next) {
+		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if(s < 0) {
-			warn("socket %s/%s", host, serv);
+			warn("socket %s", ai_sockstr(ai));
 			continue;
 		}
 		r = 1;
 		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0) {
-			warn("setsockopt %s/%s SO_REUSEADDR", host, serv);
+			warn("setsockopt %s SO_REUSEADDR", ai_sockstr(ai));
 			close(s);
 			s = -1;
 			continue;
 		}
-		if(bind(s, res->ai_addr, res->ai_addrlen) < 0) {
-			warn("bind %s/%s", host, serv);
+		if(bind(s, ai->ai_addr, ai->ai_addrlen) < 0) {
+			warn("bind %s", ai_sockstr(ai));
 			close(s);
 			s = -1;
 			continue;
 		}
+		printf(";; listening on %s\n\n", ai_sockstr(ai));
 		break;
 	}
 	if(s < 0)
 		errx(1, "could not listen on %s/%s", addr, port);
-	else
-		printf(";; listening on %s/%s\n\n", host, serv);
 
 	byte msg[NS_PACKETSZ];
 	char qname[NS_MAXDNAME];
@@ -225,20 +218,20 @@ main(int argc, char *argv[]) {
 		}
 		eom = msg + r;
 
-		r = getnameinfo(sa, sa_len,
-			host, sizeof(host), serv, sizeof(serv),
-			NI_NUMERICHOST | NI_NUMERICSERV);
-		if(r) errx(1, "%s/%s: %s", host, serv, gai_strerror(r));
-		printf(";; client %s/%s\n", host, serv);
+		printf(";; client %s\n", sockstr(sa, sa_len));
+		printf(";; message legnth %d\n", r);
 
-		res_pquery(&_res, msg, eom-msg, stdout);
+		ns_msg ns_msg;
+		if(ns_initparse(msg, r, &ns_msg) < 0)
+			warn("ns_initparse");
+		res_pquery(&_res, msg, r, stderr);
 
 		HEADER *h = (void *) msg;
 		byte *p = msg + sizeof(HEADER);
 
 		if(eom < p || h->qdcount != htons(1))
 			goto formerr;
-		print_header(h);
+		p_query(msg);
 
 		r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
 		if(r < 0)
@@ -290,10 +283,10 @@ main(int argc, char *argv[]) {
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
-		print_header(h);
+		res_pquery(&_res, msg, p - msg, stdout);
 		r = sendto(s, msg, p - msg, 0, sa, sa_len);
 		if(r < 0)
-			warn("sendto %s/%s\n", host, serv);
+			warn("sendto %s\n", sockstr(sa, sa_len));
 		printf("\n");
 		continue;
 	formerr:
