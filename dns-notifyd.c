@@ -281,13 +281,14 @@ main(int argc, char *argv[]) {
 		res_setservers(&_res, &res_addr, 1);
 		e = soa_serial(zone, &newserial);
 		if(e != NULL) {
-			log_err("%s %s IN SOA ? %s", zone, e);
+			log_err("%s %s IN SOA ? %s",
+				sockstr(sa, sa_len), zone, e);
 		} else if(!serial_lt(serial, newserial)) {
 			log_info("%s %s IN SOA %d unchanged",
-			       sockstr(sa, sa_len), zone, newserial);
+				 sockstr(sa, sa_len), zone, newserial);
 		} else {
 			log_info("%s %s IN SOA %d updated; running %s",
-			       sockstr(sa, sa_len), zone, newserial, argv[0]);
+				 sockstr(sa, sa_len), zone, newserial, argv[0]);
 			serial = newserial;
 			switch(fork()) {
 			case(-1):
