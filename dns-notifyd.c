@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <netinet/in.h>
 
+#define BIND_8_COMPAT
+
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
 #include <err.h>
@@ -52,7 +54,7 @@ print_header(HEADER *h) {
 
 static uint32_t
 soa_serial(const char *zone) {
-	byte msg[NS_MAXMSG];
+	byte msg[NS_PACKETSZ];
 	char name[NS_MAXDNAME];
 	int len, r;
 
@@ -104,7 +106,18 @@ serial_lt(uint32_t s1, uint32_t s2) {
 
 static void
 usage(void) {
-	fprintf(stderr, "usage: dns-notifyd [-46] [-a addr] -p port zone command...\n");
+	fprintf(stderr,
+"usage: dns-notifyd [-46d] [-a addr] [-p port] zone command...\n"
+"	-4		listen on IPv4 only\n"
+"	-6		listen on IPv6 only\n"
+"	-d		debugging mode\n"
+"	-a addr		listen on this IP address or host name\n"
+"			(default 127.0.0.1)\n"
+"	-p port		listen on this port number or service name\n"
+"			(default 53)\n"
+"	zone		the zone for which to accept notifies\n"
+"	command...	the command to run when the zone changes\n"
+		);
 	exit(1);
 }
 
@@ -113,16 +126,21 @@ main(int argc, char *argv[]) {
 	int r;
 	int family = PF_UNSPEC;
 	const char *addr = "127.0.0.1";
-	const char *port = NULL;
+	const char *port = "domain";
 	const char *zone;
+	bool debug;
 
-	while((r = getopt(argc, argv, "46a:p:")) != -1)
+	while((r = getopt(argc, argv, "46a:dp:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
 			continue;
 		case('6'):
 			family = PF_INET6;
+			continue;
+		case('d'):
+			debug++;
+			_res.options = RES_DEBUG;
 			continue;
 		case('a'):
 			addr = optarg;
@@ -155,21 +173,30 @@ main(int argc, char *argv[]) {
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_DGRAM;
 	r = getaddrinfo(addr, port, &hints, &res0);
-	if(r) errx(1, "%s", gai_strerror(r));
+	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
 
 	for(res = res0; res != NULL; res = res->ai_next) {
 		r = getnameinfo(res->ai_addr, res->ai_addrlen,
 			host, sizeof(host), serv, sizeof(serv),
 			NI_NUMERICHOST | NI_NUMERICSERV);
-		if(r) errx(1, "%s", gai_strerror(r));
+		if(r) errx(1, "%s/%s: %s", host, serv, gai_strerror(r));
 
 		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if(s < 0) {
 			warn("socket %s/%s", host, serv);
 			continue;
 		}
+		r = 1;
+		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0) {
+			warn("setsockopt %s/%s SO_REUSEADDR", host, serv);
+			close(s);
+			s = -1;
+			continue;
+		}
 		if(bind(s, res->ai_addr, res->ai_addrlen) < 0) {
 			warn("bind %s/%s", host, serv);
+			close(s);
+			s = -1;
 			continue;
 		}
 		break;
@@ -179,7 +206,7 @@ main(int argc, char *argv[]) {
 	else
 		printf(";; listening on %s/%s\n\n", host, serv);
 
-	byte msg[NS_MAXMSG];
+	byte msg[NS_PACKETSZ];
 	char qname[NS_MAXDNAME];
 	struct sockaddr_storage sa_buf;
 	struct sockaddr *sa = (void *) &sa_buf;
@@ -199,7 +226,7 @@ main(int argc, char *argv[]) {
 		r = getnameinfo(sa, sa_len,
 			host, sizeof(host), serv, sizeof(serv),
 			NI_NUMERICHOST | NI_NUMERICSERV);
-		if(r) errx(1, "%s", gai_strerror(r));
+		if(r) errx(1, "%s/%s: %s", host, serv, gai_strerror(r));
 		printf(";; client %s/%s\n", host, serv);
 
 		res_pquery(&_res, msg, eom-msg, stdout);
