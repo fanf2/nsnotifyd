@@ -5,10 +5,23 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
 
+#include <arpa/nameser.h>
+#include <arpa/inet.h>
 #include <err.h>
 #include <netdb.h>
+#include <resolv.h>
 #include <unistd.h>
+
+typedef unsigned char byte;
+
+static const char * const opcode[] = {
+	"QUERY",    "1",        "2",        "3",
+	"NOTIFY",   "UPDATE",   "6",        "7",
+	"8",        "9",        "10",       "11",
+	"12",       "13",       "14",       "15",
+};
 
 static void
 usage(void) {
@@ -58,7 +71,7 @@ main(int argc, char *argv[]) {
 
 	struct addrinfo hints, *res, *res0;
 	char hostbuf[NI_MAXHOST], servbuf[NI_MAXSERV];
-	int s;
+	int s = -1;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
@@ -85,7 +98,50 @@ main(int argc, char *argv[]) {
 		}
 		break;
 	}
-	warnx("listening on %s/%s", hostbuf, servbuf);
+	if(s < 0)
+		errx(1, "could not listen on %s/%s", addr, port);
+	else
+		printf(";; listening on %s/%s\n\n", hostbuf, servbuf);
 
-	exit(0);
+	byte pkt[NS_MAXMSG];
+	char qname[NS_MAXDNAME];
+	struct sockaddr_storage sa_buf;
+	struct sockaddr *sa = (void *) &sa_buf;
+	socklen_t sa_len;
+	ssize_t pktlen;
+
+	for(;;) {
+		sa_len = sizeof(sa_buf);
+		pktlen = recvfrom(s, pkt, sizeof(pkt), 0, sa, &sa_len);
+		if(pktlen < 0) {
+			warn("recv");
+			continue;
+		}
+		r = getnameinfo(sa, sa_len,
+			hostbuf, sizeof(hostbuf),
+			servbuf, sizeof(servbuf),
+			NI_NUMERICHOST | NI_NUMERICSERV);
+		if(r) errx(1, "%s", gai_strerror(r));
+		HEADER *h = (void *) pkt;
+		printf(";; client %s/%s\n", hostbuf, servbuf);
+		printf(";; id=%d opcode=%s rcode=%s\n", ntohs(h->id),
+		    opcode[h->opcode], p_rcode(h->rcode));
+		printf(";; qr=%d aa=%d tc=%d rd=%d ra=%d zz=%d ad=%d cd=%d\n",
+		    h->qr, h->aa, h->tc, h->rd, h->ra, h->unused, h->ad, h->cd);
+		printf(";; qdcount=%d ancount=%d nscount=%d arcount=%d\n",
+		    ntohs(h->qdcount), ntohs(h->ancount),
+		    ntohs(h->nscount), ntohs(h->arcount));
+		byte *p = pkt + sizeof(HEADER);
+		r = ns_name_uncompress(pkt, pkt + pktlen, p, qname, sizeof(qname));
+		if(r < 0) {
+			printf("!! FORMERR\n\n");
+			continue;
+		}
+		int qtype, qclass;
+		p += r;
+		NS_GET16(qtype, p);
+		NS_GET16(qclass, p);
+		printf("%s. %s %s ?\n", qname, p_class(qclass), p_type(qtype));
+		printf("\n");
+	}
 }
