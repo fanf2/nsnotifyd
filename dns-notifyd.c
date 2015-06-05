@@ -219,7 +219,7 @@ main(int argc, char *argv[]) {
 		if(debug) {
 			printf(";; client %s\n", sockstr(sa, sa_len));
 			printf(";; message legnth %d\n", r);
-			res_pquery(&_res, msg, eom-msg, stderr);
+			res_pquery(&_res, msg, r, stderr);
 		}
 		eom = msg + r;
 
