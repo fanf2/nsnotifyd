@@ -162,7 +162,7 @@ main(int argc, char *argv[]) {
 	if(debug) _res.options |= RES_DEBUG;
 
 	uint32_t serial = soa_serial(zone);
-	printf("%s. IN SOA (... %d ...)\n", zone, serial);
+	printf("%s. IN SOA %d\n", zone, serial);
 
 	sigactions();
 
@@ -252,8 +252,6 @@ main(int argc, char *argv[]) {
 		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
 		uint32_t newserial = soa_serial(zone);
-		printf("%s %s. IN SOA (... %d ...)\n",
-		       sockstr(sa, sa_len), zone, newserial);
 
 		if(!serial_lt(serial, newserial)) {
 			printf("%s %s. IN SOA %d unchanged\n",
