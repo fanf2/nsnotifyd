@@ -32,6 +32,20 @@ usage(void) {
 }
 
 static void
+sigactions(void) {
+	struct sigaction sa;
+	int r;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = SIG_IGN;
+	sa.sa_flags = SA_RESTART;
+	r = sigaction(SIGCHLD, &sa, NULL);
+	if(r < 0) err(1, "sigaction(SIGCHLD)");
+	r = sigaction(SIGPIPE, &sa, NULL);
+	if(r < 0) err(1, "sigaction(SIGPIPE)");
+}
+
+static void
 print_header(HEADER *h) {
 	printf(";; id=%d opcode=%s rcode=%s\n", ntohs(h->id),
 	    opcode[h->opcode], p_rcode(h->rcode));
@@ -81,6 +95,8 @@ main(int argc, char *argv[]) {
 		err(1, "dirname %s", file);
 	if(chdir(dir))
 		err(1, "chdir %s", dir);
+
+	sigactions();
 
 	struct addrinfo hints, *res, *res0;
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
