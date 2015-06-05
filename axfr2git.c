@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -100,6 +101,14 @@ soa_serial(const char *zone) {
 	errx(1, "%s IN SOA: missing answer", zone);
 }
 
+static bool
+serial_lt(uint32_t s1, uint32_t s2) {
+	int64_t i1 = s1, i2 = s2, smax = 0x80000000;
+	return(s1 != s2 && (
+		(i1 < i2 && i2 - i1 < smax) ||
+		(i1 > i2 && i1 - i2 > smax) ));
+}
+
 int
 main(int argc, char *argv[]) {
 	int r;
@@ -140,8 +149,8 @@ main(int argc, char *argv[]) {
 	if(chdir(dir))
 		err(1, "chdir %s", dir);
 
-	uint8_t serial = soa_serial(zone);
-	printf("%s SOA serial %d\n", zone, serial);
+	uint32_t serial = soa_serial(zone);
+	printf("%s. IN SOA (... %d ...)\n", zone, serial);
 
 	sigactions();
 
@@ -223,8 +232,13 @@ main(int argc, char *argv[]) {
 		    strcmp(qname, zone) != 0)
 			goto refused;
 
-		h->rcode = ns_r_noerror;
+		uint32_t newserial = soa_serial(zone);
+		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
+		if(serial_lt(serial, newserial)) {
+			printf("UPDATE\n");
+		}
 
+		h->rcode = ns_r_noerror;
 	reply:
 		h->qr = 1;
 		// echo opcode
