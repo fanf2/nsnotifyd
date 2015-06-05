@@ -140,7 +140,6 @@ main(int argc, char *argv[]) {
 			continue;
 		case('d'):
 			debug++;
-			_res.options = RES_DEBUG;
 			continue;
 		case('a'):
 			addr = optarg;
@@ -158,6 +157,9 @@ main(int argc, char *argv[]) {
 		usage();
 
 	zone = *argv++; argc--;
+
+	res_init();
+	if(debug) _res.options |= RES_DEBUG;
 
 	uint32_t serial = soa_serial(zone);
 	printf("%s. IN SOA (... %d ...)\n", zone, serial);
