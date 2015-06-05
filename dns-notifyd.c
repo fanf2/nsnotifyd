@@ -259,6 +259,7 @@ main(int argc, char *argv[]) {
 		} else {
 			printf("%s %s. IN SOA %d updated; running %s\n",
 			       sockstr(sa, sa_len), zone, newserial, argv[0]);
+			serial = newserial;
 			switch(fork()) {
 			case(-1):
 				warn("fork");
