@@ -216,22 +216,18 @@ main(int argc, char *argv[]) {
 			warn("recv");
 			continue;
 		}
+		if(debug) {
+			printf(";; client %s\n", sockstr(sa, sa_len));
+			printf(";; message legnth %d\n", r);
+			res_pquery(&_res, msg, eom-msg, stderr);
+		}
 		eom = msg + r;
-
-		printf(";; client %s\n", sockstr(sa, sa_len));
-		printf(";; message legnth %d\n", r);
-
-		ns_msg ns_msg;
-		if(ns_initparse(msg, r, &ns_msg) < 0)
-			warn("ns_initparse");
-		res_pquery(&_res, msg, r, stderr);
 
 		HEADER *h = (void *) msg;
 		byte *p = msg + sizeof(HEADER);
 
 		if(eom < p || h->qdcount != htons(1))
 			goto formerr;
-		p_query(msg);
 
 		r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
 		if(r < 0)
@@ -248,6 +244,13 @@ main(int argc, char *argv[]) {
 		    strcmp(qname, zone) != 0)
 			goto refused;
 
+		/* Make a non-recursive query using the server that
+		   notified us - RFC 1996 paragraph 3.11. */
+		_res.options &= ~RES_RECURSE;
+		union res_sockaddr_union res_addr;
+		memcpy(&res_addr, sa, sa_len);
+		res_addr.sin.sin_port = 53;
+		res_setservers(&_res, &res_addr, 1);
 		uint32_t newserial = soa_serial(zone);
 		printf("%s. IN SOA (... %d ...)\n", zone, newserial);
 		if(serial_lt(serial, newserial))
