@@ -4,11 +4,43 @@ if	echo '#include <resolv.h>' |
 	cc -E -dM - |
 	grep 'define __RES 200' >/dev/null
 then
-	cp Makefile.new Makefile
-	echo 'Using up-to-date system resolver'
+	echo 'Using system resolver'
+	cp Makefile.in Makefile
+elif
+	echo '#include <resolv.h>' |
+	cc -E -dM -I/usr/include/bind - |
+	grep 'define __RES 200' >/dev/null
+then
+	# Debian with libbind4-dev
+	echo 'Using libbind4'
+	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind|;
+		s|^LIBS=.*|-lbind|;
+	' <Makefile.in >Makefile
+elif
+	echo '#include <resolv.h>' |
+	cc -E -dM - |
+	grep 'define res_setservers' >/dev/null
+then
+	# MacOS
+	echo 'Using libresolv'
+	sed '	s|^LIBS=.*|-lresolv|;
+	' <Makefile.in >Makefile
 else
-	cp Makefile.old Makefile
-	echo 'Compensating for obsolete system resolver'
+	BIND=libbind-6.0
+	TGZ=${BIND}.tar.gz
+	URL=http://ftp.isc.org/isc/libbind/cur/${TGZ}
+
+	rm -rf ${BIND}
+	[ -f ${TGZ} ] || curl -O ${URL}
+	tar xf ${TGZ}
+	cd ${BIND} && ./configure
+
+	sed '	s|^LIBDEPS=.*|LIBDEPS=libbind-6.0/libbind.a|;
+		s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind -Llibbind-6.0|;
+		s|^LIBS=.*|-lbind|;
+	' <Makefile.in >Makefile
+
+	echo 'Using static libbind'
 fi
 
 echo 'Now run make...'

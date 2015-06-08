@@ -1,0 +1,20 @@
+CFLAGS= -Wall -Wextra -std=c99
+
+BIND	= libbind-6.0
+LIBDEPS=
+LIBFLAGS=
+LIBS=
+
+all: dns-notifyd
+
+dns-notifyd: dns-notifyd.c ${LIBDEPS}
+	${CC} ${CFLAGS} ${LIBFLAGS} -o dns-notifyd dns-notifyd.c ${LIBS}
+
+${BIND}/libbind.a:
+	cd ${BIND} && make all
+
+clean:
+	rm -rf dns-notifyd ${BIND}
+
+realclean: clean
+	rm -rf Makefile ${BIND}*
