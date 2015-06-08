@@ -63,14 +63,27 @@ sigactions(void) {
 	if(r < 0) err(1, "sigaction(SIGTERM)");
 }
 
-static const char *
-sockstr(struct sockaddr *sa, socklen_t sa_len) {
-	char host[NI_MAXHOST], serv[NI_MAXSERV];
-	static char hostserv[NI_MAXHOST + NI_MAXSERV];
+static void
+hostservstr(struct sockaddr *sa, socklen_t sa_len,
+    char **host_r, char**serv_r) {
+	static char host[NI_MAXHOST], serv[NI_MAXSERV];
 	int r = getnameinfo(sa, sa_len,
 			    host, sizeof(host), serv, sizeof(serv),
 			    NI_NUMERICHOST | NI_NUMERICSERV);
 	if(r) errx(1, "getnameinfo: %s", gai_strerror(r));
+	*host_r = host; *serv_r = serv;
+}
+static char *
+addrstr(struct sockaddr *sa, socklen_t sa_len) {
+	char *host, *serv;
+	hostservstr(sa, sa_len, &host, &serv);
+	return(host);
+}
+static const char *
+sockstr(struct sockaddr *sa, socklen_t sa_len) {
+	static char hostserv[NI_MAXHOST + NI_MAXSERV];
+	char *host, *serv;
+	hostservstr(sa, sa_len, &host, &serv);
 	snprintf(hostserv, sizeof(hostserv), "%s/%s", host, serv);
 	return(hostserv);
 }
@@ -212,6 +225,7 @@ main(int argc, char *argv[]) {
 		*argv++,
 		"zone",
 		serial_buf,
+		"master",
 		NULL
 	};
 
@@ -364,8 +378,10 @@ main(int argc, char *argv[]) {
 				log_err("fork: %m");
 				break;
 			case(0):
-				cmdv[1] = qname;
 				snprintf(serial_buf, sizeof(serial_buf), "%u", serial);
+				cmdv[1] = qname;
+				cmdv[2] = serial_buf;
+				cmdv[3] = addrstr(sa, sa_len);
 				execvp(cmdv[0], cmdv);
 				err(1, "exec %s", cmdv[0]);
 			default:
