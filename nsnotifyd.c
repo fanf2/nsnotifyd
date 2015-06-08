@@ -150,10 +150,12 @@ usage(void) {
 "	-a addr		listen on this IP address or host name\n"
 "			(default 127.0.0.1)\n"
 "	-d		debugging mode\n"
+"			(use twice to print DNS messages)\n"
 "	-l facility	syslog facility name\n"
 "	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
 "			(default 53)\n"
+"	-S		do not check SOA at startup\n"
 "	-u user		drop privileges to user\n"
 "	command		the command to run when a zone changes\n"
 "	zone...		list of zones for which to accept notifies\n"
@@ -170,9 +172,10 @@ main(int argc, char *argv[]) {
 	const char *user = NULL;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
+	bool checksoa = true;
 	int debug = false;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:u:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:Su:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -199,6 +202,9 @@ main(int argc, char *argv[]) {
 			continue;
 		case('p'):
 			port = optarg;
+			continue;
+		case('S'):
+			checksoa = false;
 			continue;
 		case('u'):
 			user = optarg;
@@ -275,9 +281,13 @@ main(int argc, char *argv[]) {
 		errx(1, "could not listen on %s/%s", addr, port);
 
 	for(int z = 0; argv[z] != NULL; z++) {
-		const char *e = soa_serial(argv[z], &args[z]);
-		if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
-		log_info("%s IN SOA %u", argv[z], args[z]);
+		if(checksoa) {
+			const char *e = soa_serial(argv[z], &args[z]);
+			if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
+			log_info("%s IN SOA %u", argv[z], args[z]);
+		} else {
+			args[z] = 0; // buggy!
+		}
 	}
 
 	sigactions();
