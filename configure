@@ -33,7 +33,9 @@ else
 	rm -rf ${BIND}
 	[ -f ${TGZ} ] || curl -O ${URL}
 	tar xf ${TGZ}
-	cd ${BIND} && ./configure
+	cd ${BIND}
+	./configure
+	cd ..
 
 	sed '	s|^LIBDEPS=.*|LIBDEPS=libbind-6.0/libbind.a|;
 		s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind -Llibbind-6.0|;
