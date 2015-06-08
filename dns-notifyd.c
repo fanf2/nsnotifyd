@@ -1,3 +1,8 @@
+#define _BSD_SOURCE
+#define _XOPEN_SOURCE
+#define BIND_8_COMPAT
+#define SYSLOG_NAMES
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -10,12 +15,10 @@
 #include <sys/wait.h>
 #include <netinet/in.h>
 
-#define BIND_8_COMPAT
-#define SYSLOG_NAMES
-
 #include <arpa/nameser.h>
 #include <arpa/inet.h>
 #include <err.h>
+#include <grp.h>
 #include <libgen.h>
 #include <netdb.h>
 #include <pwd.h>
@@ -97,7 +100,7 @@ soa_serial(const char *zone, uint32_t *serial) {
 		if(eom - p < 10) return("truncated RR");
 		NS_GET16(type, p);
 		NS_GET16(class, p);
-		NS_GET32(ttl, p);
+		NS_GET32(ttl, p); ttl = ttl;
 		NS_GET16(rdlength, p);
 		if(eom - p < rdlength) return("truncated RDATA");
 		if(strcmp(name, zone) == 0 && class == ns_c_in && type == ns_t_soa) {
