@@ -1,4 +1,4 @@
-dns-notifyd
+nsnotifyd
 Makefile
 libbind-6.0
 libbind-6.0.tar.gz

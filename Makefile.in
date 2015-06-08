@@ -5,16 +5,16 @@ LIBDEPS=
 LIBFLAGS=
 LIBS=
 
-all: dns-notifyd
+all: nsnotifyd
 
-dns-notifyd: dns-notifyd.c ${LIBDEPS}
-	${CC} ${CFLAGS} ${LIBFLAGS} -o dns-notifyd dns-notifyd.c ${LIBS}
+nsnotifyd: nsnotifyd.c ${LIBDEPS}
+	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotifyd nsnotifyd.c ${LIBS}
 
 ${BIND}/libbind.a:
 	cd ${BIND} && make all
 
 clean:
-	rm -rf dns-notifyd ${BIND}
+	rm -rf nsnotifyd ${BIND}
 
 realclean: clean
 	rm -rf Makefile ${BIND}*

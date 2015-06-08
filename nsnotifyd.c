@@ -143,7 +143,7 @@ serial_lt(uint32_t s1, uint32_t s2) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: dns-notifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
+"usage: nsnotifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
 "		 [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
