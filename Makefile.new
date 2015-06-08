@@ -1,0 +1,11 @@
+CFLAGS= -Wall -Wextra -std=c99
+
+TARGETS = dns-notifyd
+
+all: ${TARGETS}
+
+clean:
+	rm -f ${TARGETS}
+
+realclean:
+	rm -rf Makefile libbind*

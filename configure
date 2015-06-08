@@ -4,10 +4,10 @@ if	echo '#include <resolv.h>' |
 	cc -E -dM - |
 	grep 'define __RES 200' >/dev/null
 then
-	mv Makefile.new Makefile
+	cp Makefile.new Makefile
 	echo 'Using up-to-date system resolver'
 else
-	mv Makefile.old Makefile
+	cp Makefile.old Makefile
 	echo 'Compensating for obsolete system resolver'
 fi
 

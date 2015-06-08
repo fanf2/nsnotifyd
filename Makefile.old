@@ -12,6 +12,9 @@ dns-notifyd: dns-notifyd.c ${RES_A}
 clean:
 	rm -rf dns-notifyd ${BIND}
 
+realclean:
+	rm -rf Makefile ${BIND_TGZ}
+
 ${RES_A}: ${BIND_TGZ}
 	tar xf ${BIND_TGZ}
 	cd ${BIND} && ./configure && make all
