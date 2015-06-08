@@ -131,7 +131,7 @@ static void
 usage(void) {
 	fprintf(stderr,
 "usage: dns-notifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
-"		 [-a addr] [-p port] zone command...\n"
+"		 [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-a addr		listen on this IP address or host name\n"
@@ -140,9 +140,10 @@ usage(void) {
 "	-l facility	syslog facility name\n"
 "	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
+"			(default 53)\n"
 "	-u user		drop privileges to user\n"
-"	zone		the zone for which to accept notifies\n"
-"	command...	the command to run when the zone changes\n"
+"	command		the command to run when a zone changes\n"
+"	zone...		list of zones for which to accept notifies\n"
 		);
 	exit(1);
 }
@@ -156,7 +157,6 @@ main(int argc, char *argv[]) {
 	const char *user = NULL;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
-	const char *zone;
 	int debug = false;
 
 	while((r = getopt(argc, argv, "46a:dl:P:p:u:")) != -1)
@@ -206,7 +206,14 @@ main(int argc, char *argv[]) {
 	if(argc < 2 || addr == NULL || port == NULL)
 		usage();
 
-	zone = *argv++; argc--;
+	uint32_t args[argc], serial;
+	char serial_buf[] = "4294967295";
+	char *cmdv[] = {
+		*argv++,
+		"zone",
+		serial_buf,
+		NULL
+	};
 
 	struct passwd *pw = NULL;
 	if(user != NULL) {
@@ -253,10 +260,11 @@ main(int argc, char *argv[]) {
 	if(s < 0)
 		errx(1, "could not listen on %s/%s", addr, port);
 
-	uint32_t serial, newserial;
-	const char *e = soa_serial(zone, &serial);
-	if(e != NULL) errx(1, "%s IN SOA: %s", zone, e);
-	log_info("%s IN SOA %d", zone, serial);
+	for(int z = 0; argv[z] != NULL; z++) {
+		const char *e = soa_serial(argv[z], &args[z]);
+		if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
+		log_info("%s IN SOA %u", argv[z], args[z]);
+	}
 
 	sigactions();
 
@@ -321,13 +329,16 @@ main(int argc, char *argv[]) {
 			goto formerr;
 		p += r;
 
-		int qtype, qclass;
+		int qtype, qclass, z;
 		NS_GET16(qtype, p);
 		NS_GET16(qclass, p);
-
 		if(h->opcode != ns_o_notify ||
-		    qclass != ns_c_in || qtype != ns_t_soa ||
-		    strcmp(qname, zone) != 0)
+		    qclass != ns_c_in || qtype != ns_t_soa)
+			goto refused;
+		for(z = 0; argv[z] != NULL; z++)
+			if(strcmp(argv[z], qname) == 0)
+				break;
+		if(argv[z] == NULL)
 			goto refused;
 
 		/* Make a non-recursive query using the server that
@@ -337,24 +348,26 @@ main(int argc, char *argv[]) {
 		memcpy(&res_addr, sa, sa_len);
 		res_addr.sin.sin_port = htons(53);
 		res_setservers(&_res, &res_addr, 1);
-		e = soa_serial(zone, &newserial);
+		const char *e = soa_serial(qname, &serial);
 		if(e != NULL) {
 			log_err("%s %s IN SOA ? %s",
-				sockstr(sa, sa_len), zone, e);
-		} else if(!serial_lt(serial, newserial)) {
+				sockstr(sa, sa_len), qname, e);
+		} else if(!serial_lt(args[z], serial)) {
 			log_info("%s %s IN SOA %d unchanged",
-				 sockstr(sa, sa_len), zone, newserial);
+				 sockstr(sa, sa_len), qname, serial);
 		} else {
 			log_info("%s %s IN SOA %d updated; running %s",
-				 sockstr(sa, sa_len), zone, newserial, argv[0]);
-			serial = newserial;
+				 sockstr(sa, sa_len), qname, serial, cmdv[0]);
+			args[z] = serial;
 			switch(fork()) {
 			case(-1):
 				log_err("fork: %m");
 				break;
 			case(0):
-				execvp(argv[0], argv);
-				err(1, "exec %s", argv[0]);
+				cmdv[1] = qname;
+				snprintf(serial_buf, sizeof(serial_buf), "%u", serial);
+				execvp(cmdv[0], cmdv);
+				err(1, "exec %s", cmdv[0]);
 			default:
 				if(wait(&r) < 0)
 					log_err("wait: %m");
