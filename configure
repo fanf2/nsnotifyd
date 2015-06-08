@@ -23,7 +23,7 @@ elif
 then
 	# MacOS
 	echo 'Using libresolv'
-	sed '	s|^LIBS=.*|-lresolv|;
+	sed '	s|^LIBS=.*|LIBS=-lresolv|;
 	' <Makefile.in >Makefile
 else
 	BIND=libbind-6.0
