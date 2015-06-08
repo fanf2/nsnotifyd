@@ -38,8 +38,8 @@ else
 	cd ..
 
 	sed '	s|^LIBDEPS=.*|LIBDEPS=libbind-6.0/libbind.a|;
-		s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind -Llibbind-6.0|;
-		s|^LIBS=.*|-lbind|;
+		s|^LIBFLAGS=.*|LIBFLAGS=-Ilibbind-6.0/include -Llibbind-6.0|;
+		s|^LIBS=.*|iLIBS=-lbind|;
 	' <Makefile.in >Makefile
 
 	echo 'Using static libbind'
