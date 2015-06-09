@@ -36,7 +36,47 @@ to poll for updates if it does not receive any NOTIFY messages.
 .It Fl s Ar authority
 .It Fl u Ar user
 .El
-.Sh SEE ALS
+.Sh BUGS
+The
+.Nm
+daemon is not very secure.
+.Pp
+It accepts any well-formed NOTIFY message,
+regardless of the source.
+It does not support TSIG authentication (RFC 2845)
+for access control.
+It is easy to flood
+.Nm
+with more notifications than it can handle.
+.Pp
+You should configure it to listen on a loopback address
+(which is the default)
+or use a packet filter to block unwanted traffic.
+.Pp
+The
+.Nm
+daemon
+is not aware of the authoritative servers for a zone,
+so it cannot filter spurious NOTIFY messages.
+It has a very simplistic mechanism
+for choosing which servers to query when refreshing a zone.
+.Pp
+The
+.Nm
+daemon cannot accept NOTIFY messages over TCP.
+(It does not conform to RFC 5966.)
+It does not support EDNS (RFC 6891).
+However,
+NOTIFY messages and responses are very small,
+so following these specifications should not be necessary in practice.
+.Sh NON-BUGS
+It only handles one query at a time,
+which prevents it from becoming a fork bomb.
+.Pp
+It cannot be used to amplify spoofed UDP packets.
+.Sh SEE ALSO
+.Xr named 8 ,
+.Xr named.conf 5 .
 .Rs
 .%A Paul Mockapetris
 .%T Domain names - concepts and facilities
