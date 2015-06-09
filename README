@@ -10,6 +10,9 @@ Linux you should install libbind4-dev. Otherwise, the configure script
 will download libbind and build and link with it statically.
 
 
+
+Thanks to JP Mens for helpful feedback and encouragement.
+
 Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
 at Cambridge University Information Services.
 
