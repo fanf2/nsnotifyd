@@ -19,12 +19,17 @@
 The
 .Nm
 daemon
-monitors a set of DNS zones
-and runs a command when any of them change.
+monitors a set of DNS
+.Ar zones
+and runs a
+.Ar command
+when any of them change.
 It listens for DNS NOTIFY messages
 so it can respond to changes promptly.
-It also uses the zone SOA refresh and retry parameters
-to poll for updates if it does not receive any NOTIFY messages.
+It also uses each zone's SOA refresh and retry parameters
+to poll for updates if
+.Nm
+does not receive NOTIFY messages more frequently.
 .Sh OPTIONS
 .Bl -tag -width indent
 .It Fl 4
@@ -97,6 +102,63 @@ Drop privilege to
 .Ar user
 after daemonizing.
 .El
+.Sh DETAILS
+.Ss Startup
+Before daemonizing,
+.Nm
+makes SOA queries for each zone
+to initialize its refresh and retry timers.
+.Ss Server
+The
+.Nm
+daemon acts as a very simple UDP-only DNS server.
+The only DNS queries handled by
+.Nm
+are NOTIFY messages for
+.Ar zones
+given on the command line.
+Other queries are rejected with a
+.Va REFUSED
+response code, or
+.Va FORMERR
+if the query is too mangled.
+.Ss Zone refresh process
+When
+.Nm
+receives a NOTIFY,
+or when a refresh or retry timer expires,
+it makes a SOA query to see if the zone has changed.
+The SOA query is sent to the source of the NOTIFY
+or, if a timer expired, to the server given in the
+.Fl s
+option.
+.Pp
+When a zone's serial number increases,
+.Nm
+runs the
+.Ar command
+with two or three arguments:
+.Bl -enum
+.It
+the
+.Ar zone
+name;
+.It
+its serial number;
+.It
+the source address of the NOTIFY,
+or no third argument if the update was found via a periodic refresh or retry.
+.El
+.Pp
+When the command exits successfully,
+.Nm
+updates its copy of the zone's SOA parameters.
+It will then poll the zone on its refresh interval.
+.Pp
+If the SOA query or command fails,
+.Nm
+does not update its SOA parameters,
+and polls the zone on its retry interval.
 .Sh BUGS
 The
 .Nm
