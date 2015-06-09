@@ -180,6 +180,72 @@ If the SOA query or command fails,
 .Nm
 does not update its SOA parameters,
 and polls the zone on its retry interval.
+.Sh EXAMPLE
+Say you have a zone,
+.Sy example.org ,
+which is updated dynamically,
+and you want to automatically record its history in a
+.Xr git 1
+repository.
+.Ss Setup git
+On a server that is authoritative for
+.Sy example.org ,
+run the following commands:
+.Bd -literal -offset indent
+$ mkdir zone-history
+$ cd zone-history
+$ git init
+$ touch example.org
+$ git add example.org
+$ git commit -m 'add example.org (empty)'
+.Ed
+.Ss Monitor the zone
+The
+.Nm zone2git
+script is designed to work with
+.Nm
+to record the history of a set of zones.
+Continuing the transcript,
+.Bd -literal -offset indent
+$ nsnotifyd -P .nsnotifyd.pid -p 5533 zone2git *
+.Ed
+.Ss Send notifies
+To configure BIND to send notifies to
+.Nm ,
+so it detects changes more efficiently,
+look in your
+.Xr named.conf 5
+file for
+.Bd -literal -offset indent
+zone example.org {
+    ...
+};
+.Ed
+.Pp
+Inside the zone clause,
+add or modify the
+.Ql also-notify
+setting so it includes the address and port used by
+.Nm ,
+like
+.Bd -literal -offset indent
+also-notify { 127.0.0.1 port 5533; };
+.Ed
+.Ss Update the zone
+Now, when the zone changes,
+.Nm
+will quickly record the change in your
+.Xr git
+repository.
+.Bd -literal -offset indent
+$ nsupdate -l
+> add example.com 3600 IN TXT "foo"
+> send
+> quit
+$ git log --format=%s
+example.org IN SOA 1234
+add example.org (empty)
+.Ed
 .Sh BUGS
 The
 .Nm
@@ -225,6 +291,7 @@ However,
 NOTIFY messages and responses are very small,
 so following these specifications should not be necessary in practice.
 .Sh SEE ALSO
+.Xr git 1 ,
 .Xr named 8 ,
 .Xr named.conf 5 ,
 .Xr syslog 3 .
