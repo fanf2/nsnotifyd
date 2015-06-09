@@ -271,7 +271,7 @@ zone_soa(zone *z) {
 			NS_GET32(z->serial, p);
 			NS_GET32(refresh, p);
 			NS_GET32(retry, p);
-			/* clamp timers for sanity */
+			// clamp timers for sanity
 			if(refresh < 1<<9)  refresh = 1<<9;
 			if(refresh > 1<<15) refresh = 1<<15;
 			if(retry   < 1<<6)  retry   = 1<<6;
