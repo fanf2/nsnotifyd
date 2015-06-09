@@ -356,7 +356,7 @@ static void
 usage(void) {
 	fprintf(stderr,
 "usage: nsnotifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
-"		 [-a addr] [-p port] command zone...\n"
+"		[-s addr] [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-a addr		listen on this IP address or host name\n"

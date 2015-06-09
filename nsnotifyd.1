@@ -1,0 +1,72 @@
+.Dd June 9, 2015
+.Dt NSNOTIFYD 1 "DNS Commands Manual"
+.Os DNS
+.Sh NAME
+.Nm nsnotifyd
+.Nd handle DNS NOTIFY messages by running a command
+.Sh SYNOPSIS
+.Nm
+.Op Fl 46d
+.Op Fl l Ar facility
+.Op Fl P Ar pidfile
+.Op Fl u Ar user
+.Op Fl s Ar authority
+.Op Fl a Ar addr
+.Op Fl p Ar port
+.Aq Ar command
+.Ao Ar zone Ac Ns ...
+.Sh DESCRIPTION
+The
+.Nm
+daemon
+monitors a set of DNS zones
+and runs a command when any of them change.
+It listens for DNS NOTIFY messages
+so it can respond to changes promptly.
+It also uses the zone SOA refresh and retry parameters
+to poll for updates if it does not receive any NOTIFY messages.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl 4
+.It Fl 6
+.It Fl d
+.It Fl l Ar facility
+.It Fl P Ar pidfile
+.It Fl p Ar port
+.It Fl s Ar authority
+.It Fl u Ar user
+.El
+.Sh SEE ALS
+.Rs
+.%A Paul Mockapetris
+.%T Domain names - concepts and facilities
+.%R RFC 1034
+.%D November 1987
+.Re
+.Rs
+.%A Paul Mockapetris
+.%T Domain names - implementation and specification
+.%R RFC 1035
+.%D November 1987
+.Re
+.Rs
+.%A Robert Elz
+.%A Randy Bush
+.%T Serial number arithmetic
+.%R RFC 1982
+.%D August 1996
+.Re
+.Rs
+.%A Paul Vixie
+.%T A mechanism for prompt notification of zone changes (DNS NOTIFY)
+.%R RFC 1996
+.%D August 1996
+.Re
+.Sh AUTHOR
+.An Tony Finch
+.Aq Li dot@dotat.at
+.Aq Li fanf2@cam.ac.uk
+.br
+at Cambridge University Information Services
+.\" You may do anything with this. It has no warranty.
+.\" http://creativecommons.org/publicdomain/zero/1.0/

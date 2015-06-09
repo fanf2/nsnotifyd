@@ -1,4 +1,4 @@
-nsnotifyd is a tiny DNS server which only handles NOTIFY messages
+nsnotifyd: handle DNS NOTIFY messages by running a command
 
 To build, type
 
