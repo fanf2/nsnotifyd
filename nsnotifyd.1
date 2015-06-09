@@ -28,13 +28,74 @@ to poll for updates if it does not receive any NOTIFY messages.
 .Sh OPTIONS
 .Bl -tag -width indent
 .It Fl 4
+Use IPv4 only
+(apart from DNS queries made using the system resolver configuration).
 .It Fl 6
+Use IPv6 only
+(apart from DNS queries made using the system resolver configuration).
+.It Fl a Ar address
+Listen on
+.Ar address
+for NOTIFY messages.
+The default is
+.Li 127.0.0.1 .
+.Pp
+You can specify an IP address or hostname.
+A hostname is looked up using the system resolver.
+If it resolves to multiple addresses then one
+arbitrary address is chosen,
+constrained by the
+.Fl 4
+or
+.Fl 6
+options.
 .It Fl d
+Debugging mode.
+.Pp
+Use once to prevent
+.Nm
+from daemonizing
+and to make it print log messages to stderr.
+.Pp
+Use twice to get dumps of DNS packets.
 .It Fl l Ar facility
-.It Fl P Ar pidfile
+Set the
+.Xr syslog 3
+facility.
+The default is
+.Va daemon .
+.It Fl P Ar path
+Write the
+.Nm
+PID to the given
+.Ar path
+after daemonizing
+and before dropping privilege.
 .It Fl p Ar port
+Listen on
+.Ar port
+instead of the default port 53
+.Dq domain .
 .It Fl s Ar authority
+Specify an authoritative server to
+use for zone SOA refresh queries.
+By default
+.Nm
+does periodic refreshes
+using the system recursive resolver,
+so its refresh queries may get stale cached answers.
+.Pp
+You can specify an IP address or hostname.
+A hostname is looked up using the system resolver,
+constrained by the
+.Fl 4
+or
+.Fl 6
+options.
 .It Fl u Ar user
+Drop privilege to
+.Ar user
+after daemonizing.
 .El
 .Sh BUGS
 The
@@ -76,7 +137,8 @@ which prevents it from becoming a fork bomb.
 It cannot be used to amplify spoofed UDP packets.
 .Sh SEE ALSO
 .Xr named 8 ,
-.Xr named.conf 5 .
+.Xr named.conf 5 ,
+.Xr syslog 3 .
 .Rs
 .%A Paul Mockapetris
 .%T Domain names - concepts and facilities
