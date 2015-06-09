@@ -113,9 +113,11 @@ makes SOA queries for each
 to initialize its refresh and retry timers.
 .Pp
 Daemonizing is configured using the
-.Fl P Ar pidfile
+.Fl P
+.Ar pidfile
 and
-.Fl u Ar user
+.Fl u
+.Ar user
 options,
 or disabled with the
 .Fl d
@@ -165,7 +167,7 @@ the
 .Ar zone
 name;
 .It
-its serial number;
+its new serial number;
 .It
 the source address of the NOTIFY,
 or no third argument if the update was found via a periodic refresh or retry.
