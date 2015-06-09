@@ -76,6 +76,13 @@ sigactions(void) {
 	if(r < 0) err(1, "sigaction(SIGALRM)");
 }
 
+static const char *
+isotime(time_t t) {
+	static char buf[] = "YYYY-MM-DD HH:MM:SS +ZZZZ";
+	strftime(buf, sizeof(buf), "%F %T %z", localtime(&t));
+	return(buf);
+}
+
 static void
 hostservstr(struct sockaddr *sa, socklen_t sa_len,
     char **host_r, char**serv_r) {
@@ -182,16 +189,16 @@ res_resetservers(void) {
 }
 
 /*
- * Make non-recursive SOA queries if an authoritative server was
- * specified on the command line, otherwise make recursive queries
- * to the default resolver.
+ * Switch to making recursive queries via the default resolver. (We
+ * always need to do this so we can look up the authoritative server
+ * by name.) Make non-recursive SOA queries if an authoritative server
+ * was specified on the command line.
  */
 static void
 soa_server_name(const char *name) {
-	if(name == NULL) {
-		res_resetservers();
-		_res.options |= RES_RECURSE;
-	} else {
+	res_resetservers();
+	_res.options |= RES_RECURSE;
+	if(name != NULL) {
 		res_server_name(name);
 		_res.options &= ~RES_RECURSE;
 	}
@@ -223,9 +230,7 @@ refresh_alarm(zone z[]) {
 	for(n = z; z->name != NULL; z++)
 		if(n->refresh > z->refresh)
 			n->refresh = z->refresh;
-	char buf[] = "YYYY-MM-DD HH:MM:SS +ZZZZ";
-	strftime(buf, sizeof(buf), "%F %T %z", localtime(&n->refresh));
-	log_debug("%s refresh at %s", n->name, buf);
+	log_debug("%s refresh at %s", n->name, isotime(n->refresh));
 	alarm(n->refresh - time(NULL));
 }
 
@@ -264,16 +269,17 @@ zone_soa(zone *z) {
 			if(r < 0) return("bad SOA RNAME");
 			p += r;
 			if(eor - p < 12) return("truncated SOA timers");
-			uint32_t interval;
+			uint32_t refresh, retry;
 			NS_GET32(z->serial, p);
-			NS_GET32(interval, p);
-			NS_GET32(z->retry, p);
+			NS_GET32(refresh, p);
+			NS_GET32(retry, p);
 			/* clamp timers for sanity */
-			if(interval < 1<<9)  interval = 1<<9;
-			if(interval > 1<<15) interval = 1<<15;
-			if(z->retry < 1<<6)  z->retry = 1<<6;
-			if(z->retry > 1<<12) z->retry = 1<<12;
-			z->refresh = now + interval;
+			if(refresh < 1<<9)  refresh = 1<<9;
+			if(refresh > 1<<15) refresh = 1<<15;
+			if(retry   < 1<<6)  retry   = 1<<6;
+			if(retry   > 1<<12) retry   = 1<<12;
+			z->refresh = now + refresh;
+			z->retry = retry;
 			return(NULL);
 		}
 		p += rdlength;
@@ -291,12 +297,19 @@ serial_lt(uint32_t s1, uint32_t s2) {
 }
 
 static void
+zone_retry(zone *z) {
+	z->refresh = time(NULL) + z->retry;
+	log_debug("%s retry at %s", z->name, isotime(z->refresh));
+}
+
+static void
 zone_refresh(zone *z, const char *cmd, const char *master) {
 	char serial_buf[] = "4294967295";
 	uint32_t oldserial = z->serial;
 	const char *e = zone_soa(z);
 	if(e != NULL) {
 		log_err("%s IN SOA ? %s", z->name, e);
+		zone_retry(z);
 		return;
 	}
 	if(!serial_lt(oldserial, z->serial)) {
@@ -308,6 +321,7 @@ zone_refresh(zone *z, const char *cmd, const char *master) {
 	switch(fork()) {
 	case(-1):
 		log_err("fork: %m");
+		zone_retry(z);
 		return;
 	case(0):
 		snprintf(serial_buf, sizeof(serial_buf), "%u", z->serial);
@@ -330,6 +344,11 @@ zone_refresh(zone *z, const char *cmd, const char *master) {
 		else if(WEXITSTATUS(r) != 0)
 			log_err("%s exited with status %d",
 			    cmd, WEXITSTATUS(r));
+		else
+			/* success */
+			return;
+		/* any error */
+		zone_retry(z);
 		return;
 	}
 }
@@ -433,9 +452,6 @@ main(int argc, char *argv[]) {
 		if(pw == NULL)
 			err(1, "getpwnam %s", user);
 	}
-
-	int s = listen_udp(family, addr, port);
-
 	zone zones[argc + 1];
 	memset(&zones[argc], 0, sizeof(zone));
 
@@ -447,6 +463,8 @@ main(int argc, char *argv[]) {
 		if(e != NULL) errx(1, "%s IN SOA: %s", z->name, e);
 		log_info("%s IN SOA %u", z->name, z->serial);
 	}
+
+	int s = listen_udp(family, addr, port);
 
 	sigactions();
 
