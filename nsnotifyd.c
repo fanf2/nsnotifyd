@@ -36,6 +36,9 @@
 #define	log_info(...)    syslog(LOG_INFO,    __VA_ARGS__)
 #define	log_debug(...)   syslog(LOG_DEBUG,   __VA_ARGS__)
 
+/* They should have used sockaddr_storage... */
+typedef union res_sockaddr_union res_sockaddr_t;
+
 typedef unsigned char byte;
 
 static bool quit;
@@ -127,6 +130,54 @@ listen_udp(int family, const char *addr, const char *port) {
 		return(s);
 	}
 	errx(1, "could not listen on %s/%s", addr, port);
+}
+
+static void
+res_server_name(const char *name) {
+	struct addrinfo hints, *ai0, *ai;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = PF_UNSPEC;
+	hints.ai_flags = AI_ADDRCONFIG;
+	hints.ai_socktype = SOCK_DGRAM;
+	int r = getaddrinfo(name, "domain", &hints, &ai0);
+	if(r) errx(1, "%s: %s", name, gai_strerror(r));
+
+	int n;
+	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++)
+		;
+	res_sockaddr_t addr[n];
+
+	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++) {
+		memset(&addr[n], 0, sizeof(addr[n]));
+		memcpy(&addr[n], ai->ai_addr, ai->ai_addrlen);
+	}
+	res_setservers(&_res, addr, n);
+}
+
+static void
+res_server_addr(struct sockaddr *sa, socklen_t sa_len) {
+	res_sockaddr_t addr;
+	memset(&addr, 0, sizeof(addr));
+	memcpy(&addr, sa, sa_len);
+	addr.sin.sin_port = htons(53);
+	res_setservers(&_res, &addr, 1);
+}
+
+static res_sockaddr_t *res_saved_servers;
+static int res_saved_server_count;
+
+static void
+res_saveservers(void) {
+	int n = res_getservers(&_res, NULL, 0);
+	res_saved_servers = calloc(n, sizeof(res_sockaddr_t));
+	if(res_saved_servers == NULL) err(1, "malloc");
+	res_saved_server_count = res_getservers(&_res, res_saved_servers, n);
+}
+
+static void
+res_resetservers(void) {
+	res_setservers(&_res, res_saved_servers, res_saved_server_count);
 }
 
 static const char *
