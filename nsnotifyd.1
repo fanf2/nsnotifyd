@@ -203,13 +203,13 @@ $ git commit -m 'add example.org (empty)'
 .Ed
 .Ss Monitor the zone
 The
-.Nm zone2git
+.Nm nsnotify2git
 script is designed to work with
 .Nm
 to record the history of a set of zones.
 Continuing the transcript,
 .Bd -literal -offset indent
-$ nsnotifyd -P .nsnotifyd.pid -p 5533 zone2git *
+$ nsnotifyd -P .nsnotifyd.pid -p 5533 nsnotify2git *
 .Ed
 .Ss Send notifies
 To configure BIND to send notifies to
