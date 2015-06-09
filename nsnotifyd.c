@@ -45,7 +45,13 @@ static bool quit;
 
 static void
 sigexit(int sig) {
+	write(2, "QUIT\n", 5);
 	quit = sig;
+}
+
+static void
+signoop(int sig) {
+	sig = sig;
 }
 
 static void
@@ -64,6 +70,10 @@ sigactions(void) {
 	if(r < 0) err(1, "sigaction(SIGINT)");
 	r = sigaction(SIGTERM, &sa, NULL);
 	if(r < 0) err(1, "sigaction(SIGTERM)");
+	sa.sa_handler = signoop;
+	sa.sa_flags = 0;
+	r = sigaction(SIGALRM, &sa, NULL);
+	if(r < 0) err(1, "sigaction(SIGALRM)");
 }
 
 static void
@@ -201,19 +211,38 @@ soa_server_addr(struct sockaddr *sa, socklen_t sa_len) {
 	_res.options &= ~RES_RECURSE;
 }
 
+typedef struct zone {
+	const char *name;
+	uint32_t serial, retry;
+	time_t refresh;
+} zone;
+
+static void
+refresh_alarm(zone z[]) {
+	zone *n;
+	for(n = z; z->name != NULL; z++)
+		if(n->refresh > z->refresh)
+			n->refresh = z->refresh;
+	char buf[] = "YYYY-MM-DD HH:MM:SS +ZZZZ";
+	strftime(buf, sizeof(buf), "%F %T %z", localtime(&n->refresh));
+	log_debug("%s refresh at %s", n->name, buf);
+	alarm(n->refresh - time(NULL));
+}
+
 static const char *
-soa_serial(const char *zone, uint32_t *serial) {
+zone_soa(zone *z) {
 	byte msg[NS_PACKETSZ];
 	char name[NS_MAXDNAME];
 	int len, r;
 
-	len = res_query(zone, ns_c_in, ns_t_soa, msg, sizeof(msg));
+	len = res_query(z->name, ns_c_in, ns_t_soa, msg, sizeof(msg));
 	if(len < 0) return(hstrerror(h_errno));
 	byte *eom = msg + len, *p = msg + sizeof(HEADER);
 	r = dn_skipname(p, eom);
 	p += r + 4; // qname qtype qclass
 	HEADER *h = (void *) msg;
 	uint32_t type, class, ttl, rdlength;
+	time_t now = time(NULL);
 	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
 		if(p >= eom) return("truncated reply");
 		r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
@@ -225,14 +254,26 @@ soa_serial(const char *zone, uint32_t *serial) {
 		NS_GET32(ttl, p); ttl = ttl;
 		NS_GET16(rdlength, p);
 		if(eom - p < rdlength) return("truncated RDATA");
-		if(strcmp(name, zone) == 0 && class == ns_c_in && type == ns_t_soa) {
-			r = dn_skipname(p, eom);
+		byte *eor = p + rdlength;
+		if(strcmp(name, z->name) == 0 &&
+		    class == ns_c_in && type == ns_t_soa) {
+			r = dn_skipname(p, eor);
 			if(r < 0) return("bad SOA MNAME");
 			p += r;
-			r = dn_skipname(p, eom);
+			r = dn_skipname(p, eor);
 			if(r < 0) return("bad SOA RNAME");
 			p += r;
-			NS_GET32(*serial, p);
+			if(eor - p < 12) return("truncated SOA timers");
+			uint32_t interval;
+			NS_GET32(z->serial, p);
+			NS_GET32(interval, p);
+			NS_GET32(z->retry, p);
+			/* clamp timers for sanity */
+			if(interval < 1<<9)  interval = 1<<9;
+			if(interval > 1<<15) interval = 1<<15;
+			if(z->retry < 1<<6)  z->retry = 1<<6;
+			if(z->retry > 1<<12) z->retry = 1<<12;
+			z->refresh = now + interval;
 			return(NULL);
 		}
 		p += rdlength;
@@ -247,6 +288,50 @@ serial_lt(uint32_t s1, uint32_t s2) {
 	return(s1 != s2 && (
 		(i1 < i2 && i2 - i1 < smax) ||
 		(i1 > i2 && i1 - i2 > smax) ));
+}
+
+static void
+zone_refresh(zone *z, const char *cmd, const char *master) {
+	char serial_buf[] = "4294967295";
+	uint32_t oldserial = z->serial;
+	const char *e = zone_soa(z);
+	if(e != NULL) {
+		log_err("%s IN SOA ? %s", z->name, e);
+		return;
+	}
+	if(!serial_lt(oldserial, z->serial)) {
+		log_info("%s IN SOA %d unchanged", z->name, z->serial);
+		return;
+	}
+	log_info("%s IN SOA %d updated; running %s",
+	    z->name, z->serial, cmd);
+	switch(fork()) {
+	case(-1):
+		log_err("fork: %m");
+		return;
+	case(0):
+		snprintf(serial_buf, sizeof(serial_buf), "%u", z->serial);
+		const char *cmdv[] = {
+			cmd,
+			z->name,
+			serial_buf,
+			master,
+			NULL
+		};
+		execvp(cmd, (char**)cmdv);
+		err(1, "exec %s", cmd);
+	default:;
+		int r;
+		if(wait(&r) < 0)
+			log_err("wait: %m");
+		else if(!WIFEXITED(r))
+			log_err("%s died with signal %d",
+			    cmd, WTERMSIG(r));
+		else if(WEXITSTATUS(r) != 0)
+			log_err("%s exited with status %d",
+			    cmd, WEXITSTATUS(r));
+		return;
+	}
 }
 
 static void
@@ -282,6 +367,7 @@ main(int argc, char *argv[]) {
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *authority = NULL;
+	char *cmd = NULL;
 	int debug = false;
 
 	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:")) != -1)
@@ -336,15 +422,7 @@ main(int argc, char *argv[]) {
 	if(argc < 2 || addr == NULL || port == NULL)
 		usage();
 
-	uint32_t args[argc], serial;
-	char serial_buf[] = "4294967295";
-	char *cmdv[] = {
-		*argv++,
-		"zone",
-		serial_buf,
-		"master",
-		NULL
-	};
+	cmd = *argv++; argc--;
 
 	struct passwd *pw = NULL;
 	if(user != NULL) {
@@ -358,11 +436,16 @@ main(int argc, char *argv[]) {
 
 	int s = listen_udp(family, addr, port);
 
+	zone zones[argc + 1];
+	memset(&zones[argc], 0, sizeof(zone));
+
 	soa_server_name(authority);
-	for(int z = 0; argv[z] != NULL; z++) {
-		const char *e = soa_serial(argv[z], &args[z]);
-		if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
-		log_info("%s IN SOA %u", argv[z], args[z]);
+	for(zone *z = zones; argc > 0; z++) {
+		memset(z, 0, sizeof(*z));
+		z->name = *argv++; argc--;
+		const char *e = zone_soa(z);
+		if(e != NULL) errx(1, "%s IN SOA: %s", z->name, e);
+		log_info("%s IN SOA %u", z->name, z->serial);
 	}
 
 	sigactions();
@@ -398,16 +481,35 @@ main(int argc, char *argv[]) {
 	byte *eom;
 
 	for(;;) {
+		refresh_alarm(zones);
 		memset(msg, 0, sizeof(HEADER));
 		sa_len = sizeof(sa_buf);
 		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
+		alarm(0);
+
 		if(len < 0) {
 			if(quit) {
 				log_notice("exiting");
 				if(pidfile != NULL) unlink(pidfile);
 				exit(0);
 			}
-			log_err("recv: %m");
+			if(errno != EINTR) {
+				log_err("recv: %m");
+				continue;
+			}
+			soa_server_name(authority);
+			bool refreshed;
+			do {
+				refreshed = false;
+				time_t now = time(NULL);
+				for(zone *z = zones; z->name != NULL; z++) {
+					if(z->refresh > now)
+						continue;
+					log_info("%s REFRESH", z->name);
+					zone_refresh(z, cmd, NULL);
+					refreshed = true;
+				}
+			} while(refreshed);
 			continue;
 		}
 		if(debug > 1) {
@@ -428,52 +530,23 @@ main(int argc, char *argv[]) {
 			goto formerr;
 		p += r;
 
-		int qtype, qclass, z;
+		int qtype, qclass;
 		NS_GET16(qtype, p);
 		NS_GET16(qclass, p);
 		if(h->opcode != ns_o_notify ||
 		    qclass != ns_c_in || qtype != ns_t_soa)
 			goto refused;
-		for(z = 0; argv[z] != NULL; z++)
-			if(strcmp(argv[z], qname) == 0)
+
+		zone *z;
+		for(z = zones; z->name != NULL; z++)
+			if(strcmp(z->name, qname) == 0)
 				break;
-		if(argv[z] == NULL)
+		if(z->name == NULL)
 			goto refused;
 
+		log_info("%s notify from %s", z->name, sockstr(sa, sa_len));
 		soa_server_addr(sa, sa_len);
-		const char *e = soa_serial(qname, &serial);
-		if(e != NULL) {
-			log_err("%s %s IN SOA ? %s",
-				sockstr(sa, sa_len), qname, e);
-		} else if(!serial_lt(args[z], serial)) {
-			log_info("%s %s IN SOA %d unchanged",
-				 sockstr(sa, sa_len), qname, serial);
-		} else {
-			log_info("%s %s IN SOA %d updated; running %s",
-				 sockstr(sa, sa_len), qname, serial, cmdv[0]);
-			args[z] = serial;
-			switch(fork()) {
-			case(-1):
-				log_err("fork: %m");
-				break;
-			case(0):
-				snprintf(serial_buf, sizeof(serial_buf), "%u", serial);
-				cmdv[1] = qname;
-				cmdv[2] = serial_buf;
-				cmdv[3] = addrstr(sa, sa_len);
-				execvp(cmdv[0], cmdv);
-				err(1, "exec %s", cmdv[0]);
-			default:
-				if(wait(&r) < 0)
-					log_err("wait: %m");
-				else if(!WIFEXITED(r))
-					log_err("%s died with signal %d",
-					    argv[0], WTERMSIG(r));
-				else if(WEXITSTATUS(r) != 0)
-					log_err("%s exited with status %d",
-					    argv[0], WEXITSTATUS(r));
-			}
-		}
+		zone_refresh(z, cmd, addrstr(sa, sa_len));
 
 		h->rcode = ns_r_noerror;
 	reply:
