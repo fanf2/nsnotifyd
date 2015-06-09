@@ -189,10 +189,10 @@ res_resetservers(void) {
 }
 
 /*
- * Switch to making recursive queries via the default resolver. (We
- * always need to do this so we can look up the authoritative server
- * by name.) Make non-recursive SOA queries if an authoritative server
- * was specified on the command line.
+ * When doing a timed refresh: Switch to making recursive queries via
+ * the default resolver. (We always need to do this so we can look up
+ * the authoritative server by name.) Make non-recursive SOA queries
+ * if an authoritative server was specified on the command line.
  */
 static void
 soa_server_name(const char *name) {
@@ -205,8 +205,8 @@ soa_server_name(const char *name) {
 }
 
 /*
- * Make a non-recursive query using the server that notified us.
- * RFC 1996 paragraph 3.11.
+ * In response to a notify: Make a non-recursive query using the
+ * server that notified us. RFC 1996 paragraph 3.11.
  */
 static void
 soa_server_addr(struct sockaddr *sa, socklen_t sa_len) {
@@ -242,6 +242,7 @@ zone_soa(zone *z) {
 
 	len = res_query(z->name, ns_c_in, ns_t_soa, msg, sizeof(msg));
 	if(len < 0) return(hstrerror(h_errno));
+	// resolver has already sanity-checked the query section
 	byte *eom = msg + len, *p = msg + sizeof(HEADER);
 	r = dn_skipname(p, eom);
 	p += r + 4; // qname qtype qclass
@@ -250,9 +251,8 @@ zone_soa(zone *z) {
 	time_t now = time(NULL);
 	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
 		if(p >= eom) return("truncated reply");
-		r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
+		p += r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
 		if(r < 0) return("bad owner");
-		p += r;
 		if(eom - p < 10) return("truncated RR");
 		NS_GET16(type, p);
 		NS_GET16(class, p);
@@ -262,12 +262,10 @@ zone_soa(zone *z) {
 		byte *eor = p + rdlength;
 		if(strcmp(name, z->name) == 0 &&
 		    class == ns_c_in && type == ns_t_soa) {
-			r = dn_skipname(p, eor);
+			p += r = dn_skipname(p, eor);
 			if(r < 0) return("bad SOA MNAME");
-			p += r;
-			r = dn_skipname(p, eor);
+			p += r = dn_skipname(p, eor);
 			if(r < 0) return("bad SOA RNAME");
-			p += r;
 			if(eor - p < 12) return("truncated SOA timers");
 			uint32_t refresh, retry;
 			NS_GET32(z->serial, p);
@@ -282,7 +280,7 @@ zone_soa(zone *z) {
 			z->retry = retry;
 			return(NULL);
 		}
-		p += rdlength;
+		p = eor;
 	}
 	return("missing answer");
 }
@@ -452,10 +450,10 @@ main(int argc, char *argv[]) {
 		if(pw == NULL)
 			err(1, "getpwnam %s", user);
 	}
-	zone zones[argc + 1];
-	memset(&zones[argc], 0, sizeof(zone));
 
 	soa_server_name(authority);
+	zone zones[argc + 1];
+	memset(&zones[argc], 0, sizeof(zone));
 	for(zone *z = zones; argc > 0; z++) {
 		memset(z, 0, sizeof(*z));
 		z->name = *argv++; argc--;
@@ -464,6 +462,7 @@ main(int argc, char *argv[]) {
 		log_info("%s IN SOA %u", z->name, z->serial);
 	}
 
+	res_resetservers();
 	int s = listen_udp(family, addr, port);
 
 	sigactions();
@@ -490,15 +489,14 @@ main(int argc, char *argv[]) {
 			log_err("setuid %s: %m", user);
 	}
 
-	byte msg[NS_PACKETSZ];
-	char qname[NS_MAXDNAME];
-	struct sockaddr_storage sa_buf;
-	struct sockaddr *sa = (void *) &sa_buf;
-	socklen_t sa_len;
-	ssize_t len;
-	byte *eom;
-
 	for(;;) {
+		byte msg[NS_PACKETSZ];
+		char qname[NS_MAXDNAME];
+		struct sockaddr_storage sa_buf;
+		struct sockaddr *sa = (void *) &sa_buf;
+		socklen_t sa_len;
+		ssize_t len;
+
 		refresh_alarm(zones);
 		memset(msg, 0, sizeof(HEADER));
 		sa_len = sizeof(sa_buf);
@@ -536,18 +534,15 @@ main(int argc, char *argv[]) {
 				  sockstr(sa, sa_len), len);
 			res_pquery(&_res, msg, len, stderr);
 		}
-		eom = msg + len;
+		byte *eom = msg + len;
+		byte *p = msg + sizeof(HEADER);
+		if(eom < p) goto formerr;
 
 		HEADER *h = (void *) msg;
-		byte *p = msg + sizeof(HEADER);
+		if(h->qdcount != htons(1)) goto formerr;
 
-		if(eom < p || h->qdcount != htons(1))
-			goto formerr;
-
-		r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
-		if(r < 0)
-			goto formerr;
-		p += r;
+		p += r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
+		if(r < 0 || eom - p < 4) goto formerr;
 
 		int qtype, qclass;
 		NS_GET16(qtype, p);
@@ -567,8 +562,11 @@ main(int argc, char *argv[]) {
 		soa_server_addr(sa, sa_len);
 		zone_refresh(z, cmd, addrstr(sa, sa_len));
 
+		// build the reply mostly by echoing the query up to
+		// p, which points to the end of the part we parsed
 		h->rcode = ns_r_noerror;
 	reply:
+		// echo id
 		h->qr = 1;
 		// echo opcode
 		h->aa = 1;
@@ -578,6 +576,7 @@ main(int argc, char *argv[]) {
 		h->unused = 0;
 		h->ad = 0;
 		// echo cd
+		// echo qdcount
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
@@ -596,7 +595,7 @@ main(int argc, char *argv[]) {
 		h->qdcount = 0;
 		goto reply;
 	refused:
-		log_info("%s %s. %s %s refused", sockstr(sa, sa_len),
+		log_info("%s refused %s %s %s", sockstr(sa, sa_len),
 		       qname, p_class(qclass), p_type(qtype));
 		h->rcode = ns_r_refused;
 		goto reply;
