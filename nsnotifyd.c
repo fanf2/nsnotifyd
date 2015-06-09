@@ -151,11 +151,11 @@ listen_udp(int family, const char *addr, const char *port) {
 }
 
 static void
-res_server_name(const char *name) {
+res_server_name(int family, const char *name) {
 	struct addrinfo hints, *ai0, *ai;
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_UNSPEC;
+	hints.ai_family = family;
 	hints.ai_flags = AI_ADDRCONFIG;
 	hints.ai_socktype = SOCK_DGRAM;
 	int r = getaddrinfo(name, "domain", &hints, &ai0);
@@ -196,11 +196,11 @@ res_resetservers(void) {
  * if an authoritative server was specified on the command line.
  */
 static void
-soa_server_name(const char *name) {
+soa_server_name(int family, const char *name) {
 	res_resetservers();
 	_res.options |= RES_RECURSE;
 	if(name != NULL) {
-		res_server_name(name);
+		res_server_name(family, name);
 		_res.options &= ~RES_RECURSE;
 	}
 }
@@ -455,7 +455,7 @@ main(int argc, char *argv[]) {
 			err(1, "getpwnam %s", user);
 	}
 
-	soa_server_name(authority);
+	soa_server_name(family, authority);
 	zone zones[argc + 1];
 	memset(&zones[argc], 0, sizeof(zone));
 	for(zone *z = zones; argc > 0; z++) {
@@ -518,7 +518,7 @@ main(int argc, char *argv[]) {
 				continue;
 			}
 			/* keep refreshing until there is nothing to do */
-			soa_server_name(authority);
+			soa_server_name(family, authority);
 			bool refreshed = true;
 			while(refreshed) {
 				refreshed = false;
