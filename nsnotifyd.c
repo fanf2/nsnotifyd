@@ -155,15 +155,6 @@ res_server_name(const char *name) {
 	res_setservers(&_res, addr, n);
 }
 
-static void
-res_server_addr(struct sockaddr *sa, socklen_t sa_len) {
-	res_sockaddr_t addr;
-	memset(&addr, 0, sizeof(addr));
-	memcpy(&addr, sa, sa_len);
-	addr.sin.sin_port = htons(53);
-	res_setservers(&_res, &addr, 1);
-}
-
 static res_sockaddr_t *res_saved_servers;
 static int res_saved_server_count;
 
@@ -178,6 +169,36 @@ res_saveservers(void) {
 static void
 res_resetservers(void) {
 	res_setservers(&_res, res_saved_servers, res_saved_server_count);
+}
+
+/*
+ * Make non-recursive SOA queries if an authoritative server was
+ * specified on the command line, otherwise make recursive queries
+ * to the default resolver.
+ */
+static void
+soa_server_name(const char *name) {
+	if(name == NULL) {
+		res_resetservers();
+		_res.options |= RES_RECURSE;
+	} else {
+		res_server_name(name);
+		_res.options &= ~RES_RECURSE;
+	}
+}
+
+/*
+ * Make a non-recursive query using the server that notified us.
+ * RFC 1996 paragraph 3.11.
+ */
+static void
+soa_server_addr(struct sockaddr *sa, socklen_t sa_len) {
+	res_sockaddr_t addr;
+	memset(&addr, 0, sizeof(addr));
+	memcpy(&addr, sa, sa_len);
+	addr.sin.sin_port = htons(53);
+	res_setservers(&_res, &addr, 1);
+	_res.options &= ~RES_RECURSE;
 }
 
 static const char *
@@ -243,7 +264,7 @@ usage(void) {
 "	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
 "			(default 53)\n"
-"	-S		do not check SOA at startup\n"
+"	-s addr		authoritative server for refresh queries\n"
 "	-u user		drop privileges to user\n"
 "	command		the command to run when a zone changes\n"
 "	zone...		list of zones for which to accept notifies\n"
@@ -260,10 +281,10 @@ main(int argc, char *argv[]) {
 	const char *user = NULL;
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
-	bool checksoa = true;
+	const char *authority = NULL;
 	int debug = false;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:Su:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -291,8 +312,8 @@ main(int argc, char *argv[]) {
 		case('p'):
 			port = optarg;
 			continue;
-		case('S'):
-			checksoa = false;
+		case('s'):
+			authority = optarg;
 			continue;
 		case('u'):
 			user = optarg;
@@ -304,7 +325,9 @@ main(int argc, char *argv[]) {
 	openlog(basename(argv[0]), debug ? LOG_PERROR : LOG_PID, facility);
 
 	res_init();
+	res_saveservers();
 	if(debug > 1) _res.options |= RES_DEBUG;
+	/* be impatient */
 	_res.retrans = 3;
 	_res.retry = 2;
 
@@ -335,14 +358,11 @@ main(int argc, char *argv[]) {
 
 	int s = listen_udp(family, addr, port);
 
+	soa_server_name(authority);
 	for(int z = 0; argv[z] != NULL; z++) {
-		if(checksoa) {
-			const char *e = soa_serial(argv[z], &args[z]);
-			if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
-			log_info("%s IN SOA %u", argv[z], args[z]);
-		} else {
-			args[z] = 0; // buggy!
-		}
+		const char *e = soa_serial(argv[z], &args[z]);
+		if(e != NULL) errx(1, "%s IN SOA: %s", argv[z], e);
+		log_info("%s IN SOA %u", argv[z], args[z]);
 	}
 
 	sigactions();
@@ -420,13 +440,7 @@ main(int argc, char *argv[]) {
 		if(argv[z] == NULL)
 			goto refused;
 
-		/* Make a non-recursive query using the server that
-		   notified us - RFC 1996 paragraph 3.11. */
-		_res.options &= ~RES_RECURSE;
-		union res_sockaddr_union res_addr;
-		memcpy(&res_addr, sa, sa_len);
-		res_addr.sin.sin_port = htons(53);
-		res_setservers(&_res, &res_addr, 1);
+		soa_server_addr(sa, sa_len);
 		const char *e = soa_serial(qname, &serial);
 		if(e != NULL) {
 			log_err("%s %s IN SOA ? %s",
