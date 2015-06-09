@@ -39,7 +39,7 @@ else
 
 	sed '	s|^LIBDEPS=.*|LIBDEPS=libbind-6.0/libbind.a|;
 		s|^LIBFLAGS=.*|LIBFLAGS=-Ilibbind-6.0/include -Llibbind-6.0|;
-		s|^LIBS=.*|iLIBS=-lbind|;
+		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile
 
 	echo 'Using static libbind'

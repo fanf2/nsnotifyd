@@ -25,6 +25,7 @@
 #include <resolv.h>
 #include <signal.h>
 #include <syslog.h>
+#include <time.h>
 #include <unistd.h>
 
 #define	log_emerg(...)   syslog(LOG_EMERG,   __VA_ARGS__)
