@@ -106,11 +106,23 @@ It accepts any well-formed NOTIFY message,
 regardless of the source.
 It does not support TSIG authentication (RFC 2845)
 for access control.
-It is easy to flood
-.Nm
-with more notifications than it can handle.
 .Pp
-You should configure it to listen on a loopback address
+The
+.Nm
+daemon
+only handles one query at a time,
+which prevents it from becoming a fork bomb.
+However, you can easily overwhelm it
+with more notifications than it can handle.
+A spoofed NOTIFY will make
+.Nm
+send a SOA query to the spoofed source address
+and wait for a reply (which will probably not arrive),
+during which time it is unresponsive.
+.Pp
+You should configure
+.Nm
+to listen on a loopback address
 (which is the default)
 or use a packet filter to block unwanted traffic.
 .Pp
@@ -124,17 +136,11 @@ for choosing which servers to query when refreshing a zone.
 .Pp
 The
 .Nm
-daemon cannot accept NOTIFY messages over TCP.
-(It does not conform to RFC 5966.)
+daemon cannot accept NOTIFY messages over TCP (RFC 5966).
 It does not support EDNS (RFC 6891).
 However,
 NOTIFY messages and responses are very small,
 so following these specifications should not be necessary in practice.
-.Sh NON-BUGS
-It only handles one query at a time,
-which prevents it from becoming a fork bomb.
-.Pp
-It cannot be used to amplify spoofed UDP packets.
 .Sh SEE ALSO
 .Xr named 8 ,
 .Xr named.conf 5 ,
