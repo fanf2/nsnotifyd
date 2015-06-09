@@ -133,18 +133,15 @@ listen_udp(int family, const char *addr, const char *port) {
 		r = 1;
 		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0) {
 			warn("setsockopt %s SO_REUSEADDR", ai_sockstr(ai));
-			close(s);
-			s = -1;
-			continue;
+			goto next;
 		}
 		if(bind(s, ai->ai_addr, ai->ai_addrlen) < 0) {
 			warn("bind %s", ai_sockstr(ai));
-			close(s);
-			s = -1;
-			continue;
+			goto next;
 		}
 		log_notice("listening on %s", ai_sockstr(ai));
 		return(s);
+	next:	close(s);
 	}
 	errx(1, "could not listen on %s/%s", addr, port);
 }
@@ -247,13 +244,12 @@ zone_soa(zone *z) {
 	r = dn_skipname(p, eom);
 	p += r + 4; // qname qtype qclass
 	HEADER *h = (void *) msg;
-	uint32_t type, class, ttl, rdlength;
-	time_t now = time(NULL);
 	for(int ancount = ntohs(h->ancount); ancount > 0; ancount--) {
 		if(p >= eom) return("truncated reply");
 		p += r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
 		if(r < 0) return("bad owner");
 		if(eom - p < 10) return("truncated RR");
+		uint32_t type, class, ttl, rdlength;
 		NS_GET16(type, p);
 		NS_GET16(class, p);
 		NS_GET32(ttl, p);
@@ -276,7 +272,7 @@ zone_soa(zone *z) {
 			if(refresh > 1<<15) refresh = 1<<15;
 			if(retry   < 1<<6)  retry   = 1<<6;
 			if(retry   > 1<<12) retry   = 1<<12;
-			z->refresh = now + refresh;
+			z->refresh = time(NULL) + refresh;
 			z->retry = retry;
 			return(NULL);
 		}
@@ -302,9 +298,7 @@ zone_retry(zone *z) {
 
 static void
 zone_refresh(zone *zp, const char *cmd, const char *master) {
-	char serial_buf[] = "4294967295";
-	// only update the zone object if the refresh succeeds
-	zone z = *zp;
+	zone z = *zp; // only update *zp if the refresh succeeds
 	const char *e = zone_soa(&z);
 	if(e != NULL) {
 		log_err("%s IN SOA ? %s", z.name, e);
@@ -322,7 +316,8 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 		log_err("fork: %m");
 		zone_retry(zp);
 		return;
-	case(0):
+	case(0):;
+		char serial_buf[] = "4294967295";
 		snprintf(serial_buf, sizeof(serial_buf), "%u", z.serial);
 		const char *cmdv[] = {
 			cmd,
@@ -344,12 +339,10 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 			log_err("%s exited with status %d",
 			    cmd, WEXITSTATUS(r));
 		else {
-			/* success */
-			*zp = z;
+			*zp = z; // success
 			return;
 		}
-		/* any error */
-		zone_retry(zp);
+		zone_retry(zp); // command failed
 		return;
 	}
 }
@@ -516,7 +509,7 @@ main(int argc, char *argv[]) {
 				log_err("recv: %m");
 				continue;
 			}
-			/* keep refreshing until there is nothing to do */
+			// keep refreshing until there is nothing to do
 			soa_server_name(family, authority);
 			bool refreshed = true;
 			while(refreshed) {
