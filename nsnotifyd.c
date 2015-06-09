@@ -309,7 +309,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 	const char *e = zone_soa(&z);
 	if(e != NULL) {
 		log_err("%s IN SOA ? %s", z.name, e);
-		zone_retry(z);
+		zone_retry(&z);
 		return;
 	}
 	if(!serial_lt(zp->serial, z.serial)) {
@@ -321,7 +321,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 	switch(fork()) {
 	case(-1):
 		log_err("fork: %m");
-		zone_retry(z);
+		zone_retry(&z);
 		return;
 	case(0):
 		snprintf(serial_buf, sizeof(serial_buf), "%u", z.serial);
@@ -350,7 +350,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 			return;
 		}
 		/* any error */
-		zone_retry(z);
+		zone_retry(&z);
 		return;
 	}
 }
