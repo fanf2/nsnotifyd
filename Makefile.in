@@ -10,6 +10,10 @@ all: nsnotifyd
 nsnotifyd: nsnotifyd.c ${LIBDEPS}
 	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotifyd nsnotifyd.c ${LIBS}
 
+nsnotifyd.pdf: nsnotifyd.1
+	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
+	pstopdf nsnotifyd.ps >nsnotifyd.pdf
+
 ${BIND}/libbind.a:
 	cd ${BIND} && make all
 
