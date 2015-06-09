@@ -30,12 +30,15 @@ else
 	TGZ=${BIND}.tar.gz
 	URL=http://ftp.isc.org/isc/libbind/cur/${TGZ}
 
-	rm -rf ${BIND}
-	[ -f ${TGZ} ] || curl -O ${URL}
-	tar xf ${TGZ}
-	cd ${BIND}
-	./configure
-	cd ..
+	if [ ! -f ${BIND}/libbind.a ]
+	then
+		rm -rf ${BIND}
+		[ -f ${TGZ} ] || curl -O ${URL}
+		tar xf ${TGZ}
+		cd ${BIND}
+		./configure
+		cd ..
+	fi
 
 	sed '	s|^LIBDEPS=.*|LIBDEPS=libbind-6.0/libbind.a|;
 		s|^LIBFLAGS=.*|LIBFLAGS=-Ilibbind-6.0/include -Llibbind-6.0|;
