@@ -1,5 +1,9 @@
 nsnotifyd: handle DNS NOTIFY messages by running a command
 
+The "nsnotifyd" daemon monitors a set of DNS zones and runs a command
+when any of them change. It listens for DNS NOTIFY messages so it can
+respond to changes promptly.
+
 To build, type
 
 	 $ ./configure
@@ -8,7 +12,6 @@ To build, type
 BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
 Linux you should install libbind4-dev. Otherwise, the configure script
 will download libbind and build and link with it statically.
-
 
 
 Thanks to JP Mens for helpful feedback and encouragement.
