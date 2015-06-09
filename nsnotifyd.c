@@ -92,6 +92,43 @@ ai_sockstr(struct addrinfo *ai) {
 	return(sockstr(ai->ai_addr, ai->ai_addrlen));
 }
 
+static int
+listen_udp(int family, const char *addr, const char *port) {
+	struct addrinfo hints, *ai;
+	int r, s;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_DGRAM;
+	r = getaddrinfo(addr, port, &hints, &ai);
+	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
+
+	for(; ai != NULL; ai = ai->ai_next) {
+		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if(s < 0) {
+			warn("socket %s", ai_sockstr(ai));
+			continue;
+		}
+		r = 1;
+		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0) {
+			warn("setsockopt %s SO_REUSEADDR", ai_sockstr(ai));
+			close(s);
+			s = -1;
+			continue;
+		}
+		if(bind(s, ai->ai_addr, ai->ai_addrlen) < 0) {
+			warn("bind %s", ai_sockstr(ai));
+			close(s);
+			s = -1;
+			continue;
+		}
+		log_notice("listening on %s", ai_sockstr(ai));
+		return(s);
+	}
+	errx(1, "could not listen on %s/%s", addr, port);
+}
+
 static const char *
 soa_serial(const char *zone, uint32_t *serial) {
 	byte msg[NS_PACKETSZ];
@@ -245,40 +282,7 @@ main(int argc, char *argv[]) {
 			err(1, "getpwnam %s", user);
 	}
 
-	struct addrinfo hints, *ai;
-	int s = -1;
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = family;
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_DGRAM;
-	r = getaddrinfo(addr, port, &hints, &ai);
-	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
-
-	for(; ai != NULL; ai = ai->ai_next) {
-		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if(s < 0) {
-			warn("socket %s", ai_sockstr(ai));
-			continue;
-		}
-		r = 1;
-		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(r)) < 0) {
-			warn("setsockopt %s SO_REUSEADDR", ai_sockstr(ai));
-			close(s);
-			s = -1;
-			continue;
-		}
-		if(bind(s, ai->ai_addr, ai->ai_addrlen) < 0) {
-			warn("bind %s", ai_sockstr(ai));
-			close(s);
-			s = -1;
-			continue;
-		}
-		log_notice("listening on %s", ai_sockstr(ai));
-		break;
-	}
-	if(s < 0)
-		errx(1, "could not listen on %s/%s", addr, port);
+	int s = listen_udp(family, addr, port);
 
 	for(int z = 0; argv[z] != NULL; z++) {
 		if(checksoa) {
