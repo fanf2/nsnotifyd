@@ -47,12 +47,11 @@ static bool quit;
 static void
 sigexit(int sig) {
 	write(2, "QUIT\n", 5);
-	quit = sig;
+	quit = true;
 }
 
 static void
 signoop(int sig) {
-	sig = sig;
 }
 
 static void
@@ -257,7 +256,7 @@ zone_soa(zone *z) {
 		if(eom - p < 10) return("truncated RR");
 		NS_GET16(type, p);
 		NS_GET16(class, p);
-		NS_GET32(ttl, p); ttl = ttl;
+		NS_GET32(ttl, p);
 		NS_GET16(rdlength, p);
 		if(eom - p < rdlength) return("truncated RDATA");
 		byte *eor = p + rdlength;
