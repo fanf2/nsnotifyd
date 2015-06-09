@@ -497,19 +497,20 @@ main(int argc, char *argv[]) {
 				log_err("recv: %m");
 				continue;
 			}
+			/* keep refreshing until there is nothing to do */
 			soa_server_name(authority);
-			bool refreshed;
-			do {
+			bool refreshed = true;
+			while(refreshed) {
 				refreshed = false;
 				time_t now = time(NULL);
 				for(zone *z = zones; z->name != NULL; z++) {
 					if(z->refresh > now)
 						continue;
-					log_info("%s REFRESH", z->name);
+					log_info("%s refresh", z->name);
 					zone_refresh(z, cmd, NULL);
 					refreshed = true;
 				}
-			} while(refreshed);
+			}
 			continue;
 		}
 		if(debug > 1) {
