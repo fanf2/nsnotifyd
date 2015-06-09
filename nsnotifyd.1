@@ -20,7 +20,7 @@ The
 .Nm
 daemon
 monitors a set of DNS
-.Ar zones
+.Ar zone Ns s
 and runs a
 .Ar command
 when any of them change.
@@ -68,7 +68,7 @@ Set the
 .Xr syslog 3
 facility.
 The default is
-.Va daemon .
+.Sy daemon .
 .It Fl P Ar path
 Write the
 .Nm
@@ -78,9 +78,11 @@ after daemonizing
 and before dropping privilege.
 .It Fl p Ar port
 Listen on
-.Ar port
-instead of the default port 53
-.Dq domain .
+.Ar port ,
+which may be a service name or a UDP port number.
+The default is the
+.Sy domain
+service, UDP port 53.
 .It Fl s Ar authority
 Specify an authoritative server to
 use for zone SOA refresh queries.
@@ -106,8 +108,27 @@ after daemonizing.
 .Ss Startup
 Before daemonizing,
 .Nm
-makes SOA queries for each zone
+makes SOA queries for each
+.Ar zone
 to initialize its refresh and retry timers.
+.Pp
+Daemonizing is configured using the
+.Fl P Ar pidfile
+and
+.Fl u Ar user
+options,
+or disabled with the
+.Fl d
+debugging option.
+.Pp
+When daemonizing,
+.Nm
+does
+.Em not
+change its working directory.
+This allows the
+.Ar command
+to be context-sensitive.
 .Ss Server
 The
 .Nm
@@ -118,9 +139,9 @@ are NOTIFY messages for
 .Ar zones
 given on the command line.
 Other queries are rejected with a
-.Va REFUSED
+.Sy REFUSED
 response code, or
-.Va FORMERR
+.Sy FORMERR
 if the query is too mangled.
 .Ss Zone refresh process
 When
@@ -133,7 +154,7 @@ or, if a timer expired, to the server given in the
 .Fl s
 option.
 .Pp
-When a zone's serial number increases,
+When the SOA reply indicates the zone's serial number has increased,
 .Nm
 runs the
 .Ar command
