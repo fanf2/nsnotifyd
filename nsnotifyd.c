@@ -302,31 +302,32 @@ zone_retry(zone *z) {
 }
 
 static void
-zone_refresh(zone *z, const char *cmd, const char *master) {
+zone_refresh(zone *zp, const char *cmd, const char *master) {
 	char serial_buf[] = "4294967295";
-	uint32_t oldserial = z->serial;
-	const char *e = zone_soa(z);
+	// only update the zone object if the refresh succeeds
+	zone z = *zp;
+	const char *e = zone_soa(&z);
 	if(e != NULL) {
-		log_err("%s IN SOA ? %s", z->name, e);
+		log_err("%s IN SOA ? %s", z.name, e);
 		zone_retry(z);
 		return;
 	}
-	if(!serial_lt(oldserial, z->serial)) {
-		log_info("%s IN SOA %d unchanged", z->name, z->serial);
+	if(!serial_lt(zp->serial, z.serial)) {
+		log_info("%s IN SOA %d unchanged", z.name, z.serial);
 		return;
 	}
 	log_info("%s IN SOA %d updated; running %s",
-	    z->name, z->serial, cmd);
+	    z.name, z.serial, cmd);
 	switch(fork()) {
 	case(-1):
 		log_err("fork: %m");
 		zone_retry(z);
 		return;
 	case(0):
-		snprintf(serial_buf, sizeof(serial_buf), "%u", z->serial);
+		snprintf(serial_buf, sizeof(serial_buf), "%u", z.serial);
 		const char *cmdv[] = {
 			cmd,
-			z->name,
+			z.name,
 			serial_buf,
 			master,
 			NULL
@@ -343,9 +344,11 @@ zone_refresh(zone *z, const char *cmd, const char *master) {
 		else if(WEXITSTATUS(r) != 0)
 			log_err("%s exited with status %d",
 			    cmd, WEXITSTATUS(r));
-		else
+		else {
 			/* success */
+			*zp = z;
 			return;
+		}
 		/* any error */
 		zone_retry(z);
 		return;
