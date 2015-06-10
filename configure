@@ -14,7 +14,7 @@ then
 	# Debian with libbind4-dev
 	echo 'Using libbind4'
 	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind|;
-		s|^LIBS=.*|-lbind|;
+		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile
 elif
 	echo '#include <resolv.h>' |
