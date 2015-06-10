@@ -1,6 +1,9 @@
 CFLAGS= -Wall -Wextra -std=c99
 
 BIND	= libbind-6.0
+BINDTGZ	= ${BIND}.tar.gz
+BINDURL	= http://ftp.isc.org/isc/libbind/cur/${BINDTGZ}
+
 LIBDEPS=
 LIBFLAGS=
 LIBS=
@@ -14,11 +17,21 @@ nsnotifyd.pdf: nsnotifyd.1
 	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
 	pstopdf nsnotifyd.ps >nsnotifyd.pdf
 
-${BIND}/libbind.a:
+${BIND}/libbind.a: ${BIND}/Makefile
 	cd ${BIND} && make all
+
+${BIND}/Makefile: ${BIND}/configure
+	cd ${BIND} && ./configure
+
+${BIND}/configure: ${BINDTGZ}
+	tar xf ${BINDTGZ}
+	patch -p0 <${BIND}-patch
+
+${BINDTGZ}:
+	curl -O ${BINDURL}
 
 clean:
 	rm -rf nsnotifyd ${BIND}
 
 realclean: clean
-	rm -rf Makefile ${BIND}*
+	rm -rf Makefile ${BINDTGZ}
