@@ -307,6 +307,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 	}
 	if(!serial_lt(zp->serial, z.serial)) {
 		log_info("%s IN SOA %d unchanged", z.name, z.serial);
+		*zp = z; // success
 		return;
 	}
 	log_info("%s IN SOA %d updated; running %s",
