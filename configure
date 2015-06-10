@@ -35,6 +35,7 @@ else
 		rm -rf ${BIND}
 		[ -f ${TGZ} ] || curl -O ${URL}
 		tar xf ${TGZ}
+		patch -p0 <${BIND}.patch
 		cd ${BIND}
 		./configure
 		cd ..
