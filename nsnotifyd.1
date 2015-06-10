@@ -145,7 +145,10 @@ Other queries are rejected with a
 response code, or
 .Sy FORMERR
 if the query is too mangled.
-.Ss Zone refresh process
+.Pp
+Messages are logged via
+.Xr syslog 3 .
+.Ss Zone refresh
 When
 .Nm
 receives a NOTIFY,
