@@ -555,6 +555,8 @@ main(int argc, char *argv[]) {
 		if(z->name == NULL)
 			goto refused;
 
+		// TODO: call ns_verify() to check TSIG
+
 		log_info("%s notify from %s", z->name, sockstr(sa, sa_len));
 		soa_server_addr(sa, sa_len);
 		zone_refresh(z, cmd, addrstr(sa, sa_len));
@@ -577,6 +579,7 @@ main(int argc, char *argv[]) {
 		h->ancount = 0;
 		h->nscount = 0;
 		h->arcount = 0;
+		// TODO: call ns_sign() to add TSIG
 		if(debug > 1) {
 			log_debug("%s reply length %ld",
 				  sockstr(sa, sa_len), p - msg);
