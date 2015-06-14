@@ -6,4 +6,4 @@
 	dig +noall +answer +onesoa +multiline $ master $zone axfr >$zone
 	git commit -q -m "$zone IN SOA $serial" $zone
 ) 2>&1 |
-logger -p daemon.notice -t zone2git -s
+logger -p daemon.notice -t nsnotify2git -s
