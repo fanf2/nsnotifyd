@@ -38,7 +38,10 @@ ${BINDTGZ}:
 	curl -O ${BINDURL}
 
 clean:
-	rm -rf nsnotifyd ${BIND}
+	rm -rf nsnotifyd version/dirty-date ${RES}
 
-realclean: clean
-	rm -rf Makefile ${BINDTGZ}
+cleaner: clean
+	rm -rf Makefile ${RESTGZ}
+
+cleanest: cleaner
+	rm -rf version.h
