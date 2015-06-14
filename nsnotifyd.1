@@ -1,4 +1,4 @@
-.Dd June 9, 2015
+.Dd June 14, 2015
 .Dt NSNOTIFYD 1 "DNS Commands Manual"
 .Os DNS
 .Sh NAME
@@ -6,7 +6,7 @@
 .Nd handle DNS NOTIFY messages by running a command
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46d
+.Op Fl 46dV
 .Op Fl l Ar facility
 .Op Fl P Ar pidfile
 .Op Fl u Ar user
@@ -103,6 +103,9 @@ options.
 Drop privilege to
 .Ar user
 after daemonizing.
+.It Fl V
+Print details about this version of
+.Nm .
 .El
 .Sh DETAILS
 .Ss Startup

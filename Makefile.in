@@ -10,8 +10,11 @@ LIBS=
 
 all: nsnotifyd
 
-nsnotifyd: nsnotifyd.c ${LIBDEPS}
+nsnotifyd: nsnotifyd.c version.h ${LIBDEPS}
 	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotifyd nsnotifyd.c ${LIBS}
+
+version.h::
+	@version/get.sh
 
 nsnotifyd.pdf: nsnotifyd.1
 	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps

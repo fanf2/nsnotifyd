@@ -51,6 +51,28 @@ typedef union res_sockaddr_union res_sockaddr_t;
 
 typedef unsigned char byte;
 
+#include "version.h"
+
+static const char what_ident[] =
+    "@(#) $Version: " VERSION " $\n"
+    "@(#) $Date:    " REVDATE " $\n"
+    "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
+    "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
+;
+
+static void
+version(void) {
+	const char *p = what_ident;
+	for(;;) {
+		while(*++p != '$')
+			if (*p == '\0')
+				exit(0);
+		while(*++p != '$')
+			putchar(*p);
+		putchar('\n');
+	}
+}
+
 static bool quit;
 
 static void
@@ -360,7 +382,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotifyd [-46d] [-l facility] [-P pidfile] [-u user]\n"
+"usage: nsnotifyd [-46dV] [-l facility] [-P pidfile] [-u user]\n"
 "		[-s addr] [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
@@ -374,6 +396,7 @@ usage(void) {
 "			(default 53)\n"
 "	-s addr		authoritative server for refresh queries\n"
 "	-u user		drop privileges to user\n"
+"	-V		print version information\n"
 "	command		the command to run when a zone changes\n"
 "	zone...		list of zones for which to accept notifies\n"
 		);
@@ -393,7 +416,7 @@ main(int argc, char *argv[]) {
 	char *cmd = NULL;
 	int debug = false;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:V")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -427,6 +450,8 @@ main(int argc, char *argv[]) {
 		case('u'):
 			user = optarg;
 			continue;
+		case('V'):
+			version();
 		default:
 			usage();
 		}
