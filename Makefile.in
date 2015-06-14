@@ -8,7 +8,11 @@ LIBDEPS=
 LIBFLAGS=
 LIBS=
 
-all: nsnotifyd
+all: Makefile nsnotifyd
+
+Makefile: Makefile.in configure
+	@echo make: You need to re-run ./configure
+	@false
 
 nsnotifyd: nsnotifyd.c version.h ${LIBDEPS}
 	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotifyd nsnotifyd.c ${LIBS}
