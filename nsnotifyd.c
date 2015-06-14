@@ -73,16 +73,20 @@ version(void) {
 	}
 }
 
+#ifdef __GNUC__
+#define dummy dummy __attribute__((unused))
+#endif
+
 static bool quit;
 
 static void
-sigexit(int sig) {
+sigexit(int dummy) {
 	write(2, "QUIT\n", 5);
 	quit = true;
 }
 
 static void
-signoop(int sig) {
+signoop(int dummy) {
 }
 
 static void
@@ -498,8 +502,14 @@ main(int argc, char *argv[]) {
 
 	sigactions();
 
+// don't complain about daemon() on Mac OS
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 	if(!debug && daemon(1, 0) < 0)
 		err(1, "daemon");
+
+#pragma GCC diagnostic pop
 
 	if(pidfile != NULL) {
 		FILE *fp = fopen(pidfile, "w");
