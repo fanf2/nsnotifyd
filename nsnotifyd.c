@@ -1,3 +1,12 @@
+/* nsnotifyd: handle DNS NOTIFY messages by running a command
+ *
+ * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
+ * at Cambridge University Information Services.
+ *
+ * You may do anything with this. It has no warranty.
+ * <http://creativecommons.org/publicdomain/zero/1.0/>
+ */
+
 #define _BSD_SOURCE
 #define _XOPEN_SOURCE
 #define BIND_8_COMPAT
