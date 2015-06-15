@@ -1,4 +1,4 @@
-CFLAGS= -Wall -Wextra -std=c99
+CFLAGS	= -std=c99 -O2 -Wall -Wextra
 
 RES	= libbind-6.0
 RESLIB	= ${RES}/libbind.a
