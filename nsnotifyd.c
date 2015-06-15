@@ -503,13 +503,13 @@ main(int argc, char *argv[]) {
 	sigactions();
 
 // don't complain about daemon() on Mac OS
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 	if(!debug && daemon(1, 0) < 0)
 		err(1, "daemon");
 
-#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
 
 	if(pidfile != NULL) {
 		FILE *fp = fopen(pidfile, "w");
