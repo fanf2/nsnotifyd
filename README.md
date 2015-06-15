@@ -7,8 +7,8 @@ respond to changes promptly.
 
 To build, type
 
-	 $ ./configure
-	 $ make all
+        $ ./configure
+        $ make all
 
 ### Dependencies
 
@@ -18,7 +18,7 @@ will download libbind and build and link with it statically.
 
 ### Examples
 
-There are two example scripts:
+There are two example scripts described in the manual:
 
 `nsnotify2git` records the history of changes to a set of zones.
 
@@ -31,9 +31,18 @@ The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
 To read the manual, run
 
-	$ man ./nsnotifyd.1
+        $ man ./nsnotifyd.1
 
-or go to <http://dotat.at/prog/nsnotifyd/nsnotifyd.txt>
+or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.txt)
+or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
+
+### Latest release
+
+Download the full source archives:
+
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.tar.xz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.tar.gz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.zip>
 
 ### Source repositories
 
