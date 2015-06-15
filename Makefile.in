@@ -73,7 +73,7 @@ upload: ${DOCS}
 	git push --tags github master
 	git push --tags chiark master
 	git push --tags origin master
-	scp ${DOCS} *.tar.xz *.tar.gz *.zip \
+	scp ${DOCS} nsnotifyd-*.tar.xz nsnotifyd-*.tar.gz nsnotifyd-*.zip \
 		chiark:public-html/prog/nsnotifyd/
 
 ################################################################
