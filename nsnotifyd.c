@@ -46,6 +46,8 @@
 #define	log_info(...)    syslog(LOG_INFO,    __VA_ARGS__)
 #define	log_debug(...)   syslog(LOG_DEBUG,   __VA_ARGS__)
 
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+
 /* They should have used sockaddr_storage... */
 typedef union res_sockaddr_union res_sockaddr_t;
 
