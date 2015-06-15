@@ -5,17 +5,6 @@ The `nsnotifyd` daemon monitors a set of DNS zones and runs a command
 when any of them change. It listens for DNS NOTIFY messages so it can
 respond to changes promptly.
 
-To build, type
-
-        $ ./configure
-        $ make all
-
-### Dependencies
-
-BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
-Linux you should install libbind4-dev. Otherwise, the configure script
-will download libbind and build and link with it statically.
-
 ### Examples
 
 There are two example scripts described in the manual:
@@ -36,6 +25,19 @@ To read the manual, run
 or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.txt)
 or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
 
+### Build
+
+To build, type
+
+        $ ./configure
+        $ make all
+
+### Dependencies
+
+BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
+Linux you should install libbind4-dev. Otherwise, the configure script
+will download libbind and build and link with it statically.
+
 ### Latest release
 
 Download the full source archives:
@@ -55,14 +57,12 @@ You can clone or browse the repository from:
 
 ----------------------------------------------------------------
 
-Thanks to JP Mens and Richard James Salts for helpful feedback and
-encouragement.
+Please send bug reports or patches to me. I accept contributions made
+under the terms of CC0. Thanks to JP Mens and Richard James Salts for
+helpful feedback and encouragement.
 
-Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
+Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>  
 at Cambridge University Information Services.
 
-Please send bug reports or patches to me. I accept
-contributions made under the terms of CC0.
-
-You may do anything with this software. It has no warranty.
+You may do anything with this. It has no warranty.  
 <http://creativecommons.org/publicdomain/zero/1.0/>

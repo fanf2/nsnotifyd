@@ -30,7 +30,7 @@ nsnotifyd.txt: nsnotifyd.1
 
 nsnotifyd.pdf: nsnotifyd.1
 	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
-	pstopdf nsnotifyd.ps >nsnotifyd.pdf
+	ps2pdf nsnotifyd.ps >nsnotifyd.pdf
 
 index.html: README.md
 	markdown README.md >index.html
