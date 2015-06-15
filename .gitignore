@@ -1,9 +1,10 @@
 nsnotifyd
 Makefile
 index.html
+nsnotifyd.html
 nsnotifyd.txt
 nsnotifyd.pdf
-nsnotifyd.html
+nsnotifyd.ps
 libbind-6.0
 libbind-6.0.tar.gz
 version.h

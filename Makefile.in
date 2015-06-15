@@ -21,12 +21,21 @@ nsnotifyd: nsnotifyd.c version.h ${LIBDEPS}
 version.h::
 	@version/set.sh
 
+################################################################
+
+DOCS = nsnotifyd.txt nsnotifyd.pdf index.html
+
+nsnotifyd.txt: nsnotifyd.1
+	groff -Tascii -mdoc nsnotifyd.1 | col -bx >nsnotifyd.txt
+
 nsnotifyd.pdf: nsnotifyd.1
 	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
 	pstopdf nsnotifyd.ps >nsnotifyd.pdf
 
-nsnotifyd.txt: nsnotifyd.1
-	groff -Tascii -mdoc nsnotifyd.1 | col -bx >nsnotifyd.txt
+index.html: README.md
+	markdown README.md >index.html
+
+################################################################
 
 ${RESLIB}: resconfig
 	cd ${RES} && make all
@@ -44,11 +53,27 @@ ${RES}/configure: ${RESTGZ}
 ${RESTGZ}:
 	curl -O ${RESURL}
 
+################################################################
+
 clean:
-	rm -rf nsnotifyd version/dirty-date ${RES}
+	rm -rf nsnotifyd version/dirty-date ${RES} ${DOCS}
 
 cleaner: clean
 	rm -rf Makefile ${RESTGZ}
 
 cleanest: cleaner
 	rm -rf version.h
+
+################################################################
+
+release: version.h
+	version/release.sh version.h
+
+upload: ${DOCS}
+	git push --tags github master
+	git push --tags chiark master
+	git push --tags origin master
+	scp ${DOCS} *.tar.xz *.tar.gz *.zip \
+		chiark:public-html/prog/nsnotifyd/
+
+################################################################
