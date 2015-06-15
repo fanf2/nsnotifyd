@@ -25,6 +25,9 @@ nsnotifyd.pdf: nsnotifyd.1
 	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
 	pstopdf nsnotifyd.ps >nsnotifyd.pdf
 
+nsnotifyd.txt: nsnotifyd.1
+	groff -Tascii -mdoc nsnotifyd.1 | col -bx >nsnotifyd.txt
+
 ${RESLIB}: resconfig
 	cd ${RES} && make all
 
