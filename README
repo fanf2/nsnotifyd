@@ -1,6 +1,7 @@
 nsnotifyd: handle DNS NOTIFY messages by running a command
+----------------------------------------------------------
 
-The "nsnotifyd" daemon monitors a set of DNS zones and runs a command
+The `nsnotifyd` daemon monitors a set of DNS zones and runs a command
 when any of them change. It listens for DNS NOTIFY messages so it can
 respond to changes promptly.
 
@@ -15,11 +16,12 @@ will download libbind and build and link with it statically.
 
 There are two example scripts:
 
-nsnotify2git records the history of changes to a set of zones.
+`nsnotify2git` records the history of changes to a set of zones.
 
-nsnotify2update uses nsdiff and nsupdate as part of a bump-in-the-wire
+`nsnotify2update` uses nsdiff and nsupdate as part of a bump-in-the-wire
 DNSSEC signer.
 
+----------------------------------------------------------------
 
 Thanks to JP Mens and Richard James Salts for helpful feedback and
 encouragement.
