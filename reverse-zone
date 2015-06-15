@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+
+# Part of a half-arsed reverse DNS autogenerator
+
+use warnings;
+use strict;
+
+my $re_label = qr{[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])};
+my $re_domain = qr{(?:$re_label\.)+|\.};
+
+my $re16 = qr{[0-9a-f]{1,4}};
+my $re_ipv6 = qr{(?:$re16:)+(?::|(?::$re16)+|$re16)};
+my $re_ipv4 = qr{\d+\.\d+\.\d+\.\d+};
+
+my $re_s = qr{[ \t]+};
+my $re_rr_otc = qr{($re_domain)${re_s}(\d+)${re_s}IN${re_s}};
+
+my $re_rr_AAAA = qr{$re_rr_otc(AAAA)$re_s($re_ipv6)};
+my $re_rr_A = qr{$re_rr_otc(A)$re_s($re_ipv4)};
+
+sub pad16 {
+	my $a16 = shift;
+	$a16 = '0' x 4 . $a16;
+	$a16 =~ s{(....)$}{$1};
+	return $1;
+}
+
+my %fh;
+
+sub putzone {
+	my ($zone,$reverse,$ttl,$forward) = @_;
+	my $fh = $fh{$zone};
+	unless (defined $fh) {
+		open $fh, '>', $zone
+		    or die "open > $zone: $!\n";
+		$fh{$zone} = $fh;
+	}
+	print $fh "$reverse\t$ttl\tIN\tPTR\t$forward\n";
+}
+
+while (<>) {
+	if (my ($owner,$ttl,$type,$rdata) = m{^$re_rr_AAAA\s*$}) {
+		my $hex128 = '0' x (8 * 4);
+		for (my $i = 0; $rdata =~ s{^($re16):}{}; $i++) {
+			substr $hex128, $i * 4, 4, pad16 $1;
+		}
+		for (my $i = 7; $rdata =~ s{:($re16)$}{}; $i--) {
+			substr $hex128, $i * 4, 4, pad16 $1;
+		}
+		if ($rdata =~ s{^($re16)$}{}) {
+			substr $hex128, 7 * 4, 4, pad16 $1;
+		}
+		my $nibbles = join '.', reverse split //, $hex128;
+		my $reverse = $nibbles . '.ip6.arpa.';
+		my $zone = substr $reverse, (2 * 128) / (4 * 2);
+		putzone $zone, $reverse, $ttl, $owner;
+		next;
+	}
+	if (my ($owner,$ttl,$type,$rdata) = m{^$re_rr_A\s*$}) {
+		$rdata =~ m{^(\d+)\.(\d+)\.(\d+)\.(\d+)$};
+		my $zone = "$3.$2.$1.in-addr.arpa.";
+		my $reverse = "$4.$zone";
+		putzone $zone, $reverse, $ttl, $owner;
+		next;
+	}
+}
