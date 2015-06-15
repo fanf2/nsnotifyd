@@ -193,6 +193,7 @@ res_server_name(int family, const char *name) {
 	hints.ai_socktype = SOCK_DGRAM;
 	int r = getaddrinfo(name, "domain", &hints, &ai0);
 	if(r) errx(1, "%s: %s", name, gai_strerror(r));
+	if(ai0 == NULL) errx(1, "%s not found", name);
 
 	int n;
 	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++)
