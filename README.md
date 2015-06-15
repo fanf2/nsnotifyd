@@ -27,22 +27,22 @@ DNSSEC signer.
 
 ### Documentation
 
-The `nsnotifyd` homepage is http://dotat.at/prog/nsnotifyd/
+The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
 To read the manual, run
 
 	$ man ./nsnotifyd.1
 
-or go to http://dotat.at/prog/nsnotifyd/nsnotifyd.txt
+or go to <http://dotat.at/prog/nsnotifyd/nsnotifyd.txt>
 
 ### Source repositories
 
 You can clone or browse the repository from:
 
 * git://dotat.at/nsnotifyd.git
-* http://dotat.at/cgi/git/nsnotifyd.git
-* https://github.com/fanf2/nsnotifyd.git
-* https://git.csx.cam.ac.uk/x/ucs/ipreg/nsnotifyd.git
+* <http://dotat.at/cgi/git/nsnotifyd.git>
+* <https://github.com/fanf2/nsnotifyd.git>
+* <https://git.csx.cam.ac.uk/x/ucs/ipreg/nsnotifyd.git>
 
 ----------------------------------------------------------------
 
