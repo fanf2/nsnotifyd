@@ -579,9 +579,9 @@ main(int argc, char *argv[]) {
 		}
 		byte *eom = msg + len;
 		byte *p = msg + sizeof(HEADER);
-		if(eom < p) goto formerr;
-
 		HEADER *h = (void *) msg;
+
+		if(eom < p) goto formerr;
 		if(h->qdcount != htons(1)) goto formerr;
 
 		p += r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
