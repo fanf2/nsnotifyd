@@ -40,9 +40,9 @@ or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
 
 Download the full source archives:
 
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.tar.xz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.tar.gz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-0.zip>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.0.tar.xz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.0.tar.gz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.0.zip>
 
 ### Source repositories
 
