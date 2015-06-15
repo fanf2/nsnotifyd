@@ -603,6 +603,8 @@ main(int argc, char *argv[]) {
 			goto refused;
 
 		// TODO: call ns_verify() to check TSIG
+		// however libbind's ns_verify only does HMAC MD5
+		// so it needs some work...
 
 		log_info("%s notify from %s", z->name, sockstr(sa, sa_len));
 		soa_server_addr(sa, sa_len);
