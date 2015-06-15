@@ -10,9 +10,13 @@ To build, type
 	 $ ./configure
 	 $ make all
 
+### Dependencies
+
 BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
 Linux you should install libbind4-dev. Otherwise, the configure script
 will download libbind and build and link with it statically.
+
+### Examples
 
 There are two example scripts:
 
@@ -20,6 +24,25 @@ There are two example scripts:
 
 `nsnotify2update` uses nsdiff and nsupdate as part of a bump-in-the-wire
 DNSSEC signer.
+
+### Documentation
+
+The `nsnotifyd` homepage is http://dotat.at/prog/nsnotifyd/
+
+To read the manual, run
+
+	$ man ./nsnotifyd.1
+
+or go to http://dotat.at/prog/nsnotifyd/nsnotifyd.txt
+
+### Source repositories
+
+You can clone or browse the repository from:
+
+* git://dotat.at/nsnotifyd.git
+* http://dotat.at/cgi/git/nsnotifyd.git
+* https://github.com/fanf2/nsnotifyd.git
+* https://git.csx.cam.ac.uk/x/ucs/ipreg/nsnotifyd.git
 
 ----------------------------------------------------------------
 
