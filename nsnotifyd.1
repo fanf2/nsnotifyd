@@ -188,7 +188,7 @@ If the SOA query or command fails,
 .Nm
 does not update its SOA parameters,
 and polls the zone on its retry interval.
-.Sh EXAMPLE
+.Sh EXAMPLE - zone revision history
 Say you have a zone,
 .Sy example.org ,
 which is updated dynamically,
@@ -215,7 +215,7 @@ script is designed to work with
 to record the history of a set of zones.
 Continuing the transcript,
 .Bd -literal -offset indent
-$ nsnotifyd -P .nsnotifyd.pid -p 5533 nsnotify2git example.org
+$ nsnotifyd -P nsnotifyd.pid -p 5533 nsnotify2git example.org
 .Ed
 .Ss Send notifies
 To configure BIND to send notifies to
@@ -254,6 +254,56 @@ $ git log --format=%s
 example.org IN SOA 1234
 add example.org (empty)
 .Ed
+.Sh EXAMPLE - bump-in-the-wire DNSSEC
+The
+.Xr nsdiff 1
+utility creates an
+.Xr nsupdate 1
+script from the differences between two versions of a zone.
+It can be used as an alternative to BIND's
+.Cd inline-signing
+option, amongst other things.
+.Pp
+You can use
+.Nm
+together with
+.Nm nsdiff
+to implement a zone signer that operates as a "bump in the wire"
+between a DNSSEC-unaware hidden master server and the zone's public
+name servers.
+.Pp
+Configure your hidden master server to send notifies and allow zone
+transfers to your signing server:
+.Bd -literal -offset indent
+also-notify { signer port 5533; };
+allow-transfer { signer; };
+.Ed
+.Pp
+Configure the signer with dynamic signed master zones,
+and generate keys for them:
+.Bd -literal -offset indent
+zone example.org {
+    type master;
+    update-policy local;
+    auto-dnssec maintain;
+};
+.Ed
+.Pp
+.Bd -literal -offset indent
+$ dnssec-keygen -fk example.org
+$ dnssec-keygen example.org
+.Ed
+.Pp
+Run
+.Nm
+on the signer to trigger an update of the signed zone
+as soon as an update occurs on the hidden master:
+.Bd -literal -offset indent
+$ nsnotifyd -P nsnotifyd.pid -p 5533 nsnotify2update example.org
+.Ed
+.Pp
+Configure your public name servers to transfer your zones from the
+signer instead of from the hidden master.
 .Sh BUGS
 The
 .Nm
@@ -302,6 +352,9 @@ so following these specifications should not be necessary in practice.
 .Xr git 1 ,
 .Xr named 8 ,
 .Xr named.conf 5 ,
+.Xr nsdiff 1 ,
+.Xr nspatch 1 ,
+.Xr nsupdate 1 ,
 .Xr syslog 3 .
 .Rs
 .%A Paul Mockapetris

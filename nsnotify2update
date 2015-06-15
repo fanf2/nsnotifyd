@@ -1,0 +1,7 @@
+#!/bin/sh
+(	zone=$1 serial=$2 master=${3:+@$3}
+	nsdiff="-m $master $zone"
+	nsupdate="-l"
+	nspatch -- $nsdiff -- $nsupdate
+) 2>&1 |
+logger -p daemon.notice -t nsnotify2update -s
