@@ -13,8 +13,16 @@ BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
 Linux you should install libbind4-dev. Otherwise, the configure script
 will download libbind and build and link with it statically.
 
+There are two example scripts:
 
-Thanks to JP Mens for helpful feedback and encouragement.
+nsnotify2git records the history of changes to a set of zones.
+
+nsnotify2update uses nsdiff and nsupdate as part of a bump-in-the-wire
+DNSSEC signer.
+
+
+Thanks to JP Mens and Richard James Salts for helpful feedback and
+encouragement.
 
 Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
 at Cambridge University Information Services.
