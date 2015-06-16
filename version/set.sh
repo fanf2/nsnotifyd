@@ -15,7 +15,7 @@ case $V in
 	    make version/dirty-date 1>&2
 	D="$(version/dirty-date $(git ls-files))"
 	;;
-(*)	D="$(git show --no-patch --format=%ci HEAD)"
+(*)	D="$(git show -s --format=%ci HEAD)"
 	;;
 esac
 
