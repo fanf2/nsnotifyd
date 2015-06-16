@@ -3,7 +3,14 @@ nsnotifyd: handle DNS NOTIFY messages by running a command
 
 The `nsnotifyd` daemon monitors a set of DNS zones and runs a command
 when any of them change. It listens for DNS NOTIFY messages so it can
-respond to changes promptly.
+respond to changes promptly. It also uses each zone's SOA refresh and
+retry parameters to poll for updates if `nsnotifyd` does not receive
+NOTIFY messages more frequently.
+
+Anywhere you currently have a cron job which is monitoring updates to
+DNS zones, you might want to run it under `nsnotifyd` instead of cron,
+so your script runs as soon as the zone changes instead of running at
+fixed intervals.
 
 ### Examples
 
@@ -16,14 +23,14 @@ DNSSEC signer.
 
 ### Documentation
 
-The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
-
 To read the manual, run
 
         $ man ./nsnotifyd.1
 
 or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.txt)
 or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
+
+The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
 ### Build
 
@@ -34,9 +41,10 @@ To build, type
 
 ### Dependencies
 
-BSD and Mac OS have a sufficiently recent resolver. On a Debian-like
-Linux you should install libbind4-dev. Otherwise, the configure script
-will download libbind and build and link with it statically.
+The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
+with a sufficiently recent resolver. On a Debian-like Linux you should
+install libbind4-dev. Otherwise, the configure script will download
+libbind and build and link with it statically.
 
 ### Latest release
 
