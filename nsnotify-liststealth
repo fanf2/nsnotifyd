@@ -3,7 +3,7 @@
 # This program analyses a BIND log file to extract lists of client
 # hosts that are taking zone transfers for each zone.
 #
-# It is intended for use with nsnotifyd-fanout.
+# It is intended for use with nsnotify-fanout.
 
 use warnings;
 use strict;
