@@ -17,7 +17,7 @@ while (<>) {
 	# because TSIG clients are not stealth slaves
 	next unless m{client\ ([0-9a-f:.]+)\#[0-9]+
 		      \ [(]([^()]+)[)]:
-		      (?:\ view [^:]+:)
+		      (?:\ view [^:]+:)?
 		      \ transfer\ of\ '\2/[^']+':
 		      \ (AXFR|IXFR|AXFR-style IXFR)\ started\ 
 	     }x;
