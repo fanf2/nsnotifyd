@@ -67,7 +67,7 @@ version(void) {
 	const char *p = what_ident;
 	for(;;) {
 		while(*++p != '$')
-			if (*p == '\0')
+			if(*p == '\0')
 				exit(0);
 		while(*++p != '$')
 			putchar(*p);
