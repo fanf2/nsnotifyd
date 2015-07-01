@@ -151,17 +151,17 @@ ai_sockstr(struct addrinfo *ai) {
 
 static int
 listen_udp(int family, const char *addr, const char *port) {
-	struct addrinfo hints, *ai;
+	struct addrinfo hints, *ai0, *ai;
 	int r, s;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
 	hints.ai_flags = AI_PASSIVE;
 	hints.ai_socktype = SOCK_DGRAM;
-	r = getaddrinfo(addr, port, &hints, &ai);
+	r = getaddrinfo(addr, port, &hints, &ai0);
 	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
 
-	for(; ai != NULL; ai = ai->ai_next) {
+	for(ai = ai0; ai != NULL; ai = ai->ai_next) {
 		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if(s < 0) {
 			warn("socket %s", ai_sockstr(ai));
@@ -177,6 +177,7 @@ listen_udp(int family, const char *addr, const char *port) {
 			goto next;
 		}
 		log_notice("listening on %s", ai_sockstr(ai));
+		freeaddrinfo(ai0);
 		return(s);
 	next:	close(s);
 	}
@@ -205,6 +206,7 @@ res_server_name(int family, const char *name) {
 		memcpy(&addr[n], ai->ai_addr, ai->ai_addrlen);
 	}
 	res_setservers(&_res, addr, n);
+	freeaddrinfo(ai0);
 }
 
 static res_sockaddr_t *res_saved_servers;
