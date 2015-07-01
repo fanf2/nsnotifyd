@@ -56,6 +56,7 @@ typedef unsigned char byte;
 #include "version.h"
 
 static const char what_ident[] =
+    "@(#) $Program: nsnotifyd $\n"
     "@(#) $Version: " VERSION " $\n"
     "@(#) $Date:    " REVDATE " $\n"
     "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
