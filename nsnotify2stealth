@@ -4,9 +4,9 @@
 	(.)	file=root ;;
 	(*)	file=$zone ;;
 	esac
-	nsnotify-fanout $zone <$file
+	[ -f $file ] && nsnotify-fanout $zone <$file
 	# find will print $file if it is less than a day old
-	case $(find $file -mtime 1) in
+	case $(find $file -mtime 1 2>/dev/null) in
 	('')	( nsnotify-liststealth .log & ) &
 	esac
 ) 2>&1 |
