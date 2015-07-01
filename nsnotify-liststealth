@@ -1,0 +1,37 @@
+#!/usr/bin/perl
+#
+# This program analyses a BIND log file to extract lists of client
+# hosts that are taking zone transfers for each zone.
+#
+# It is intended for use with nsnotifyd-fanout.
+
+use warnings;
+use strict;
+
+use File::Temp qw(tempfile);
+
+my %zc;
+
+while (<>) {
+	# note that this does not match transfers that use a TSIG key,
+	# because TSIG clients are not stealth slaves
+	next unless m{client\ ([0-9a-f:.]+)\#[0-9]+
+		      \ [(]([^()]+)[)]:\ transfer\ of\ '\1/[^']+':
+		      \ (AXFR|IXFR|AXFR-style IXFR)\ started\ }x;
+	my $client = $1;
+	my $zone = $2;
+	$zc{$zone}{$client} = 1;
+}
+
+for my $zone (keys %zc) {
+	$zone = 'root' if $zone eq '.';
+	my ($tmpfh,$tmpnam) = tempfile("$zone.XXXXXXXX");
+	print $tmpfh "$_\n" for keys %{$zc{$zone}};
+	next if (close $tmpfh)
+	    and	(chmod 0666 & ~umask, $tmpnam)
+	    and (rename $tmpnam, $zone);
+	my $errno = $!;
+	unlink $tmpnam;
+	$! = $errno;
+	die "write $zone: $!\n";
+}
