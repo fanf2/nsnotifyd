@@ -1,4 +1,4 @@
-/* nsnotifyd-fanout: send DNS NOTIFY messages to lots of clients
+/* nsnotify-fanout: send DNS NOTIFY messages to lots of clients
  *
  * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
  * at Cambridge University Information Services.
@@ -25,7 +25,7 @@
 #include "version.h"
 
 static const char what_ident[] =
-    "@(#) $Program: nsnotifyd-fanout $\n"
+    "@(#) $Program: nsnotify-fanout $\n"
     "@(#) $Version: " VERSION " $\n"
     "@(#) $Date:    " REVDATE " $\n"
     "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
@@ -48,7 +48,7 @@ version(void) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotifyd-fanout [-46dV] zone [serial] [master]\n"
+"usage: nsnotify-fanout [-46dV] zone [serial] [master]\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-d		debugging mode\n"
