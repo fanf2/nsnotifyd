@@ -254,6 +254,59 @@ $ git log --format=%s
 example.org IN SOA 1234
 add example.org (empty)
 .Ed
+.Sh EXAMPLE - stealth secondary synchronization
+A stealth secondary is a server which transfers authoritative copies
+of a zone, but which is not listed in the zone's NS records. It will
+not normally get NOTIFY messages to tell it when to update the zone,
+so must rely on the zone's SOA timers instead.
+.Pp
+We would like stealth secondaries to get updates promptly,
+but without extra manual configuration of
+.Ql also-notify
+lists.
+.Pp
+To do this,
+.Nm
+includes
+.Nm nsnotify-liststealth
+which analyzes a BIND log file to extract lists of AXFR and IXFR
+clients for each zone
+(excluding clients that use TSIG),
+and
+.Nm nsnotify-fanout
+which takes zone and a list of clients that should be notified.
+The
+.Nm nsnotify2stealth
+script bridges between
+.Nm
+and these two helpers.
+.Ss Create working directory
+The working directory contains automatically updates client lists,
+one per zone,
+and a symlink to the log file used by BIND.
+.Bd -literal -offset indent
+$ mkdir notify-stealth
+$ cd notify-stealth
+$ ln -s /var/log/messages .log
+.Ed
+.Ss Pre-populate the directory
+This gets us a file per zone,
+each containing a list of clients for that zone.
+.Bd -literal -offset indent
+$ nsnotify-liststealth .log
+.Ed
+.Ss Monitor the zones
+Because we have a file per zone,
+we can invoke
+.Nm
+with a wildcard instead of listing the zones explicitly.
+.Bd -literal -offset indent
+$ nsnotifyd -P .pid -p 5533 nsnotify2stealth *
+.Ed
+.Ss Send notifies
+You will also need to reconfigure BIND to send notifies to
+.Nm
+as described in the previous example.
 .Sh EXAMPLE - bump-in-the-wire DNSSEC
 The
 .Xr nsdiff 1
