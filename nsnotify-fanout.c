@@ -48,15 +48,14 @@ version(void) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify-fanout [-46dV] zone [serial] [master]\n"
+"usage: nsnotify-fanout [-46dV] zone <clients\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-d		debugging mode\n"
 "			(use twice to print DNS messages)\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
-"	serial		the zone's serial number (ignored)\n"
-"	master		the zone's master server (ignored)\n"
+"	clients		one client address per line\n"
 		);
 	exit(1);
 }
@@ -89,7 +88,7 @@ main(int argc, char *argv[]) {
 
 	argc -= optind;
 	argv += optind;
-	if(argc < 1)
+	if(argc != 1)
 		usage();
 
 	const char *zone = argv[0];
@@ -118,14 +117,8 @@ main(int argc, char *argv[]) {
 			err(1, "socket (IPv6)");
 	}
 
-	if(strcmp(zone, ".") == 0)
-		zone = "root";
-	FILE *h = fopen(zone, "r");
-	if(h == NULL)
-		err(1, "open %s", zone);
-
 	char addr[64];
-	while(fgets(addr, sizeof(addr), h) != NULL) {
+	while(fgets(addr, sizeof(addr), stdin) != NULL) {
 		size_t len = strlen(addr);
 		if(len > 0 && addr[len-1] == '\n')
 			addr[--len] = '\0';
@@ -157,7 +150,7 @@ main(int argc, char *argv[]) {
 		}
 		freeaddrinfo(ai0);
 	}
-	if(ferror(h) || fclose(h))
+	if(ferror(stdin) || fclose(stdin))
 		err(1, "read %s", zone);
 	exit(0);
 }

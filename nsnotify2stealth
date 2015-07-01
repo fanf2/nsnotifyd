@@ -1,12 +1,10 @@
 #!/bin/sh
 (	zone=$1 serial=$2 master=${3:+@$3}
-	nsnotify-fanout $zone
-	# after we have sent the notifies,
-	# see if we need to update the client list
 	case $zone in
 	(.)	file=root ;;
 	(*)	file=$zone ;;
 	esac
+	nsnotify-fanout $zone <$file
 	# find will print $file if it is less than a day old
 	case $(find $file -mtime 1) in
 	('')	( nsnotify-liststealth .log & ) &
