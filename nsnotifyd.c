@@ -421,7 +421,7 @@ main(int argc, char *argv[]) {
 	const char *port = "domain";
 	const char *authority = NULL;
 	char *cmd = NULL;
-	int debug = false;
+	int debug = 0;
 
 	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:V")) != -1)
 		switch(r) {
