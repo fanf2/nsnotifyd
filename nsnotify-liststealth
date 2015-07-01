@@ -16,20 +16,23 @@ while (<>) {
 	# note that this does not match transfers that use a TSIG key,
 	# because TSIG clients are not stealth slaves
 	next unless m{client\ ([0-9a-f:.]+)\#[0-9]+
-		      \ [(]([^()]+)[)]:\ transfer\ of\ '\1/[^']+':
-		      \ (AXFR|IXFR|AXFR-style IXFR)\ started\ }x;
+		      \ [(]([^()]+)[)]:
+		      (?:\ view [^:]+:)
+		      \ transfer\ of\ '\2/[^']+':
+		      \ (AXFR|IXFR|AXFR-style IXFR)\ started\ 
+	     }x;
 	my $client = $1;
 	my $zone = $2;
 	$zc{$zone}{$client} = 1;
 }
 
 for my $zone (keys %zc) {
-	$zone = 'root' if $zone eq '.';
-	my ($tmpfh,$tmpnam) = tempfile("$zone.XXXXXXXX");
+	my $file = $zone eq '.' ? 'root' : $zone;
+	my ($tmpfh,$tmpnam) = tempfile("$file.XXXXXXXX");
 	print $tmpfh "$_\n" for keys %{$zc{$zone}};
 	next if (close $tmpfh)
 	    and	(chmod 0666 & ~umask, $tmpnam)
-	    and (rename $tmpnam, $zone);
+	    and (rename $tmpnam, $file);
 	my $errno = $!;
 	unlink $tmpnam;
 	$! = $errno;
