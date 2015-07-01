@@ -7,6 +7,10 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>
  */
 
+#define _BSD_SOURCE
+#define _XOPEN_SOURCE
+#define BIND_8_COMPAT
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
