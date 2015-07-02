@@ -66,6 +66,12 @@ You can clone or browse the repository from:
 * <https://github.com/fanf2/nsnotifyd.git>
 * <https://git.csx.cam.ac.uk/x/ucs/ipreg/nsnotifyd.git>
 
+### Articles about nsnotifyd
+
+* <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
+* <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
+* <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
+
 ----------------------------------------------------------------
 
 Please send bug reports or patches to me. I accept contributions made
