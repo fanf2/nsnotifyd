@@ -66,11 +66,12 @@ usage(void) {
 
 int
 main(int argc, char *argv[]) {
+	const char *port = "domain";
 	int family = PF_UNSPEC;
 	int debug = 0;
 	int r;
 
-	while((r = getopt(argc, argv, "46dV")) != -1)
+	while((r = getopt(argc, argv, "46dp:V")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -80,6 +81,9 @@ main(int argc, char *argv[]) {
 			continue;
 		case('d'):
 			debug++;
+			continue;
+		case('p'):
+			port = optarg;
 			continue;
 		case('V'):
 			version();
@@ -132,7 +136,7 @@ main(int argc, char *argv[]) {
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_family = family;
 		hints.ai_socktype = SOCK_DGRAM;
-		r = getaddrinfo(addr, "domain", &hints, &ai0);
+		r = getaddrinfo(addr, port, &hints, &ai0);
 		if(r) {
 			warnx("%s: %s", addr, gai_strerror(r));
 			continue;
