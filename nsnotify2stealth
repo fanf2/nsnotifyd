@@ -7,7 +7,13 @@
 	[ -f $file ] && nsnotify-fanout $zone <$file
 	# find will print $file if it is less than a day old
 	case $(find $file -mtime 1 2>/dev/null) in
-	('')	( nsnotify-liststealth .log & ) &
+	('')	[ ! -f .once ] &&
+		( (
+			touch .once
+			nsnotify-liststealth .log
+			rm -f .once
+		) & ) &
+		;;
 	esac
 ) 2>&1 |
 logger -p daemon.notice -t nsnotify2stealth -s
