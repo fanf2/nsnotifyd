@@ -281,17 +281,35 @@ script bridges between
 .Nm
 and these two helpers.
 .Ss Create working directory
-The working directory contains automatically updates client lists,
+The working directory contains the client lists,
 one per zone,
 and a symlink to the log file used by BIND.
+You only need to run this command once
+when creating the directory.
 .Bd -literal -offset indent
 $ mkdir notify-stealth
 $ cd notify-stealth
 $ ln -s /var/log/messages .log
 .Ed
+.Pp
+This directory will also contain a
+.Pa .pid
+file for
+.Nm ,
+and occasionally a
+.Pa .once
+file to stop
+.Nm nsnotify2stealth
+from running more than one
+.Nm nsnotify-liststealth
+at a time.
 .Ss Pre-populate the directory
 This gets us a file per zone,
 each containing a list of clients for that zone.
+The
+.Nm nsnotify2stealth
+script will automatically update the client lists
+once per day.
 .Bd -literal -offset indent
 $ nsnotify-liststealth .log
 .Ed
@@ -299,13 +317,16 @@ $ nsnotify-liststealth .log
 Because we have a file per zone,
 we can invoke
 .Nm
-with a wildcard instead of listing the zones explicitly.
+with a glob instead of listing the zones explicitly.
+The special files
+.Pa ( .log .once .pid )
+are dotted so that the glob works as expected.
 .Bd -literal -offset indent
 $ nsnotifyd -P .pid -p 5533 nsnotify2stealth *
 .Ed
 .Ss Send notifies
 You will also need to reconfigure BIND to send notifies to
-.Nm
+.Nm ,
 as described in the previous example.
 .Sh EXAMPLE - bump-in-the-wire DNSSEC
 The
