@@ -28,6 +28,38 @@
 
 #include "version.h"
 
+static int
+udpsend(int family, const char *addr, const char *port,
+    int s4, int s6, u_char *msg, size_t msglen) {
+	struct addrinfo hints, *ai0, *ai;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_socktype = SOCK_DGRAM;
+	int r = getaddrinfo(addr, port, &hints, &ai0);
+	if(r) {
+		warnx("%s: %s", addr, gai_strerror(r));
+		return(-1);
+	}
+	for(ai = ai0; ai != NULL; ai = ai->ai_next) {
+		int s = -1;
+		if(ai->ai_family == AF_INET)
+			s = s4;
+		if(ai->ai_family == AF_INET6)
+			s = s6;
+		if(s == -1)
+			continue;
+		r = sendto(s, msg, msglen, 0,
+		    ai->ai_addr, ai->ai_addrlen);
+		if(r < 0) {
+			warn("sendto %s", addr);
+			return(-1);
+		}
+	}
+	freeaddrinfo(ai0);
+	return(0);
+}
+
 static const char what_ident[] =
     "@(#) $Program: nsnotify-fanout $\n"
     "@(#) $Version: " VERSION " $\n"
@@ -52,14 +84,18 @@ version(void) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify-fanout [-46dV] zone <clients\n"
+"usage: nsnotify-fanout [-46dpV] zone clients\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-d		debugging mode\n"
 "			(use twice to print DNS messages)\n"
+"	-p port		send notifies to this port number\n"
+"			(default 53)\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
-"	clients		one client address per line\n"
+"	clients		notify targets\n"
+"			(may be command-line arguments)\n"
+"			(or read from stdin, one per line)\n"
 		);
 	exit(1);
 }
@@ -69,7 +105,7 @@ main(int argc, char *argv[]) {
 	const char *port = "domain";
 	int family = PF_UNSPEC;
 	int debug = 0;
-	int r;
+	int r, e;
 
 	while((r = getopt(argc, argv, "46dp:V")) != -1)
 		switch(r) {
@@ -96,10 +132,10 @@ main(int argc, char *argv[]) {
 
 	argc -= optind;
 	argv += optind;
-	if(argc != 1)
+	if(argc < 1)
 		usage();
 
-	const char *zone = argv[0];
+	const char *zone = *argv++; argc--;
 
 	u_char msg[512];
 	int msglen = res_mkquery(ns_o_notify, zone, ns_c_in, ns_t_soa,
@@ -125,40 +161,31 @@ main(int argc, char *argv[]) {
 			err(1, "socket (IPv6)");
 	}
 
+	e = 0;
+
+	while(*argv != NULL) {
+		r = udpsend(family, *argv, port, s4, s6, msg, msglen);
+		if(r == 0 && debug)
+			fprintf(stderr, "; -> %s\n", *argv);
+		else
+			e = 1;
+		argv++;
+	}
+	if(argc > 0)
+		exit(e);
+
 	char addr[64];
 	while(fgets(addr, sizeof(addr), stdin) != NULL) {
 		size_t len = strlen(addr);
 		if(len > 0 && addr[len-1] == '\n')
 			addr[--len] = '\0';
-
-		struct addrinfo hints, *ai0, *ai;
-
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = family;
-		hints.ai_socktype = SOCK_DGRAM;
-		r = getaddrinfo(addr, port, &hints, &ai0);
-		if(r) {
-			warnx("%s: %s", addr, gai_strerror(r));
-			continue;
-		}
-		for(ai = ai0; ai != NULL; ai = ai->ai_next) {
-			int s = -1;
-			if(ai->ai_family == AF_INET)
-				s = s4;
-			if(ai->ai_family == AF_INET6)
-				s = s6;
-			if(s == -1)
-				continue;
-			r = sendto(s, msg, msglen, 0,
-			    ai->ai_addr, ai->ai_addrlen);
-			if(r < 0)
-				warn("sendto %s", addr);
-			else if(debug)
-				fprintf(stderr, "; -> %s\n", addr);
-		}
-		freeaddrinfo(ai0);
+		r = udpsend(family, addr, port, s4, s6, msg, msglen);
+		if(r == 0 && debug)
+			fprintf(stderr, "; -> %s\n", addr);
+		else
+			e = 1;
 	}
 	if(ferror(stdin) || fclose(stdin))
 		err(1, "read %s", zone);
-	exit(0);
+	exit(e);
 }
