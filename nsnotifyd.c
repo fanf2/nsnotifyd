@@ -498,6 +498,8 @@ main(int argc, char *argv[]) {
 	for(zone *z = zones; argc > 0; z++) {
 		memset(z, 0, sizeof(*z));
 		z->name = *argv++; argc--;
+		if(strcmp(z->name, "root") == 0)
+			z->name = ".";
 		const char *e = zone_soa(z);
 		if(e != NULL) errx(1, "%s IN SOA: %s", z->name, e);
 		log_info("%s IN SOA %u", z->name, z->serial);

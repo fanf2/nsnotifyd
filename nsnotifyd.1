@@ -30,6 +30,12 @@ It also uses each zone's SOA refresh and retry parameters
 to poll for updates if
 .Nm
 does not receive NOTIFY messages more frequently.
+.Pp
+You should specify zone names without the trailing dot.
+The root zone can be specified as
+.Ql \&.
+or
+.Ql root .
 .Sh OPTIONS
 .Bl -tag -width indent
 .It Fl 4
@@ -161,7 +167,7 @@ The SOA query is sent to the source of the NOTIFY
 or, if a timer expired, to the server given in the
 .Fl s
 option.
-.Pp
+.Ss Command invocation
 When the SOA reply indicates the zone's serial number has increased,
 .Nm
 runs the
@@ -171,7 +177,9 @@ with two or three arguments:
 .It
 the
 .Ar zone
-name;
+name without the trailing dot,
+except for the root zone
+.Ql \&. ;
 .It
 its new serial number;
 .It
