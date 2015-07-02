@@ -18,11 +18,11 @@ while (<>) {
 	next unless m{client\ ([0-9a-f:.]+)\#[0-9]+
 		      \ [(]([^()]+)[)]:
 		      (?:\ view [^:]+:)?
-		      \ transfer\ of\ '\2/[^']+':
+		      \ transfer\ of\ '[^']+':
 		      \ (AXFR|IXFR|AXFR-style IXFR)\ started\ 
 	     }x;
 	my $client = $1;
-	my $zone = $2;
+	my $zone = lc $2;
 	$zc{$zone}{$client} = 1;
 }
 
