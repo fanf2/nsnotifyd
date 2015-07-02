@@ -1,4 +1,4 @@
-/* nsnotify-fanout: send DNS NOTIFY messages to lots of clients
+/* nsnotify-fanout: send DNS NOTIFY messages to lots of targets
  *
  * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
  * at Cambridge University Information Services.
@@ -84,7 +84,7 @@ version(void) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify-fanout [-46dpV] zone clients\n"
+"usage: nsnotify-fanout [-46dpV] zone targets\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-d		debugging mode\n"
@@ -93,9 +93,9 @@ usage(void) {
 "			(default 53)\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
-"	clients		notify targets\n"
-"			(may be command-line arguments)\n"
-"			(or read from stdin, one per line)\n"
+"	targets		destinations of notify messages\n"
+"			(may be command-line arguments\n"
+"			 or read from stdin, one per line)\n"
 		);
 	exit(1);
 }

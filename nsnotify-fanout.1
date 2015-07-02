@@ -1,0 +1,70 @@
+.Dd June 14, 2015
+.Dt NSNOTIFY-FANOUT 1 "DNS Commands Manual"
+.Os DNS
+.Sh NAME
+.Nm nsnotify-fanout
+.Nd send DNS NOTIFY messages
+.Sh SYNOPSIS
+.Nm
+.Op Fl 46dV
+.Op Fl p Ar port
+.Aq Ar zone
+.Ao Ar target Ac Ns ...
+.Sh DESCRIPTION
+The
+.Nm
+program
+sends DNS NOTIFY messages for a
+.Ar zone
+to a list of
+.Ar target Ns s .
+.Pp
+If no
+.Ar target Ns s
+are provided on the command line,
+they are read from stdin.
+There must be one target address per line,
+with no comments or extra white space.
+.Pp
+You can use
+.Nm
+for testing
+.Nm nsnotifyd .
+It is also used by the
+.Nm nsnotify2stealth
+script to notify stealth secondaries.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl 4
+Use IPv4 only
+(apart the system resolver).
+.It Fl 6
+Use IPv6 only
+(apart the system resolver).
+.It Fl d
+Debugging mode.
+.Pp
+Use once to print successful message sends.
+.Pp
+Use twice to get dumps of DNS packets.
+.It Fl p Ar port
+Listen on
+.Ar port ,
+which may be a service name or a UDP port number.
+The default is the
+.Sy domain
+service, UDP port 53.
+.It Fl V
+Print details about this version of
+.Nm .
+.El
+.Sh SEE ALSO
+.Xr nsnotifyd 1 .
+.Sh AUTHOR
+.An Tony Finch
+.Aq Li dot@dotat.at
+.Aq Li fanf2@cam.ac.uk
+.br
+at Cambridge University Information Services
+.\" You may do anything with this. It has no warranty.
+.\" http://creativecommons.org/publicdomain/zero/1.0/
