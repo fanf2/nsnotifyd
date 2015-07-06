@@ -19,7 +19,10 @@ case $V in
 	;;
 esac
 
+[ -f version.h ] && mv version.h version.h~
 ( printf '#define VERSION "%s"\n' "$V"
   printf '#define REVDATE "%s"\n' "$D"
 ) >version.h
 touch -t $(echo "$D" | sed 's/[^0-9]//g;s/....$//;s/..$/.&/') version.h
+[ -f version.h~ ] &&
+diff -u version.h~ version.h | sed '/#define/!d;s///'
