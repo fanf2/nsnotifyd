@@ -1,4 +1,5 @@
 nsnotifyd
+nsnotify-fanout
 Makefile
 index.html
 nsnotifyd.html

@@ -1,15 +1,50 @@
+# install locations
+
+prefix =	${HOME}
+bindir =	${prefix}/bin
+mandir =	${prefix}/share/man
+man1dir=	${mandir}/man1
+
+bindest=	${DESTDIR}${bindir}
+man1dest=	${DESTDIR}${man1dir}
+
+# compiler flags
+
 CFLAGS	= -std=c99 -O2 -Wall -Wextra
+
+# resolver library
 
 RES	= libbind-6.0
 RESLIB	= ${RES}/libbind.a
 RESTGZ	= ${RES}.tar.gz
 RESURL	= http://ftp.isc.org/isc/libbind/cur/${RESTGZ}
 
+# filled in by ./configure
+
 LIBDEPS=
 LIBFLAGS=
 LIBS=
 
-all: Makefile nsnotifyd nsnotify-fanout
+# targets
+
+EXE	=	nsnotifyd \
+		nsnotify-fanout
+
+scripts	=	nsnotify2git \
+		nsnotify2stealth \
+		nsnotify2update \
+		nsnotify-liststealth
+
+binfiles =	${EXE} ${scripts}
+
+man1files =	nsnotifyd.1 \
+		nsnotify-fanout.1
+
+ALL	=	Makefile ${binfiles} ${man1files}
+
+################################################################
+
+all: ${ALL}
 
 Makefile: Makefile.in configure
 	@echo make: You need to re-run ./configure
@@ -40,10 +75,10 @@ index.html: README.md
 
 ################################################################
 
-${RESLIB}: resconfig
-	cd ${RES} && make all
-
 resconfig: ${RES}/Makefile
+
+${RESLIB}: ${RES}/Makefile
+	cd ${RES} && make all
 
 ${RES}/Makefile: ${RES}/configure
 	cd ${RES} && ./configure
@@ -58,8 +93,15 @@ ${RESTGZ}:
 
 ################################################################
 
+install: ${ALL}
+	install -m 755 -d ${bindest} ${man1dest}
+	install -m 755 ${binfiles} ${bindest}/
+	install -m 644 ${man1files} ${man1dest}/
+
+################################################################
+
 clean:
-	rm -rf nsnotifyd version/dirty-date ${RES} ${DOCS}
+	rm -rf version/dirty-date ${EXE} ${RES} ${DOCS}
 
 cleaner: clean
 	rm -rf Makefile ${RESTGZ}
