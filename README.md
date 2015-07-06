@@ -53,9 +53,9 @@ libbind and build and link with it statically.
 
 Download the full source archives:
 
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.1.tar.xz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.1.tar.gz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.1.zip>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.2.tar.xz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.2.tar.gz>
+* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.2.zip>
 
 ### Source repositories
 
