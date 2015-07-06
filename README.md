@@ -35,12 +35,18 @@ or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
 
 The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
-### Build
+### Build and install
 
-To build, type
+To install in your home directory,
 
         $ ./configure
         $ make all
+	$ make install
+
+See the top of the Makefile for variables that control the install
+location, for example,
+
+        $ sudo make prefix=/usr/local install
 
 ### Dependencies
 
