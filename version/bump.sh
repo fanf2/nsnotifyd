@@ -14,7 +14,7 @@ case $# in
 esac
 
 R=$(echo $V | sed 's/-[0-9].*/-[0-9a-f.]*/')
-sed -i~ "s/$R/$V./" README.md
+sed -i~ "s|/$R[.]|/$V.|" README.md
 
 case $# in
 (0)	git diff
