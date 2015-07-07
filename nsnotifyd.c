@@ -294,6 +294,7 @@ zone_soa(zone *z) {
 		NS_GET16(class, p);
 		NS_GET32(ttl, p);
 		NS_GET16(rdlength, p);
+		(void)ttl;
 		if(eom - p < rdlength) return("truncated RDATA");
 		byte *eor = p + rdlength;
 		if(strcmp(name, z->name) == 0 &&
