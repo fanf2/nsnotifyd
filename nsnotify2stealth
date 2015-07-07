@@ -4,7 +4,7 @@
 	(.)	file=root ;;
 	(*)	file=$zone ;;
 	esac
-	[ -f $file ] && nsnotify-fanout $zone <$file
+	[ -f $file ] && nsnotify -f $file $zone
 	if perl -e 'exit(time - [stat shift]->[9] > 86400)' $file &&
 		! [ -f .once ]
 	then (

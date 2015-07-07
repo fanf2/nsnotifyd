@@ -12,13 +12,15 @@ DNS zones, you might want to run it under `nsnotifyd` instead of cron,
 so your script runs as soon as the zone changes instead of running at
 fixed intervals.
 
+There is also a client program `nsnotify` for sending notify messages.
+
 ### Examples
 
 There are three example scripts described in the manual:
 
 `nsnotify2git` records the history of changes to a set of zones.
 
-`nsnotify2stealth` uses nsnotify-liststealth and nsnotify-fanout to
+`nsnotify2stealth` uses nsnotify-liststealth and nsnotify to
 notify stealth secondaries so they get updates faster.
 
 `nsnotify2update` uses nsdiff and nsupdate as part of a bump-in-the-wire

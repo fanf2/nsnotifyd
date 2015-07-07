@@ -1,4 +1,4 @@
-/* nsnotify-fanout: send DNS NOTIFY messages to lots of targets
+/* nsnotify: send DNS NOTIFY messages to lots of targets
  *
  * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
  * at Cambridge University Information Services.
@@ -61,7 +61,7 @@ udpsend(int family, const char *addr, const char *port,
 }
 
 static const char what_ident[] =
-    "@(#) $Program: nsnotify-fanout $\n"
+    "@(#) $Program: nsnotify $\n"
     "@(#) $Version: " VERSION " $\n"
     "@(#) $Date:    " REVDATE " $\n"
     "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
@@ -84,11 +84,12 @@ version(void) {
 static void
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify-fanout [-46dpV] zone targets\n"
+"usage: nsnotify [-46dpV] [-f targets] zone [targets]\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-d		debugging mode\n"
 "			(use twice to print DNS messages)\n"
+"	-f targets	read targets from file instead of command line\n"
 "	-p port		send notifies to this port number\n"
 "			(default 53)\n"
 "	-V		print version information\n"
@@ -103,11 +104,12 @@ usage(void) {
 int
 main(int argc, char *argv[]) {
 	const char *port = "domain";
+	const char *file = NULL;
 	int family = PF_UNSPEC;
 	int debug = 0;
 	int r, e;
 
-	while((r = getopt(argc, argv, "46dp:V")) != -1)
+	while((r = getopt(argc, argv, "46df:p:V")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -117,6 +119,9 @@ main(int argc, char *argv[]) {
 			continue;
 		case('d'):
 			debug++;
+			continue;
+		case('f'):
+			file = optarg;
 			continue;
 		case('p'):
 			port = optarg;
@@ -133,6 +138,8 @@ main(int argc, char *argv[]) {
 	argc -= optind;
 	argv += optind;
 	if(argc < 1)
+		usage();
+	if(file != NULL && argc > 1)
 		usage();
 
 	const char *zone = *argv++; argc--;
@@ -163,19 +170,29 @@ main(int argc, char *argv[]) {
 
 	e = 0;
 
-	while(*argv != NULL) {
-		r = udpsend(family, *argv, port, s4, s6, msg, msglen);
+	for(int i = 0; i < argc; i++) {
+		r = udpsend(family, argv[i], port, s4, s6, msg, msglen);
 		if(r == 0 && debug)
-			fprintf(stderr, "; -> %s\n", *argv);
+			fprintf(stderr, "; -> %s\n", argv[i]);
 		else
 			e = 1;
-		argv++;
 	}
-	if(argc > 0)
+
+	if(file == NULL)
 		exit(e);
 
+	FILE *fh;
+	if(strcmp(file, "-") == 0) {
+		file = "stdin";
+		fh = stdin;
+	} else {
+		fh = fopen(file, "r");
+		if(fh == NULL)
+			err(1, "open %s", file);
+	}
+
 	char addr[64];
-	while(fgets(addr, sizeof(addr), stdin) != NULL) {
+	while(fgets(addr, sizeof(addr), fh) != NULL) {
 		size_t len = strlen(addr);
 		if(len > 0 && addr[len-1] == '\n')
 			addr[--len] = '\0';
@@ -185,7 +202,7 @@ main(int argc, char *argv[]) {
 		else
 			e = 1;
 	}
-	if(ferror(stdin) || fclose(stdin))
-		err(1, "read %s", zone);
+	if(ferror(fh) || fclose(fh))
+		err(1, "read %s", file);
 	exit(e);
 }

@@ -36,6 +36,17 @@ The root zone can be specified as
 .Ql \&.
 or
 .Ql root .
+.Pp
+Note:
+.Nm nsnotify
+(without
+.Ql d )
+is a client for sending DNS NOTIFY messages
+whereas
+.Nm nsnotifyd
+(with
+.Ql d )
+is a daemon for handling DNS NOTIFY messages.
 .Sh OPTIONS
 .Bl -tag -width indent
 .It Fl 4
@@ -281,7 +292,7 @@ which analyzes a BIND log file to extract lists of AXFR and IXFR
 clients for each zone
 (excluding clients that use TSIG),
 and
-.Nm nsnotify-fanout
+.Nm nsnotify
 which takes zone and a list of clients that should be notified.
 The
 .Nm nsnotify2stealth
@@ -336,6 +347,15 @@ $ nsnotifyd -P .pid -p 5533 nsnotify2stealth *
 You will also need to reconfigure BIND to send notifies to
 .Nm ,
 as described in the previous example.
+.Ss Tune BIND
+If you have a lot of stealth secondaries,
+.Nm nsnotify2stealth
+can cause a large flood of zone transfers.
+You may need to change BIND's capacity settings
+as described in the ISC Knowledge Base article
+cited in the
+.Sx SEE ALSO
+section below.
 .Sh EXAMPLE - bump-in-the-wire DNSSEC
 The
 .Xr nsdiff 1
@@ -435,7 +455,7 @@ so following these specifications should not be necessary in practice.
 .Xr named 8 ,
 .Xr named.conf 5 ,
 .Xr nsdiff 1 ,
-.Xr nsnotify-fanout 1 ,
+.Xr nsnotify 1 ,
 .Xr nspatch 1 ,
 .Xr nsupdate 1 ,
 .Xr syslog 3 .
@@ -463,6 +483,14 @@ so following these specifications should not be necessary in practice.
 .%T A mechanism for prompt notification of zone changes (DNS NOTIFY)
 .%R RFC 1996
 .%D August 1996
+.Re
+.Rs
+.%T Tuning BIND for zone transfers
+.%A Cathy Almond
+.%I Internet Systems Consortium
+.%J ISC Knowledge Base
+.%N AA-00726
+.%U https://kb.isc.org/article/AA-00726
 .Re
 .Sh AUTHOR
 .An Tony Finch

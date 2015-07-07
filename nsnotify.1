@@ -1,8 +1,8 @@
 .Dd June 14, 2015
-.Dt NSNOTIFY-FANOUT 1 "DNS Commands Manual"
+.Dt NSNOTIFY 1 "DNS Commands Manual"
 .Os DNS
 .Sh NAME
-.Nm nsnotify-fanout
+.Nm nsnotify
 .Nd send DNS NOTIFY messages
 .Sh SYNOPSIS
 .Nm
@@ -10,6 +10,11 @@
 .Op Fl p Ar port
 .Aq Ar zone
 .Ao Ar target Ac Ns ...
+.Nm
+.Op Fl 46dV
+.Op Fl p Ar port
+.Op Fl f Ar targets
+.Aq Ar zone
 .Sh DESCRIPTION
 The
 .Nm
@@ -18,21 +23,23 @@ sends DNS NOTIFY messages for a
 .Ar zone
 to a list of
 .Ar target Ns s .
-.Pp
-If no
+You can either provide a list of
 .Ar target Ns s
-are provided on the command line,
-they are read from stdin.
-There must be one target address per line,
-with no comments or extra white space.
+on the command line,
+or use the
+.Fl f Ar targets
+option to read from a file.
 .Pp
-You can use
-.Nm
-for testing
-.Nm nsnotifyd .
-It is also used by the
-.Nm nsnotify2stealth
-script to notify stealth secondaries.
+Note:
+.Nm nsnotify
+(without
+.Ql d )
+is a client for sending DNS NOTIFY messages
+whereas
+.Nm nsnotifyd
+(with
+.Ql d )
+is a daemon for handling DNS NOTIFY messages.
 .Sh OPTIONS
 .Bl -tag -width indent
 .It Fl 4
@@ -47,6 +54,18 @@ Debugging mode.
 Use once to print successful message sends.
 .Pp
 Use twice to get dumps of DNS packets.
+.It Fl f Ar targets
+File containing list of addresses
+to send NOTIFY messages to.
+There must be one target address per line,
+with no comments or extra white space.
+.Pp
+If
+.Ar targets
+is
+.Ql -
+then the addresses are read from
+.Li stdin .
 .It Fl p Ar port
 Listen on
 .Ar port ,
@@ -60,14 +79,6 @@ Print details about this version of
 .El
 .Sh SEE ALSO
 .Xr nsnotifyd 1 .
-.Rs
-.%T Tuning BIND for zone transfers
-.%A Cathy Almond
-.%I Internet Systems Consortium
-.%J ISC Knowledge Base
-.%N AA-00726
-.%U https://kb.isc.org/article/AA-00726
-.Re
 .Sh AUTHOR
 .An Tony Finch
 .Aq Li dot@dotat.at

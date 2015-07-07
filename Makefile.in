@@ -27,8 +27,7 @@ LIBS=
 
 # targets
 
-EXE	=	nsnotifyd \
-		nsnotify-fanout
+EXE	=	nsnotify nsnotifyd
 
 scripts	=	nsnotify2git \
 		nsnotify2stealth \
@@ -37,8 +36,7 @@ scripts	=	nsnotify2git \
 
 binfiles =	${EXE} ${scripts}
 
-man1files =	nsnotifyd.1 \
-		nsnotify-fanout.1
+man1files =	nsnotify.1 nsnotifyd.1
 
 ALL	=	Makefile ${binfiles} ${man1files}
 
@@ -50,11 +48,11 @@ Makefile: Makefile.in configure
 	@echo make: You need to re-run ./configure
 	@false
 
+nsnotify: nsnotify.c version.h ${LIBDEPS}
+	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotify nsnotify.c ${LIBS}
+
 nsnotifyd: nsnotifyd.c version.h ${LIBDEPS}
 	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotifyd nsnotifyd.c ${LIBS}
-
-nsnotify-fanout: nsnotify-fanout.c version.h ${LIBDEPS}
-	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotify-fanout nsnotify-fanout.c ${LIBS}
 
 version.h::
 	@version/set.sh
