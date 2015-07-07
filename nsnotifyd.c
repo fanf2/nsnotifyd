@@ -84,7 +84,6 @@ static bool quit;
 
 static void
 sigexit(int dummy) {
-	write(2, "QUIT\n", 5);
 	quit = true;
 }
 
