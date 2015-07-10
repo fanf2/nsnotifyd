@@ -17,20 +17,19 @@ my $compilezone = 'named-compilezone -i local -k warn -n warn -o -';
 
 sub usage {
     print STDERR <<EOF;
-usage:	metazone [options] <zone> [serial [master]]
+usage:	metazone [options] <zone> [serial [server]]
 	metazone [options] <zone> named.zones.*
 options:
   -f [file]           read/write metazone from/to file
   -n                  do not reconfigure named
   -q                  suppress information about zone load
-  -s [server]         AXFR metazone from server
-  [serial [master]]   generate config files from metazone
+  [serial [server]]   generate config files from metazone
   named.zones.*       generate metazone from config files
 EOF
     exit 2;
 }
 my %opt;
-usage unless getopts '-f:nqs:', \%opt;
+usage unless getopts '-f:nq', \%opt;
 exec "perldoc -F $0" if $opt{h};
 usage if @ARGV < 1;
 
@@ -38,8 +37,21 @@ our $quiet = $opt{q} ? '2>/dev/null' : '';
 
 our $metazone = shift;
 
-# strip nsnotifyd arguments
-@ARGV = () if (@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$};
+our $server;
+
+if ((@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$}) {
+	$server = $ARGV[1];
+	@ARGV = ();
+}
+
+sub slurp {
+    my $f = shift;
+    open my $h, '<', $f or fale "open $f";
+    undef $/;
+    return <$h>;
+}
+
+# metazone to named.conf
 
 $metazone =~ s{[.]?$}{.};
 our $zonere = quotemeta $metazone;
@@ -50,13 +62,6 @@ our $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
 		\s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
 our $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
 		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
-
-sub slurp {
-    my $f = shift;
-    open my $h, '<', $f or fale "open $f";
-    undef $/;
-    return <$h>;
-}
 
 sub unquote {
 	my $rdata = shift;
@@ -117,18 +122,21 @@ sub metazone {
     }
     if (%rename and not $opt{n}) {
 	    wail "reconfiguring named" unless $quiet;
-	    exit system 'rndc reconfig';
+	    return system 'rndc reconfig';
     } else {
-	    exit 0;
+	    return 0;
     }
 }
 
-metazone loadzone $metazone, $opt{f} if $opt{f};
-metazone axfrzone $metazone, $opt{s} if $opt{s};
-metazone axfrzone $metazone if @ARGV == 0;
+if (@ARGV == 0) {
+	if ($opt{f}) {
+		exit metazone loadzone $metazone, $opt{f};
+	} else {
+		exit metazone axfrzone $metazone, $server;
+	}
+}
 
-
-# named.conf zone parser
+# named.conf to metazone
 
 our $com89_re = qr{ /\*.*?\*/ }sx;
 our $com99_re = qr{ //.*\n }x;
