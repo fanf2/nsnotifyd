@@ -164,8 +164,9 @@ sub loadconf {
 sub quote {
 	my $rdata = shift;
 	$rdata =~ s{([\\"])}{\\$1}g;
-	$rdata =~ s{^(.*[^\n])\n*$}{\t"$1"}s;
-	$rdata =~ s{\n}{"\n\t" }g;
+	$rdata =~ s{(.*)}{\t"$1"}g;
+	$rdata =~ s{"\n}{\\010"\n}g;
+	$rdata =~ s{\n*$}{};
 	return $rdata;
 }
 
