@@ -2,6 +2,7 @@
 
 use warnings;
 use strict;
+use re 'eval';
 
 use File::Temp qw(tempfile);
 use Getopt::Std;
@@ -34,9 +35,9 @@ usage unless getopts '-hf:nqs:', \%opt;
 exec "perldoc -F $0" if $opt{h};
 usage if @ARGV < 1;
 
-my $quiet = $opt{q} ? '2>/dev/null' : '';
+our $quiet = $opt{q} ? '2>/dev/null' : '';
 
-my $metazone = shift;
+our $metazone = shift;
 
 # strip nsnotifyd arguments
 @ARGV = () if (@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$};
@@ -50,14 +51,26 @@ if (@ARGV > 0) {
 }
 
 $metazone =~ s{[.]?$}{.};
-my $zonere = quotemeta $metazone;
-my $label = qr{(?:[^;.\\\s]|\\.)+};
-my $hostname = qr{(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?[.])+};
-my $rname = qr{$label\.$hostname};
-my $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
-	       \s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
-my $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
+our $zonere = quotemeta $metazone;
+our $label = qr{(?:[^;.\\\s]|\\.)+};
+our $hostname = qr{(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?[.])+};
+our $rname = qr{$label\.$hostname};
+our $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
+	        \s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
+our $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
 		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
+
+# named.conf zone parser
+our $string_re = qr{ " (?: [^"\\] | \\. )* " }x;
+our $atom_re   = qr{ [0-9A-Za-z!:._/-]+ }x;
+our $stuff_re  = qr{  $string_re
+		  |     $atom_re
+		  | (??{$block_re})
+		  | \s+ | ;
+		  }x;
+our $block_re = qr{ { (?: $stuff_re )+ } \s* ; }x;
+our $zone_re = qr{ \s* zone \s+ ($string_re|$atom_re)
+		   (?i: \s+ IN ) \s* ($block_re) }x;
 
 sub slurp {
     my $f = shift;
