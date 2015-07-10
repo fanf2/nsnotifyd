@@ -20,20 +20,20 @@ sub usage {
 usage:	metazone [options] <zone> [serial [server]]
 	metazone [options] <zone> named.zones.*
 options:
+  -d                  debugging mode
   -f [file]           read/write metazone from/to file
   -n                  do not reconfigure named
-  -q                  suppress information about zone load
   [serial [server]]   generate config files from metazone
   named.zones.*       generate metazone from config files
 EOF
     exit 2;
 }
 my %opt;
-usage unless getopts '-f:nq', \%opt;
+usage unless getopts '-df:n', \%opt;
 exec "perldoc -F $0" if $opt{h};
 usage if @ARGV < 1;
 
-our $quiet = $opt{q} ? '2>/dev/null' : '';
+our $quiet = $opt{d} ? '' : '2>/dev/null';
 
 our $metazone = shift;
 
