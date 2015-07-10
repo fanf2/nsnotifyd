@@ -112,8 +112,7 @@ sub metazone {
 		    $conf .= "zone \"$zone\" $conf{$view}{$zone}\n";
 	    }
 	    my $fn = "named.zones.$view";
-	    my $old = slurp $fn;
-	    next if $old eq $conf;
+	    next if -f $fn and $conf eq slurp $fn;
 	    my ($fh,$tn) = tempfile "$fn.XXXXXXXX", UNLINK => 1;
 	    print $fh $conf;
 	    close $fh or fale "write $fn";
