@@ -267,6 +267,7 @@ refresh_alarm(zone z[]) {
 	for(n = z; z->name != NULL; z++)
 		if(n->refresh > z->refresh)
 			n = z;
+	if(n->name == NULL) return;
 	log_debug("%s refresh at %s", n->name, isotime(n->refresh));
 	alarm(n->refresh - time(NULL));
 }
@@ -333,6 +334,7 @@ serial_lt(uint32_t s1, uint32_t s2) {
 
 static void
 zone_retry(zone *z) {
+	if(z->retry == 0) return;
 	z->refresh = time(NULL) + z->retry;
 	log_debug("%s retry at %s", z->name, isotime(z->refresh));
 }
@@ -346,13 +348,17 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 		zone_retry(zp);
 		return;
 	}
-	if(!serial_lt(zp->serial, z.serial)) {
+	if(zp->serial == 0 && zp->refresh == 0 && zp->retry == 0) {
+		log_info("%s IN SOA %d wildcard; running %s",
+		    z.name, z.serial, cmd);
+	} else if (serial_lt(zp->serial, z.serial)) {
+		log_info("%s IN SOA %d updated; running %s",
+		    z.name, z.serial, cmd);
+	} else {
 		log_info("%s IN SOA %d unchanged", z.name, z.serial);
 		*zp = z; // refresh later
 		return;
 	}
-	log_info("%s IN SOA %d updated; running %s",
-	    z.name, z.serial, cmd);
 	switch(fork()) {
 	case(-1):
 		log_err("fork: %m");
@@ -407,6 +413,7 @@ usage(void) {
 "	-s addr		authoritative server for refresh queries\n"
 "	-u user		drop privileges to user\n"
 "	-V		print version information\n"
+"	-w		wildcard: accept notifies on any zone\n"
 "	command		the command to run when a zone changes\n"
 "	zone...		list of zones for which to accept notifies\n"
 		);
@@ -423,10 +430,11 @@ main(int argc, char *argv[]) {
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *authority = NULL;
+	bool wild = false;
 	char *cmd = NULL;
 	int debug = 0;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:V")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:Vw")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -460,6 +468,9 @@ main(int argc, char *argv[]) {
 		case('u'):
 			user = optarg;
 			continue;
+		case('w'):
+			wild = true;
+			continue;
 		case('V'):
 			version();
 		default:
@@ -477,7 +488,7 @@ main(int argc, char *argv[]) {
 
 	argc -= optind;
 	argv += optind;
-	if(argc < 2 || addr == NULL || port == NULL)
+	if(argc < 1 || (argc == 1 && !wild))
 		usage();
 
 	cmd = *argv++; argc--;
@@ -600,12 +611,14 @@ main(int argc, char *argv[]) {
 		    qclass != ns_c_in || qtype != ns_t_soa)
 			goto refused;
 
-		zone *z;
+		zone *z, wz = { .name = qname };
 		for(z = zones; z->name != NULL; z++)
 			if(strcmp(z->name, qname) == 0)
 				break;
-		if(z->name == NULL)
-			goto refused;
+		if(z->name == NULL) {
+			if(wild) z = &wz;
+			else goto refused;
+		}
 
 		// TODO: call ns_verify() to check TSIG
 		// however libbind's ns_verify only does HMAC MD5

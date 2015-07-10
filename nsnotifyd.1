@@ -6,7 +6,7 @@
 .Nd handle DNS NOTIFY messages by running a command
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46dV
+.Op Fl 46dVw
 .Op Fl l Ar facility
 .Op Fl P Ar pidfile
 .Op Fl u Ar user
@@ -123,6 +123,10 @@ after daemonizing.
 .It Fl V
 Print details about this version of
 .Nm .
+.It Fl w
+Accept NOTIFY messages for unknown zones
+that are not given on the command line.
+(Wildcard mode.)
 .El
 .Sh DETAILS
 .Ss Startup
@@ -157,14 +161,21 @@ The
 daemon acts as a very simple UDP-only DNS server.
 The only DNS queries handled by
 .Nm
-are NOTIFY messages for
-.Ar zones
-given on the command line.
-Other queries are rejected with a
+are NOTIFY messages.
+It rejects other queries with a
 .Sy REFUSED
 response code, or
 .Sy FORMERR
 if the query is too mangled.
+.Pp
+Normally
+.Nm
+only accepts NOTIFY messages for
+.Ar zones
+given on the command line.
+NOTIFY messages are accepted for unknown zones if you use the
+.Fl w
+wildcard option.
 .Pp
 Messages are logged via
 .Xr syslog 3 .
@@ -178,6 +189,16 @@ The SOA query is sent to the source of the NOTIFY
 or, if a timer expired, to the server given in the
 .Fl s
 option.
+.Pp
+If the NOTIFY message was accepted for an unknown zone
+because you used the
+.Fl w
+wildcard option,
+.Nm
+makes a SOA query to verify the zone exists
+and to get its serial number,
+and runs the command if it succeeds.
+(It is unable to verify the zone has changed in this case.)
 .Ss Command invocation
 When the SOA reply indicates the zone's serial number has increased,
 .Nm
@@ -201,12 +222,15 @@ or no third argument if the update was found via a periodic refresh or retry.
 When the command exits successfully,
 .Nm
 updates its copy of the zone's SOA parameters.
-It will then poll the zone on its refresh interval.
+It will next poll the zone on its refresh interval.
 .Pp
 If the SOA query or command fails,
 .Nm
 does not update its SOA parameters,
-and polls the zone on its retry interval.
+and and will next poll the zone on its retry interval.
+.Pp
+Unknown zones that were not mentioned on the command line
+are not polled.
 .Sh EXAMPLE - zone revision history
 Say you have a zone,
 .Sy example.org ,
