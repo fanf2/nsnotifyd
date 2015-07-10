@@ -1,0 +1,134 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use File::Temp qw(tempfile);
+use Getopt::Std;
+
+sub wail { warn "metazone: @_\n"; }
+sub fail { wail @_; exit 2; }
+sub fale { fail "@_: $!" }
+
+# for named-compilezone
+$ENV{PATH} .= ":/sbin:/usr/sbin:/usr/local/sbin";
+my $compilezone = 'named-compilezone -i local -k warn -n warn -o -';
+
+sub usage {
+    print STDERR <<EOF;
+usage:	metazone [options] <zone> [serial [master]]
+	metazone [options] <zone> named.zones.*
+options:
+  -h                  display full documentation
+  -f [file]           read metazone from file
+  -n                  do not reconfigure named
+  -q                  suppress information about zone load
+  -s [server]         AXFR metazone from server
+  [serial [master]]   ignored (used by nsnotifyd)
+  named.zones.*       generate metazone from config files
+EOF
+    exit 2;
+}
+my %opt;
+usage unless getopts '-hf:nqs:', \%opt;
+exec "perldoc -F $0" if $opt{h};
+usage if @ARGV < 1;
+
+my $quiet = $opt{q} ? '2>/dev/null' : '';
+
+my $metazone = shift;
+
+# strip nsnotifyd arguments
+@ARGV = () if (@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$};
+
+if (@ARGV > 0) {
+	usage if $opt{s} or $opt{f};
+	# check config files
+	for (@ARGV) {
+		usage unless s{^named\.zones\.}{};
+	}
+}
+
+$metazone =~ s{[.]?$}{.};
+my $zonere = quotemeta $metazone;
+my $label = qr{(?:[^;.\\\s]|\\.)+};
+my $hostname = qr{(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?[.])+};
+my $rname = qr{$label\.$hostname};
+my $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
+	       \s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
+my $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
+		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
+
+sub slurp {
+    my $f = shift;
+    open my $h, '<', $f or fale "open $f";
+    undef $/;
+    return <$h>;
+}
+
+sub unquote {
+	my $rdata = shift;
+	$rdata =~ s{"((?:[^"\\]|\\.)+)"\s*}{$1}g;
+	$rdata =~ s{\\(.)}{$1}g;
+	return $rdata;
+}
+
+sub checkzone {
+    my $soa = shift;
+    fail "missing SOA record" unless defined $soa and $soa =~ $soare;
+    return @_;
+}
+
+sub axfrzone {
+    my $zone = shift;
+    my $master = shift;
+    if ($master) {
+	    wail "loading zone $zone via AXFR from $master" unless $quiet;
+	    $master =~ s{^(.*)#(\d+)$}{-p $2 \@$1} or $master = '@'.$master;
+    } else {
+	    wail "loading zone $zone via AXFR" unless $quiet;
+	    $master = '';
+    }
+    return checkzone qx{dig $master +noadditional axfr $zone |
+                        $compilezone $zone /dev/stdin $quiet};
+}
+
+sub loadzone {
+    my ($zone,$file) = @_;
+    wail "loading zone $zone from file $file" unless $quiet;
+    return checkzone qx{$compilezone -j $zone '$file' $quiet};
+}
+
+sub metazone {
+    my %conf;
+    for (@_) {
+	    $conf{$+{view}}{$+{zone}} = unquote $+{txt}
+		if m{$txtre}o;
+    }
+    my %rename;
+    for my $view (sort keys %conf) {
+	    my $conf = "; view $view from $metazone\n";
+	    for my $zone (sort keys %{$conf{$view}}) {
+		    $conf .= "zone \"$zone\" $conf{$view}{$zone}\n";
+	    }
+	    my $fn = "named.zones.$view";
+	    my $old = slurp $fn;
+	    next if $old eq $conf;
+	    my ($fh,$tn) = tempfile "$fn.XXXXXXXX", UNLINK => 1;
+	    print $fh $conf;
+	    close $fh or fale "write $fn";
+	    $rename{$tn} = $fn;
+    }
+    while (my ($tn,$fn) = each %rename) {
+	    rename $tn, $fn or fale "rename $tn";
+    }
+    if (%rename and not $opt{n}) {
+	    exit system 'rndc reconfig';
+    } else {
+	    exit 0;
+    }
+}
+
+metazone loadzone $metazone, $opt{f} if $opt{f};
+metazone axfrzone $metazone, $opt{s} if $opt{s};
+metazone axfrzone $metazone if @ARGV == 0;
