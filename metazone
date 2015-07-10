@@ -189,14 +189,12 @@ if ($opt{f}) {
 	    or fale "open > $opt{f}";
 }
 
-my $mname = $opt{s} // "localhost";
-$mname =~ s{[.]?$}{.};
+# XXX configurable?
 my $time = time;
-
 print <<EOF;
 \$ORIGIN $metazone
 \$TTL 1h
-@	SOA	$mname hostmaster.$mname (
+@	SOA	localhost. hostmaster.localhost. (
 		$time 1h 1h 1w 1h )
 	NS	localhost.
 EOF
