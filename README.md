@@ -83,8 +83,8 @@ You can clone or browse the repository from:
 ----------------------------------------------------------------
 
 Please send bug reports or patches to me. I accept contributions made
-under the terms of CC0. Thanks to JP Mens and Richard James Salts for
-helpful feedback and encouragement.
+under the terms of CC0. Thanks to JP Mens, Gavin Brown, and Richard
+James Salts for helpful feedback and encouragement.
 
 Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>  
 at Cambridge University Information Services.
