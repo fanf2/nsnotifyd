@@ -121,6 +121,7 @@ sub metazone {
 	    rename $tn, $fn or fale "rename $tn";
     }
     if (%rename and not $opt{n}) {
+	    # XXX syslog
 	    wail "reconfiguring named" unless $quiet;
 	    return system 'rndc reconfig';
     } else {
