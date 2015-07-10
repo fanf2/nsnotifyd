@@ -61,7 +61,7 @@ sub slurp {
 
 sub unquote {
 	my $rdata = shift;
-	$rdata =~ s{"((?:[^"\\]|\\.)+)"\s*}{$1}g;
+	$rdata =~ s{"((?:[^"\\]|\\.)*)"\s*}{$1}g;
 	$rdata =~ s{\\(00(?<n>\d)|0(?<n>\d\d)|(?<n>\d\d\d))}{chr $+{n}}ge;
 	$rdata =~ s{\\(.)}{$1}g;
 	return $rdata;
@@ -164,7 +164,7 @@ sub loadconf {
 sub quote {
 	my $rdata = shift;
 	$rdata =~ s{([\\"])}{\\$1}g;
-	$rdata =~ s{(.*)}{\t"$1"}g;
+	$rdata =~ s{(.+)}{\t"$1"}g;
 	$rdata =~ s{"\n}{\\010"\n}g;
 	$rdata =~ s{\n*$}{};
 	return $rdata;
