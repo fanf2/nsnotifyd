@@ -150,9 +150,10 @@ sub loadconf {
 	my $ctxt = slurp $f;
 	my %conf;
 	while ($ctxt =~ s{^$zone_re}{}o) {
+		my $conf = $+{conf};
 		my $zone = unquote $+{zone};
 		$zone =~ s{[.]*$}{};
-		$conf{$zone} = $+{conf};
+		$conf{$zone} = $conf;
 	}
 	return \%conf if $ctxt =~ s{^$s_re?$}{}o;
 	$ctxt =~ s{\n}{ }g;
