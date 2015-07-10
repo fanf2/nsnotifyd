@@ -120,7 +120,8 @@ sub metazone {
     }
     my %rename;
     for my $view (sort keys %conf) {
-	    my $conf = "; view $view from $metazone\n";
+	    my $conf = "# automatically updated by metazone - DO NOT EDIT\n";
+	    $conf .= "# view $view generated from $metazone\n";
 	    for my $zone (sort keys %{$conf{$view}}) {
 		    $conf .= "zone \"$zone\" $conf{$view}{$zone}\n";
 	    }
