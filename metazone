@@ -20,18 +20,17 @@ sub usage {
 usage:	metazone [options] <zone> [serial [master]]
 	metazone [options] <zone> named.zones.*
 options:
-  -h                  display full documentation
   -f [file]           read/write metazone from/to file
   -n                  do not reconfigure named
   -q                  suppress information about zone load
   -s [server]         AXFR metazone from server
-  [serial [master]]   ignored (used by nsnotifyd)
+  [serial [master]]   generate config files from metazone
   named.zones.*       generate metazone from config files
 EOF
     exit 2;
 }
 my %opt;
-usage unless getopts '-hf:nqs:', \%opt;
+usage unless getopts '-f:nqs:', \%opt;
 exec "perldoc -F $0" if $opt{h};
 usage if @ARGV < 1;
 
