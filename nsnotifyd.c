@@ -266,7 +266,7 @@ refresh_alarm(zone z[]) {
 	zone *n;
 	for(n = z; z->name != NULL; z++)
 		if(n->refresh > z->refresh)
-			n->refresh = z->refresh;
+			n = z;
 	log_debug("%s refresh at %s", n->name, isotime(n->refresh));
 	alarm(n->refresh - time(NULL));
 }
