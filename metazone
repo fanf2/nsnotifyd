@@ -133,7 +133,7 @@ metazone axfrzone $metazone if @ARGV == 0;
 
 our $com89_re = qr{ /\*.*?\*/ }sx;
 our $com99_re = qr{ //.*\n }x;
-our $comsh_re = qr{ #.*\n }x;
+our $comsh_re = qr{ \#.*\n }x;
 our $s_re = qr{ ( $com89_re | $com99_re | $comsh_re | \s+ )+ }x;
 our $string_re = qr{ " (?: [^"\\] | \\. )* " }x;
 our $atom_re   = qr{ [0-9A-Za-z!:._/-]+ }x;
