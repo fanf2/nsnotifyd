@@ -1,0 +1,116 @@
+.Dd July 10, 2015
+.Dt NSNOTIFY 1 "DNS File Formats Manual"
+.Os DNS
+.Sh NAME
+.Nm metazone
+.Nd BIND configuration in a DNS zone
+.Sh DESCRIPTION
+A
+.Dq metazone
+is a DNS zone
+that describes the configuration of other DNS zones.
+.Pp
+Metazones allow you to use standard DNS mechanisms -
+AXFR, IXFR, NOTIFY, UPDATE -
+to control the configuration of multiple name servers,
+instead of using a separate out-of-band distribution system.
+.Sh STRUCTURE
+.Ss Apex
+A metazone has apex SOA and NS resource records
+as required by the DNS protocol.
+The SOA record is used for zone refresh timing
+and to locate the primary master,
+in the usual way.
+The NS resource records will never be used
+and are just placeholders required by the protocol.
+.Ss Views
+Immediately under the apex are a number of
+single-label subdomains.
+When the metazone is converted to
+.Pa named.conf
+syntax,
+the zone configurations
+are written to multiple files,
+one for each subdomain.
+This allows you to have a single metazone
+containing the configuration for multiple views.
+(When you have
+.Sy in-view
+zones,
+the configurations for multiple views
+must be updated in sync.)
+.Ss Zones
+Each zone configuration is represented in the metazone
+using one TXT resource record.
+The owner of the TXT record is
+.D1 Ao Ar zone Ac Ns . Ns Ao Ar view Ac Ns . Ns Ao Ar metazone Ac Ns .
+The TXT RDATA contains the zone's configuration clause.
+.Pp
+Note that if you need a configuration clause longer than 255 bytes,
+you can use one TXT record containing multiple strings.
+The strings are concatenated to form the configuration clause.
+You must not use multiple TXT records because you cannot control their order.
+.Sh EXAMPLE
+.Bd -literal
+; This name for the metazone cannot collide with a real domain.
+; You might prefer to use a subdomain of a domain you own.
+$ORIGIN _metazone.
+
+; The required apex records.
+$TTL	1h
+@	SOA	ns-pri.example.org. hostmaster.example.org. (
+		1436531696 1h 1h 1w 1h )
+@	NS	ns-pri.example.org.
+
+; Configuration for the "int" view
+$ORIGIN int._metazone.
+
+example.org	TXT	( "{"
+			" type slave;"
+			" masters { ns-pri-int; };"
+			" allow-query { internal; };"
+			" allow-transfer { internal; };"
+			"};" )
+
+; Configuration for the "ext" view
+$ORIGIN ext._metazone.
+
+example.org	TXT	( "{"
+			" type slave;"
+			" masters { ns-pri-ext; };"
+			" allow-transfer { xfer-2nd; };"
+			" also-notify { notify-2nd; };"
+			"};" )
+.Ed
+.Sh COMPATIBILITY
+The metazone structure described in this manual
+is significantly different from the original
+metazone design by Paul Vixie.
+.Pp
+Vixie metazones encode the configuration for a zone in multiple RRsets.
+This encoding needs to be translated into a name server configuration.
+Vixie metazones are designed to be interoperable
+across multiple name server implementations.
+.Pp
+Our metazones are specific to BIND,
+since they include literal
+.Pa named.conf
+snippets,
+and do not make any attempt to support other name server implementations.
+.Sh SEE ALSO
+.Xr named.conf 5
+.Rs
+.%A Paul Vixie
+.%T Federated domain name service using DNS metazones
+.%J IEICE Transactions on Communication
+.%N E89-B(4)
+.%D April 2006
+.Re
+.Sh AUTHOR
+.An Tony Finch
+.Aq Li dot@dotat.at
+.Aq Li fanf2@cam.ac.uk
+.br
+at Cambridge University Information Services
+.\" You may do anything with this. It has no warranty.
+.\" http://creativecommons.org/publicdomain/zero/1.0/
