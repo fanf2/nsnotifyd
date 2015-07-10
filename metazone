@@ -195,7 +195,7 @@ EOF
 for my $view (sort keys %conf) {
 	print "\$ORIGIN $view.$metazone\n";
 	for my $zone (sort keys %{$conf{$view}}) {
-		printf "%s	TXT (\n%s )\n",
+		printf "%s	TXT ( %s )\n",
 		    $zone, quote $conf{$view}{$zone};
 	}
 }
