@@ -142,8 +142,8 @@ our $stuff_re  = qr{ $string_re | $atom_re
 		   }x;
 our $block_re = qr{ { (?: $stuff_re )+ } }x;
 our $zone_re = qr{ $s_re? zone $s_re (?<zone>$string_re|$atom_re)
-		   (?: $s_re (?i:in|"in") ) $s_re?
-		   (?<conf>$block_re) $s_re? ; }x;
+		   (?: $s_re (?i:in|"in") )? $s_re?
+		   (?<conf>$block_re $s_re? ;) }x;
 
 sub loadconf {
 	my $f = shift;
@@ -154,7 +154,7 @@ sub loadconf {
 		$zone =~ s{[.]*$}{};
 		$conf{$zone} = $+{conf};
 	}
-	return \%conf if $ctxt =~ s{$s_re*$}{}o;
+	return \%conf if $ctxt =~ s{^$s_re?$}{}o;
 	$ctxt =~ s{\n}{ }g;
 	$ctxt =~ s{^(.{60}).*}{$1...} if length $ctxt >= 60;
 	fail "$f: could not parse \"$ctxt\"";
