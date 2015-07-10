@@ -21,7 +21,7 @@ usage:	metazone [options] <zone> [serial [master]]
 	metazone [options] <zone> named.zones.*
 options:
   -h                  display full documentation
-  -f [file]           read metazone from file
+  -f [file]           read/write metazone from/to file
   -n                  do not reconfigure named
   -q                  suppress information about zone load
   -s [server]         AXFR metazone from server
@@ -42,14 +42,6 @@ our $metazone = shift;
 # strip nsnotifyd arguments
 @ARGV = () if (@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$};
 
-if (@ARGV > 0) {
-	usage if $opt{s} or $opt{f};
-	# check config files
-	for (@ARGV) {
-		usage unless s{^named\.zones\.}{};
-	}
-}
-
 $metazone =~ s{[.]?$}{.};
 our $zonere = quotemeta $metazone;
 our $label = qr{(?:[^;.\\\s]|\\.)+};
@@ -59,21 +51,6 @@ our $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
 		\s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
 our $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
 		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
-
-# named.conf zone parser
-our $com89_re = qr{ /\*.*?\*/ }sx;
-our $com99_re = qr{ //.*\n }x;
-our $comsh_re = qr{ #.*\n }x;
-our $s_re = qr{ ( $com89_re | $com99_re | $comsh_re | \s+ )+ }x;
-our $string_re = qr{ " (?: [^"\\] | \\. )* " }x;
-our $atom_re   = qr{ [0-9A-Za-z!:._/-]+ }x;
-our $stuff_re  = qr{ $string_re | $atom_re
-		   | (??{$::block_re}) | $s_re | ;
-		   }x;
-our $block_re = qr{ { (?: $stuff_re )+ } }x;
-our $zone_re = qr{ $s_re? zone $s_re ($string_re|$atom_re)
-		   (?i: $s_re (in|"in") ) $s_re?
-		   ($block_re) $s_re? ; }x;
 
 sub slurp {
     my $f = shift;
@@ -86,6 +63,7 @@ sub unquote {
 	my $rdata = shift;
 	$rdata =~ s{"((?:[^"\\]|\\.)+)"\s*}{$1}g;
 	$rdata =~ s{\\(.)}{$1}g;
+	# XXX \123
 	return $rdata;
 }
 
@@ -149,3 +127,76 @@ sub metazone {
 metazone loadzone $metazone, $opt{f} if $opt{f};
 metazone axfrzone $metazone, $opt{s} if $opt{s};
 metazone axfrzone $metazone if @ARGV == 0;
+
+
+# named.conf zone parser
+
+our $com89_re = qr{ /\*.*?\*/ }sx;
+our $com99_re = qr{ //.*\n }x;
+our $comsh_re = qr{ #.*\n }x;
+our $s_re = qr{ ( $com89_re | $com99_re | $comsh_re | \s+ )+ }x;
+our $string_re = qr{ " (?: [^"\\] | \\. )* " }x;
+our $atom_re   = qr{ [0-9A-Za-z!:._/-]+ }x;
+our $stuff_re  = qr{ $string_re | $atom_re
+		   | (??{$::block_re}) | $s_re | ;
+		   }x;
+our $block_re = qr{ { (?: $stuff_re )+ } }x;
+our $zone_re = qr{ $s_re? zone $s_re (?<zone>$string_re|$atom_re)
+		   (?: $s_re (?i:in|"in") ) $s_re?
+		   (?<conf>$block_re) $s_re? ; }x;
+
+sub loadconf {
+	my $f = shift;
+	my $ctxt = slurp $f;
+	my %conf;
+	while ($ctxt =~ s{^$zone_re}{}o) {
+		my $zone = unquote $+{zone};
+		$zone =~ s{[.]*$}{};
+		$conf{$zone} = $+{conf};
+	}
+	return \%conf if $ctxt =~ s{$s_re*$}{}o;
+	$ctxt =~ s{\n}{ }g;
+	$ctxt =~ s{^(.{60}).*}{$1...} if length $ctxt >= 60;
+	fail "$f: could not parse \"$ctxt\"";
+}
+
+sub quote {
+	my $rdata = shift;
+	$rdata =~ s{([\\"])}{\\$1}g;
+	$rdata =~ s{^(.*[^\n])\n*$}{\t"$1"}s;
+	$rdata =~ s{\n}{"\n\t" }g;
+	return $rdata;
+}
+
+my %conf;
+for my $fn (@ARGV) {
+	usage unless $fn =~ m{^named\.zones\.(.*)$};
+	$conf{$1} = loadconf $fn;
+}
+
+if ($opt{f}) {
+	open STDOUT, '>', $opt{f}
+	    or fale "open > $opt{f}";
+}
+
+my $mname = $opt{s} // "localhost";
+$mname =~ s{[.]?$}{.};
+my $time = time;
+
+print <<EOF;
+\$ORIGIN $metazone
+\$TTL 1h
+@	SOA	$mname hostmaster.$mname (
+		$time 1h 1h 1w 1h )
+	NS	localhost.
+EOF
+
+for my $view (sort keys %conf) {
+	print "\$ORIGIN $view.$metazone\n";
+	for my $zone (sort keys %{$conf{$view}}) {
+		printf "%s	TXT (\n%s )\n",
+		    $zone, quote $conf{$view}{$zone};
+	}
+}
+
+exit;
