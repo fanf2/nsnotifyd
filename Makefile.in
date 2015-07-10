@@ -4,9 +4,11 @@ prefix =	${HOME}
 bindir =	${prefix}/bin
 mandir =	${prefix}/share/man
 man1dir=	${mandir}/man1
+man5dir=	${mandir}/man5
 
 bindest=	${DESTDIR}${bindir}
 man1dest=	${DESTDIR}${man1dir}
+man5dest=	${DESTDIR}${man5dir}
 
 # compiler flags
 
@@ -37,8 +39,10 @@ scripts	=	nsnotify2git \
 binfiles =	${EXE} ${scripts}
 
 man1files =	nsnotify.1 nsnotifyd.1
+man5files =	metazone.5
+manfiles =	${man1files} ${man5files}
 
-ALL	=	Makefile ${binfiles} ${man1files}
+ALL	=	Makefile ${binfiles} ${manfiles}
 
 ################################################################
 
@@ -92,9 +96,10 @@ ${RESTGZ}:
 ################################################################
 
 install: ${ALL}
-	install -m 755 -d ${bindest} ${man1dest}
+	install -m 755 -d ${bindest} ${man1dest} ${man5dest}
 	install -m 755 ${binfiles} ${bindest}/
 	install -m 644 ${man1files} ${man1dest}/
+	install -m 644 ${man5files} ${man5dest}/
 
 ################################################################
 
