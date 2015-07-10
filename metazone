@@ -56,21 +56,24 @@ our $label = qr{(?:[^;.\\\s]|\\.)+};
 our $hostname = qr{(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?[.])+};
 our $rname = qr{$label\.$hostname};
 our $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
-	        \s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
+		\s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
 our $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
 		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
 
 # named.conf zone parser
+our $com89_re = qr{ /\*.*?\*/ }sx;
+our $com99_re = qr{ //.*\n }x;
+our $comsh_re = qr{ #.*\n }x;
+our $s_re = qr{ ( $com89_re | $com99_re | $comsh_re | \s+ )+ }x;
 our $string_re = qr{ " (?: [^"\\] | \\. )* " }x;
 our $atom_re   = qr{ [0-9A-Za-z!:._/-]+ }x;
-our $stuff_re  = qr{  $string_re
-		  |     $atom_re
-		  | (??{$block_re})
-		  | \s+ | ;
-		  }x;
-our $block_re = qr{ { (?: $stuff_re )+ } \s* ; }x;
-our $zone_re = qr{ \s* zone \s+ ($string_re|$atom_re)
-		   (?i: \s+ IN ) \s* ($block_re) }x;
+our $stuff_re  = qr{ $string_re | $atom_re
+		   | (??{$::block_re}) | $s_re | ;
+		   }x;
+our $block_re = qr{ { (?: $stuff_re )+ } }x;
+our $zone_re = qr{ $s_re? zone $s_re ($string_re|$atom_re)
+		   (?i: $s_re (in|"in") ) $s_re?
+		   ($block_re) $s_re? ; }x;
 
 sub slurp {
     my $f = shift;
