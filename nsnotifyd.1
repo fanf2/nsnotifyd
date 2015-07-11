@@ -231,6 +231,16 @@ and and will next poll the zone on its retry interval.
 .Pp
 Unknown zones that were not mentioned on the command line
 are not polled.
+.Sh EXAMPLE - metazones
+Metazones allow you to use standard DNS mechanisms -
+AXFR, IXFR, NOTIFY, UPDATE -
+to control the configuration of multiple name servers,
+instead of using a separate out-of-band distribution system.
+.Pp
+For details,
+see the
+.Xr metazone 1
+manual.
 .Sh EXAMPLE - zone revision history
 Say you have a zone,
 .Sy example.org ,
@@ -476,6 +486,7 @@ NOTIFY messages and responses are very small,
 so following these specifications should not be necessary in practice.
 .Sh SEE ALSO
 .Xr git 1 ,
+.Xr metazone 1 ,
 .Xr named 8 ,
 .Xr named.conf 5 ,
 .Xr nsdiff 1 ,

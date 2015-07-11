@@ -16,7 +16,11 @@ There is also a client program `nsnotify` for sending notify messages.
 
 ### Examples
 
-There are three example scripts described in the manual:
+There are four example scripts described in the manual:
+
+`metazone` allows you to use standard DNS mechanisms - AXFR, IXFR,
+NOTIFY, UPDATE - to control the configuration of multiple name
+servers, instead of using a separate out-of-band distribution system.
 
 `nsnotify2git` records the history of changes to a set of zones.
 
