@@ -38,7 +38,7 @@ scripts	=	nsnotify2git \
 
 binfiles =	${EXE} ${scripts}
 
-man1files =	nsnotify.1 nsnotifyd.1
+man1files =	metazone.1 nsnotify.1 nsnotifyd.1
 man5files =	metazone.5
 manfiles =	${man1files} ${man5files}
 

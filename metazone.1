@@ -1,0 +1,210 @@
+.Dd July 11, 2015
+.Dt METAZONE 1 "DNS Commands Manual"
+.Os DNS
+.Sh NAME
+.Nm metazone
+.Nd convert BIND configuration to/from a DNS zone
+.Sh SYNOPSIS
+.Nm
+.Op Fl dn
+.Op Fl f Ar file
+.Aq Ar zone
+.Op Ar serial Op Ar server
+.Nm
+.Op Fl f Ar file
+.Aq Ar zone
+.Ar named.zones.*
+.Sh DESCRIPTION
+A
+.Dq metazone
+is a DNS zone
+that describes the configuration of other DNS zones.
+.Pp
+Metazones allow you to use standard DNS mechanisms -
+AXFR, IXFR, NOTIFY, UPDATE -
+to control the configuration of multiple name servers,
+instead of using a separate out-of-band distribution system.
+.Pp
+The
+.Nm
+program
+converts between metazones and
+.Pa named.conf
+fragments in either direction.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl d
+Extra diagnostics about loading the zone.
+.It Fl f Ar file
+The file to use when reading or writing the metazone.
+.Pp
+If the
+.Fl f
+option is omitted in metazone-to-named.zones.* mode
+then the zone is obtained by AXFR.
+.Pp
+If the
+.Fl f
+option is omitted in named.zones.*-to-metazone mode
+then the zone is written to stdout.
+.It Fl n
+Do not run
+.Li rndc reload
+when a
+.Pa named.zones.*
+file has changed.
+.El
+.Sh DETAILS
+The format of a metazone is described in
+.Xr metazone 5 .
+.Pp
+A metazone can contain multiple
+.Dq views
+each of which corresponds to a
+.Pa named.conf
+fragment written to the file:
+.D1 Pa named.zones. Ns Aq view
+.Pp
+If you are using multiple views,
+your main
+.Pa named.conf
+will typically include each
+.Pa named.zones. Ns Aq view
+file in the corresponding view clause.
+However it is not required for your
+metazone views to correspond to your BIND views.
+.Ss metazone to named.zones.*
+The
+.Nm
+program is designed to work with
+.Nm nsnotifyd .
+You can run it with a command like:
+.D1 Nm nsnotifyd Nm metazone Aq Ar zone
+.Pp
+When the
+.Nm nsnotifyd
+daemon detects that the
+.Ar zone
+has changed,
+it runs
+.Nm
+with the name of the zone,
+its serial number,
+and optionally the address of
+the name server that notified us of the change.
+.Pp
+When the
+.Fl f
+option is not given,
+.Nm
+will AXFR the zone
+from the server
+(or
+.Li localhost
+if none is specified).
+It will then convert the zone to a set of
+.Pa named.zones. Ns Aq view
+files,
+written to the current directory.
+If any of the files has changed,
+.Nm
+runs
+.Nm rndc Cm reconfig
+to inform the name server
+(unless you give the
+.Fl n
+option).
+.Ss named.zones.* to metazone
+To convert a set of
+.Pa named.zones. Ns Aq view
+files to a metazone,
+run
+.D1 Nm Ao Ar zone Ac Pa named.zones.*
+The zone will be printed to the standard output
+unless the
+.Fl f
+option is given.
+The view names in the zone
+are taken from the file names.
+.Pp
+Your provisioning system can generate
+.Pa named.conf
+fragments on your master server,
+then you can update your metazone
+with the following command,
+and the changes will be propagated
+automatically to your slave servers.
+.Bd -literal -offset indent
+$ metazone _metazone named.zones.* |
+  nspatch -- _metazone /dev/stdin -- -l
+.Ed
+.Sh EXAMPLE
+To configure a slave server to reconfigure itself
+automatically using a metazone,
+run:
+.Bd -literal -offset indent
+$ nsnotifyd -p 5300 metazone _metazone
+.Ed
+.Pp
+You need to configure
+.Nm named
+to slave the metazone from your master server,
+and notify
+.Nm nsnotifyd
+when it changes.
+.Pp
+You need to ensure the
+.Pa named.zones.*
+files are present
+(empty is OK)
+so they can be included in the main
+.Pa named.conf .
+.Pp
+When
+.Nm named
+first starts,
+it will transfer the metazone,
+notify
+.Nm nsnotifyd
+which will run
+.Nm
+which will generate the rest of the configuration
+and tell
+.Nm named
+to reconfigure itself.
+.Bd -literal -offset indent
+options {
+	# ...
+};
+view int {
+	match-clients { 192.0.2.0/24; };
+	recursion yes;
+	zone _metazone {
+		type slave;
+		file "db.metazone";
+		masters { 192.0.2.1; };
+		also-notify { 127.0.0.1 port 5300; };
+	};
+	include "named.zones.int";
+};
+view external {
+	match-clients { any; };
+	recursion no;
+	include "named.zones.ext";
+};
+.Ed
+.Sh SEE ALSO
+.Xr metazone 5 ,
+.Xr named.conf 5 ,
+.Xr named 8 ,
+.Xr nsnotifyd 1 ,
+.Xr nspatch 1 ,
+.Xr rndc 8 .
+.Sh AUTHOR
+.An Tony Finch
+.Aq Li dot@dotat.at
+.Aq Li fanf2@cam.ac.uk
+.br
+at Cambridge University Information Services
+.\" You may do anything with this. It has no warranty.
+.\" http://creativecommons.org/publicdomain/zero/1.0/
