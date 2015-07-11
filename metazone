@@ -37,10 +37,10 @@ our $quiet = $opt{d} ? '' : '2>/dev/null';
 
 our $metazone = shift;
 
-our $server;
+our $server = 'localhost';
 
 if ((@ARGV == 1 or @ARGV == 2) and $ARGV[0] =~ m{^\d+$}) {
-	$server = $ARGV[1];
+	$server = $ARGV[1] if defined $ARGV[1];
 	@ARGV = ();
 }
 
