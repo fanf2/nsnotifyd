@@ -51,6 +51,12 @@ sub slurp {
     return <$h>;
 }
 
+my $format_version = 44;
+
+my $reserved = sprintf '^(%s)$', join '|',
+	qw(allow-query allow-transfer also-notify in-view masters
+	   server-addresses server-names servers view zones);
+
 # metazone to named.conf
 
 $metazone =~ s{[.]?$}{.};
@@ -58,8 +64,8 @@ our $zonere = quotemeta $metazone;
 our $label = qr{(?:[^;.\\\s]|\\.)+};
 our $hostname = qr{(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?[.])+};
 our $rname = qr{$label\.$hostname};
-our $soare = qr{^$zonere\s+(\d+)\s+(IN\s+SOA\s+$hostname\s+$rname)
-		\s+(\d+)\s+(\d+\s+\d+\s+\d+\s+\d+\n)$}x;
+our $soare = qr{^$zonere\s+\d+\s+IN\s+SOA\s+$hostname\s+$rname
+		\s+\d+\s+(\d+\s+\d+\s+\d+\s+(\d+)\n)$}x;
 our $txtre = qr{^(?<zone>(?:$label\.)+)(?<view>$label)\.$zonere
 		\s+\d+\s+IN\s+TXT\s+(?<txt>.*)}x;
 
@@ -74,6 +80,9 @@ sub unquote {
 sub checkzone {
     my $soa = shift;
     fail "missing SOA record" unless defined $soa and $soa =~ $soare;
+    my $fv = $1;
+    fail "mismatched format version: $fv != $format_version"
+	unless $fv == $format_version;
     return @_;
 }
 
@@ -105,6 +114,10 @@ sub metazone {
     }
     my %rename;
     for my $view (sort keys %conf) {
+	    if ($view =~ $reserved) {
+		    wail "$view: skipping reserved subdomain";
+		    next;
+	    }
 	    my $conf = "# automatically updated by metazone - DO NOT EDIT\n";
 	    $conf .= "# view $view generated from $metazone\n";
 	    for my $zone (sort keys %{$conf{$view}}) {
@@ -195,11 +208,15 @@ print <<EOF;
 \$ORIGIN $metazone
 \$TTL 1h
 @	SOA	localhost. hostmaster.localhost. (
-		$time 1h 1h 1w 1h )
+		$time 1h 1h 1w $format_version )
 	NS	localhost.
 EOF
 
 for my $view (sort keys %conf) {
+	if ($view =~ $reserved) {
+		wail "$view: skipping reserved subdomain";
+		next;
+	}
 	print "\$ORIGIN $view.$metazone\n";
 	for my $zone (sort keys %{$conf{$view}}) {
 		printf "%s	TXT ( %s )\n",

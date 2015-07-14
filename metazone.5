@@ -29,6 +29,10 @@ and to locate the primary master,
 in the usual way.
 The NS resource records will never be used
 and are just placeholders required by the protocol.
+.Pp
+The SOA MINIMUM field is used for
+the version number of the metazone format.
+The format specified in this manual is 44.
 .Ss Views
 Immediately under the apex are a number of
 single-label subdomains.
@@ -38,7 +42,9 @@ syntax,
 the zone configurations
 are written to multiple files,
 one for each subdomain:
+.Pp
 .D1 Pa named.zones. Ns Aq view
+.Pp
 This allows you to have a single metazone
 containing the configuration for multiple views.
 (When you have
@@ -46,11 +52,22 @@ containing the configuration for multiple views.
 zones,
 the configurations for multiple views
 must be updated in sync.)
+.Pp
+A number of view names are reserved for compatibility with other
+metazone formats:
+.Bl -column -offset indent 012345678901234 0123456789012 01234567890
+.It Sy allow-query      Ta Sy allow-transfer Ta Sy also-notify
+.It Sy server-addresses Ta Sy server-names   Ta Sy servers
+.It Sy in-view          Ta Sy masters        Ta Sy zones
+.It Sy view             Ta Sy zones
+.El
 .Ss Zones
 Each zone configuration is represented in the metazone
 using one TXT resource record.
 The owner of the TXT record is
+.Pp
 .D1 Ao Ar zone Ac Ns . Ns Ao Ar view Ac Ns . Ns Ao Ar metazone Ac Ns .
+.Pp
 The TXT RDATA contains the zone's configuration clause.
 .Pp
 Note that if you need a configuration clause longer than 255 bytes,
@@ -65,7 +82,7 @@ $ORIGIN _metazone.
 ; The required apex records.
 $TTL	1h
 @	SOA	localhost. hostmaster.localhost. (
-		1436531696 1h 1h 1w 1h )
+		1436531696 1h 1h 1w 44 )
 @	NS	localhost.
 
 ; Configuration for the "int" view
@@ -92,6 +109,12 @@ example.org	TXT	( "{"
 The metazone structure described in this manual
 is significantly different from the original
 metazone design by Paul Vixie.
+.Pp
+We use Vixie's format numbering scheme.
+Vixie metazones have format number 42.
+Our metazones have format number 44.
+The reserved view names in our scheme are a superset of
+the keywords used by Vixie metazones.
 .Pp
 Vixie metazones encode the configuration for a zone in multiple RRsets.
 This encoding requires a relatively complicated translated

@@ -63,6 +63,7 @@ A metazone can contain multiple
 each of which corresponds to a
 .Pa named.conf
 fragment written to the file:
+.Pp
 .D1 Pa named.zones. Ns Aq view
 .Pp
 If you are using multiple views,
@@ -73,12 +74,18 @@ will typically include each
 file in the corresponding view clause.
 However it is not required for your
 metazone views to correspond to your BIND views.
+.Pp
+A number of view names are reserved;
+see
+.Xr metazone 5
+for details.
 .Ss metazone to named.zones.*
 The
 .Nm
 program is designed to work with
 .Nm nsnotifyd .
 You can run it with a command like:
+.Pp
 .D1 Nm nsnotifyd Nm metazone Aq Ar zone
 .Pp
 When the
@@ -119,7 +126,9 @@ To convert a set of
 .Pa named.zones. Ns Aq view
 files to a metazone,
 run
+.Pp
 .D1 Nm Ao Ar zone Ac Pa named.zones.*
+.Pp
 The zone will be printed to the standard output
 unless the
 .Fl f
