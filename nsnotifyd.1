@@ -10,6 +10,8 @@
 .Op Fl l Ar facility
 .Op Fl P Ar pidfile
 .Op Fl u Ar user
+.Op Fl R Ar min : Ns Ar max
+.Op Fl r Ar min : Ns Ar max
 .Op Fl s Ar authority
 .Op Fl a Ar addr
 .Op Fl p Ar port
@@ -100,6 +102,30 @@ which may be a service name or a UDP port number.
 The default is the
 .Sy domain
 service, UDP port 53.
+.It Fl R Ar interval
+Override SOA
+.Sy refresh
+interval.
+.It Fl R Ar min : Ns Ar max
+Restrict SOA
+.Sy refresh
+intervals
+to be between
+.Ar min
+and
+.Ar max .
+.It Fl r Ar interval
+Override SOA
+.Sy retry
+interval.
+.It Fl r Ar min : Ns Ar max
+Restrict SOA
+.Sy retry
+intervals
+to be between
+.Ar min
+and
+.Ar max .
 .It Fl s Ar authority
 Specify an authoritative server to
 use for zone SOA refresh queries.
@@ -127,6 +153,30 @@ Print details about this version of
 Accept NOTIFY messages for unknown zones
 that are not given on the command line.
 (Wildcard mode.)
+.El
+.Ss Interval syntax
+Time parameters for the
+.Fl R
+and
+.Fl r
+options are in seconds,
+or you can use a combination of the following time units,
+as in DNS master files.
+For example,
+.Li 1h1m1s
+is 3661 seconds.
+.Pp
+.Bl -tag -compact -width indent -offset indent
+.It w
+weeks
+.It d
+days
+.It h
+hours
+.It m
+minutes
+.It s
+seconds
 .El
 .Sh DETAILS
 .Ss Startup
@@ -199,6 +249,9 @@ makes a SOA query to verify the zone exists
 and to get its serial number,
 and runs the command if it succeeds.
 (It is unable to verify the zone has changed in this case.)
+.Pp
+Some jitter is applied to SOA refresh and retry timers,
+so polling can occur up to 10% earlier than specified.
 .Ss Command invocation
 When the SOA reply indicates the zone's serial number has increased,
 .Nm
