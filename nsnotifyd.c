@@ -263,6 +263,26 @@ uint32_t refresh_max = 1<<15;
 uint32_t retry_min   = 1<<6;
 uint32_t retry_max   = 1<<12;
 
+static void
+ttl_pair(char *str, uint32_t *min, uint32_t *max) {
+	u_long ttl;
+	char *sep = strchr(str, ':');
+	if(sep != NULL)
+		*sep++ = '\0';
+	if(ns_parse_ttl(str, &ttl) < 0)
+		errx(1, "invalid%s refresh time: %s",
+		    sep != NULL ? " minimum" : "", str);
+	*min = ttl;
+	if(sep == NULL) {
+		*max = *min;
+		return;
+	}
+	if(ns_parse_ttl(sep, &ttl) < 0)
+		errx(1, "invalid maximum refresh time: %s", sep);
+	*max = ttl;
+	return;
+}
+
 typedef struct zone {
 	const char *name;
 	uint32_t serial, retry;
@@ -423,13 +443,16 @@ usage(void) {
 "	-P pidfile	write daemon pid to this file\n"
 "	-p port		listen on this port number or service name\n"
 "			(default 53)\n"
+"	-R min:max	limit SOA refresh times (default %d:%d)\n"
+"	-r min:max	limit SOA retry times (default %d:%d)\n"
 "	-s addr		authoritative server for refresh queries\n"
 "	-u user		drop privileges to user\n"
 "	-V		print version information\n"
 "	-w		wildcard: accept notifies on any zone\n"
 "	command		the command to run when a zone changes\n"
-"	zone...		list of zones for which to accept notifies\n"
-		);
+"	zone...		list of zones for which to accept notifies\n",
+	    refresh_min, refresh_max,
+	    retry_min, retry_max);
 	exit(1);
 }
 
@@ -447,7 +470,7 @@ main(int argc, char *argv[]) {
 	char *cmd = NULL;
 	int debug = 0;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:s:u:Vw")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:R:r:s:u:Vw")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -475,6 +498,12 @@ main(int argc, char *argv[]) {
 		case('p'):
 			port = optarg;
 			continue;
+		case('R'):
+			ttl_pair(optarg, &refresh_min, &refresh_max);
+			continue;
+		case('r'):
+			ttl_pair(optarg, &retry_min, &retry_max);
+			continue;
 		case('s'):
 			authority = optarg;
 			continue;
@@ -498,6 +527,13 @@ main(int argc, char *argv[]) {
 	/* be impatient */
 	_res.retrans = 3;
 	_res.retry = 2;
+
+	if(debug > 1) {
+		log_debug("SOA refresh limits %lu < %lu",
+		    (u_long)refresh_min, (u_long)refresh_max);
+		log_debug("SOA retry limits %lu < %lu",
+		    (u_long)retry_min, (u_long)retry_max);
+	}
 
 	argc -= optind;
 	argv += optind;
