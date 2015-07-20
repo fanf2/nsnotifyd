@@ -255,6 +255,14 @@ soa_server_addr(struct sockaddr *sa, socklen_t sa_len) {
 	_res.options &= ~RES_RECURSE;
 }
 
+/*
+ * Sanity checking for SOA timing parameters.
+ */
+uint32_t refresh_min = 1<<9;
+uint32_t refresh_max = 1<<15;
+uint32_t retry_min   = 1<<6;
+uint32_t retry_max   = 1<<12;
+
 typedef struct zone {
 	const char *name;
 	uint32_t serial, retry;
@@ -309,11 +317,10 @@ zone_soa(zone *z) {
 			NS_GET32(z->serial, p);
 			NS_GET32(refresh, p);
 			NS_GET32(retry, p);
-			// clamp timers for sanity
-			if(refresh < 1<<9)  refresh = 1<<9;
-			if(refresh > 1<<15) refresh = 1<<15;
-			if(retry   < 1<<6)  retry   = 1<<6;
-			if(retry   > 1<<12) retry   = 1<<12;
+			if(refresh < refresh_min) refresh = refresh_min;
+			if(refresh > refresh_max) refresh = refresh_max;
+			if(retry < retry_min) retry = retry_min;
+			if(retry > retry_max) retry = retry_max;
 			z->refresh = time(NULL) + refresh;
 			z->retry = retry;
 			return(NULL);
