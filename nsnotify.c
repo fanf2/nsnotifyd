@@ -149,6 +149,7 @@ main(int argc, char *argv[]) {
 	    NULL, 0, NULL, msg, sizeof(msg));
 	if(msglen < 0)
 		errx(1, "could not make DNS NOTIFY message for %s", zone);
+	((HEADER *)msg)->rd = 0;
 	if(debug > 1)
 		res_pquery(&_res, msg, msglen, stderr);
 
