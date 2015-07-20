@@ -280,6 +280,12 @@ refresh_alarm(zone z[]) {
 	alarm(n->refresh - time(NULL));
 }
 
+static void
+refresh_jitter(zone *z, uint32_t interval) {
+	interval -= res_randomid() % (interval / 10);
+	z->refresh = time(NULL) + interval;
+}
+
 static const char *
 zone_soa(zone *z) {
 	byte msg[NS_PACKETSZ];
@@ -321,7 +327,7 @@ zone_soa(zone *z) {
 			if(refresh > refresh_max) refresh = refresh_max;
 			if(retry < retry_min) retry = retry_min;
 			if(retry > retry_max) retry = retry_max;
-			z->refresh = time(NULL) + refresh;
+			refresh_jitter(z, refresh);
 			z->retry = retry;
 			return(NULL);
 		}
@@ -342,7 +348,7 @@ serial_lt(uint32_t s1, uint32_t s2) {
 static void
 zone_retry(zone *z) {
 	if(z->retry == 0) return;
-	z->refresh = time(NULL) + z->retry;
+	refresh_jitter(z, z->retry);
 	log_debug("%s retry at %s", z->name, isotime(z->refresh));
 }
 
