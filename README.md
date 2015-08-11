@@ -32,12 +32,22 @@ DNSSEC signer.
 
 ### Documentation
 
-To read the manual, run
+To read the `nsnotifyd` manual, run
 
         $ man ./nsnotifyd.1
 
-or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.txt)
-or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.pdf) formats.
+or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.1.txt)
+or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.1.pdf) formats.
+
+There are separate man pages for `nsnotify`
+in [plain text](http://dotat.at/prog/nsnotifyd/nsnotify.1.txt)
+or [PDF](http://dotat.at/prog/nsnotifyd/nsnotify.1.pdf),
+the `metazone` script
+in [plain text](http://dotat.at/prog/nsnotifyd/metazone.1.txt)
+or [PDF](http://dotat.at/prog/nsnotifyd/metazone.1.pdf)
+and the `metazone` format
+in [plain text](http://dotat.at/prog/nsnotifyd/metazone.5.txt)
+or [PDF](http://dotat.at/prog/nsnotifyd/metazone.5.pdf).
 
 The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
@@ -53,6 +63,8 @@ See the top of the Makefile for variables that control the install
 location, for example,
 
         $ sudo make prefix=/usr/local install
+
+You need to use GNU make to build the preformatted documentation.
 
 ### Dependencies
 

@@ -2,11 +2,13 @@ nsnotify
 nsnotifyd
 Makefile
 index.html
-nsnotifyd.html
-nsnotifyd.txt
-nsnotifyd.pdf
-nsnotifyd.ps
 libbind-6.0
 libbind-6.0.tar.gz
 version.h
 version/dirty-date
+*.[0-9].ps
+*.[0-9].pdf
+*.[0-9].txt
+nsnotifyd-*.tar.gz
+nsnotifyd-*.tar.xz
+nsnotifyd-*.zip
