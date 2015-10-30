@@ -321,7 +321,7 @@ script is designed to work with
 to record the history of a set of zones.
 Continuing the transcript,
 .Bd -literal -offset indent
-$ nsnotifyd -P nsnotifyd.pid -p 5533 nsnotify2git example.org
+$ nsnotifyd -P nsnotifyd.pid -p 5309 nsnotify2git example.org
 .Ed
 .Ss Send notifies
 To configure BIND to send notifies to
@@ -343,7 +343,7 @@ setting so it includes the address and port used by
 .Nm ,
 like
 .Bd -literal -offset indent
-also-notify { 127.0.0.1 port 5533; };
+also-notify { 127.0.0.1 port 5309; };
 .Ed
 .Ss Update the zone
 Now, when the zone changes,
@@ -428,7 +428,7 @@ The special files
 .Pa ( .log .once .pid )
 are dotted so that the glob works as expected.
 .Bd -literal -offset indent
-$ nsnotifyd -P .pid -p 5533 nsnotify2stealth *
+$ nsnotifyd -P .pid -p 5307 nsnotify2stealth *
 .Ed
 .Ss Send notifies
 You will also need to reconfigure BIND to send notifies to
@@ -464,7 +464,7 @@ name servers.
 Configure your hidden master server to send notifies and allow zone
 transfers to your signing server:
 .Bd -literal -offset indent
-also-notify { signer port 5533; };
+also-notify { signer port 5305; };
 allow-transfer { signer; };
 .Ed
 .Pp
@@ -488,7 +488,7 @@ Run
 on the signer to trigger an update of the signed zone
 as soon as an update occurs on the hidden master:
 .Bd -literal -offset indent
-$ nsnotifyd -P nsnotifyd.pid -p 5533 nsnotify2update example.org
+$ nsnotifyd -P nsnotifyd.pid -p 5305 nsnotify2update example.org
 .Ed
 .Pp
 Configure your public name servers to transfer your zones from the
