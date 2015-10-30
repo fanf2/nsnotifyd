@@ -5,7 +5,7 @@
 	(*)	file=$zone ;;
 	esac
 	[ -f $file ] && nsnotify -f $file $zone
-	if perl -e 'exit(time - [stat shift]->[9] > 86400)' $file &&
+	if perl -e 'exit!(time - [stat shift]->[9] > 86400)' $file &&
 		! [ -f .once ]
 	then (
 		(	touch .once
