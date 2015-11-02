@@ -85,8 +85,8 @@ static void
 usage(void) {
 	fprintf(stderr,
 "usage: nsnotify [-46dpV] [-f targets] zone [targets]\n"
-"	-4		listen on IPv4 only\n"
-"	-6		listen on IPv6 only\n"
+"	-4		send on IPv4 only\n"
+"	-6		send on IPv6 only\n"
 "	-d		debugging mode\n"
 "			(use twice to print DNS messages)\n"
 "	-f targets	read targets from file instead of command line\n"
