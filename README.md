@@ -66,6 +66,8 @@ location, for example,
 
 You need to use GNU make to build the preformatted documentation.
 
+(On FreeBSD, use the `nsnotifyd` port or package)[https://www.freshports.org/dns/nsnotifyd/]
+
 ### Dependencies
 
 The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
