@@ -57,7 +57,7 @@ To install in your home directory,
 
         $ ./configure
         $ make all
-	$ make install
+        $ make install
 
 See the top of the Makefile for variables that control the install
 location, for example,
@@ -70,7 +70,7 @@ You need to use GNU make to build the preformatted documentation.
 
 The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
 with a sufficiently recent resolver. On a Debian-like Linux you should
-install libbind4-dev. Otherwise, the configure script will download
+`apt install libbind4-dev`. Otherwise, the configure script will download
 libbind and build and link with it statically.
 
 ### Latest release
@@ -80,6 +80,10 @@ Download the full source archives:
 * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz>
 * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz>
 * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip>
+
+(Do not use GitHub's "Download ZIP" feature because it gives you
+a broken partial copy that contains neither dev support files nor
+release build output files.)
 
 ### Source repositories
 
@@ -95,6 +99,11 @@ You can clone or browse the repository from:
 * <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
 * <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
 * <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
+
+And in other media...
+
+* [TechSNAP 329: teeny weeny DNS server](http://www.jupiterbroadcasting.com/116921/teeny-weeny-dns-server-techsnap-329/) -
+  video review by Dan Langille
 
 ----------------------------------------------------------------
 
