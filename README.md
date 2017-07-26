@@ -66,7 +66,7 @@ location, for example,
 
 You need to use GNU make to build the preformatted documentation.
 
-(On FreeBSD, use the `nsnotifyd` port or package)[https://www.freshports.org/dns/nsnotifyd/]
+[On FreeBSD, use the `nsnotifyd` port or package](https://www.freshports.org/dns/nsnotifyd/)
 
 ### Dependencies
 
