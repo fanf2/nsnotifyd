@@ -81,8 +81,11 @@ ${manhtml}: ${manfiles}
 
 html/index.html: README.md
 	(	cat html/_header.html; \
-		markdown README.md | \
-		perl -pe 's/\&#(\d+);/chr $$1/eg;s/\&#x(..);/chr hex $$1/eg'; \
+		tail -n +3 README.md | \
+		sed 's|(html/|(|' | \
+		markdown | \
+		perl -pe 's/\&#(\d+);/chr $$1/eg; \
+			s/\&#x(..);/chr hex $$1/eg'; \
 		cat html/_footer.html; \
 	) > html/index.html; \
 

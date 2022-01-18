@@ -1,5 +1,5 @@
 nsnotifyd: handle DNS NOTIFY messages by running a command
-----------------------------------------------------------
+==========================================================
 
 The `nsnotifyd` daemon monitors a set of DNS zones and runs a command
 when any of them change. It listens for DNS NOTIFY messages so it can
@@ -14,7 +14,9 @@ fixed intervals.
 
 There is also a client program `nsnotify` for sending notify messages.
 
-### Examples
+
+Examples
+--------
 
 There are four example scripts described in the manual:
 
@@ -30,28 +32,26 @@ notify stealth secondaries so they get updates faster.
 `nsnotify2update` uses nsdiff and nsupdate as part of a bump-in-the-wire
 DNSSEC signer.
 
-### Documentation
+
+Documentation
+-------------
 
 To read the `nsnotifyd` manual, run
 
         $ man ./nsnotifyd.1
 
-or read online in [plain text](http://dotat.at/prog/nsnotifyd/nsnotifyd.1.txt)
-or [PDF](http://dotat.at/prog/nsnotifyd/nsnotifyd.1.pdf) formats.
+There are an HTML versions of the manual pages:
 
-There are separate man pages for `nsnotify`
-in [plain text](http://dotat.at/prog/nsnotifyd/nsnotify.1.txt)
-or [PDF](http://dotat.at/prog/nsnotifyd/nsnotify.1.pdf),
-the `metazone` script
-in [plain text](http://dotat.at/prog/nsnotifyd/metazone.1.txt)
-or [PDF](http://dotat.at/prog/nsnotifyd/metazone.1.pdf)
-and the `metazone` format
-in [plain text](http://dotat.at/prog/nsnotifyd/metazone.5.txt)
-or [PDF](http://dotat.at/prog/nsnotifyd/metazone.5.pdf).
+  * [nsnotifyd.1](html/nsnotifyd.1.html), the daemon
+  * [nsnotify.1](html/nsnotify.1.html), the notifier
+  * [metazone.1](html/metazone.1.html), the `metazone` example script
+  * [metazone.5](html/metazone.5.html), the `metazone` file format
 
 The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
 
-### Build and install
+
+Build and install
+-----------------
 
 To install in your home directory,
 
@@ -68,53 +68,60 @@ You need to use GNU make to build the preformatted documentation.
 
 [On FreeBSD, use the `nsnotifyd` port or package](https://www.freshports.org/dns/nsnotifyd/)
 
-### Dependencies
+
+Dependencies
+------------
 
 The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
 with a sufficiently recent resolver. On a Debian-like Linux you should
 `apt install libbind4-dev`. Otherwise, the configure script will download
 libbind and build and link with it statically.
 
-### Latest release
+
+Latest release
+--------------
 
 Download the full source archives:
 
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz>
-* <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip>
 
 (Do not use GitHub's "Download ZIP" feature because it gives you
 a broken partial copy that contains neither dev support files nor
 release build output files.)
 
-### Source repositories
+
+Source repositories
+-------------------
 
 You can clone or browse the repository from:
 
-* git://dotat.at/nsnotifyd.git
-* <http://dotat.at/cgi/git/nsnotifyd.git>
-* <https://github.com/fanf2/nsnotifyd.git>
-* <https://git.csx.cam.ac.uk/x/ucs/ipreg/nsnotifyd.git>
+  * git://dotat.at/nsnotifyd.git
+  * <http://dotat.at/cgi/git/nsnotifyd.git>
+  * <https://github.com/fanf2/nsnotifyd.git>
 
-### Articles about nsnotifyd
 
-* <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
-* <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
-* <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
+Articles about nsnotifyd
+------------------------
+
+  * <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
+  * <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
+  * <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
+  * <https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53> how the Guardian synchronized their DNS between Dyn and AWS Route 53 with `nsnotifyd`
 
 And in other media...
 
-* [TechSNAP 329: teeny weeny DNS server](http://www.jupiterbroadcasting.com/116921/teeny-weeny-dns-server-techsnap-329/) -
-  video review by Dan Langille
+  * [TechSNAP 329: teeny weeny DNS server](http://www.jupiterbroadcasting.com/116921/teeny-weeny-dns-server-techsnap-329/) -
+    video review by Dan Langille
 
-----------------------------------------------------------------
 
-Please send bug reports or patches to me. I accept contributions made
-under the terms of CC0. Thanks to JP Mens, Gavin Brown, and Richard
-James Salts for helpful feedback and encouragement.
+Contributing
+------------
 
-Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>  
-at Cambridge University Information Services.
+Please send bug reports or patches by email to me. I accept
+contributions made under the terms of CC0. Thanks to JP Mens, Gavin
+Brown, and Richard James Salts for helpful feedback and encouragement.
 
 You may do anything with this. It has no warranty.  
 <http://creativecommons.org/publicdomain/zero/1.0/>
