@@ -33,7 +33,7 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotifyd</code></td>
-    <td>[<code class="Fl">-46dVw</code>] [<code class="Fl">-l</code>
+    <td>[<code class="Fl">-46dtVw</code>] [<code class="Fl">-l</code>
       <var class="Ar">facility</var>] [<code class="Fl">-P</code>
       <var class="Ar">pidfile</var>] [<code class="Fl">-u</code>
       <var class="Ar">user</var>] [<code class="Fl">-R</code>
@@ -98,10 +98,10 @@
       privilege.</dd>
   <dt id="p"><a class="permalink" href="#p"><code class="Fl">-p</code></a>
     <var class="Ar">port</var></dt>
-  <dd>Listen on <var class="Ar">port</var>, which may be a service name or a UDP
+  <dd>Listen on <var class="Ar">port</var>, which may be a service name or a
       port number. The default is the
       <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
-      service, UDP port 53.</dd>
+      service, port 53.</dd>
   <dt id="R"><a class="permalink" href="#R"><code class="Fl">-R</code></a>
     <var class="Ar">interval</var></dt>
   <dd>Override SOA <b class="Sy">refresh</b> interval.</dd>
@@ -129,6 +129,12 @@
   <dt id="u"><a class="permalink" href="#u"><code class="Fl">-u</code></a>
     <var class="Ar">user</var></dt>
   <dd>Drop privilege to <var class="Ar">user</var> after daemonizing.</dd>
+  <dt id="t"><a class="permalink" href="#t"><code class="Fl">-t</code></a></dt>
+  <dd>Listen for TCP connections instead of UDP.
+    <p class="Pp">If you need <code class="Nm">nsnotifyd</code> to listen on
+        both UDP and TCP, you can run it twice, with and without the
+        <code class="Fl">-t</code> option.</p>
+  </dd>
   <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a></dt>
   <dd>Print details about this version of
     <code class="Nm">nsnotifyd</code>.</dd>
@@ -179,13 +185,21 @@
 <section class="Ss">
 <h2 class="Ss" id="Server"><a class="permalink" href="#Server">Server</a></h2>
 <p class="Pp">The <code class="Nm">nsnotifyd</code> daemon acts as a very simple
-    UDP-only DNS server. The only DNS queries handled by
+    UDP-only or TCP-only DNS server. The only DNS queries handled by
     <code class="Nm">nsnotifyd</code> are NOTIFY messages. It rejects other
     queries with a
     <a class="permalink" href="#REFUSED"><b class="Sy" id="REFUSED">REFUSED</b></a>
     response code, or
     <a class="permalink" href="#FORMERR"><b class="Sy" id="FORMERR">FORMERR</b></a>
     if the query is too mangled.</p>
+<p class="Pp">In UDP-only mode (the default), <code class="Nm">nsnotifyd</code>
+    handles one query at a time, which includes waiting for the script to
+    finish. (A flood of NOTIFY messages cannot cause a fork bomb.) In TCP-only
+    mode (the <code class="Fl">--t</code> option),
+    <code class="Nm">nsnotifyd</code> accepts one TCP connection at a time, and
+    handles one query at a time on that connection in a similar manner to
+    UDP-only mode. (A long-lasting TCP connection can prevent other connection
+    attempts.)</p>
 <p class="Pp">Normally <code class="Nm">nsnotifyd</code> only accepts NOTIFY
     messages for <var class="Ar">zones</var> given on the command line. NOTIFY
     messages are accepted for unknown zones if you use the
@@ -419,11 +433,13 @@ $ dnssec-keygen example.org</pre>
     source. It does not support TSIG authentication (RFC 2845) for access
     control.</p>
 <p class="Pp">The <code class="Nm">nsnotifyd</code> daemon only handles one
-    query at a time, which prevents it from becoming a fork bomb. However, you
-    can easily overwhelm it with more notifications than it can handle. A
-    spoofed NOTIFY will make <code class="Nm">nsnotifyd</code> send a SOA query
-    to the spoofed source address and wait for a reply (which will probably not
-    arrive), during which time it is unresponsive.</p>
+    query at a time, which prevents it from becoming a fork bomb, and in TCP
+    mode it only handles one connection at a time. However, you can easily
+    overwhelm it with more notifications than it can handle, or with a
+    long-lived TCP connection. A spoofed NOTIFY will make
+    <code class="Nm">nsnotifyd</code> send a SOA query to the spoofed source
+    address and wait for a reply (which will probably not arrive), during which
+    time it is unresponsive.</p>
 <p class="Pp">You should configure <code class="Nm">nsnotifyd</code> to listen
     on a loopback address (which is the default) or use a packet filter to block
     unwanted traffic.</p>
@@ -431,10 +447,9 @@ $ dnssec-keygen example.org</pre>
     authoritative servers for a zone, so it cannot filter spurious NOTIFY
     messages. It has a very simplistic mechanism for choosing which servers to
     query when refreshing a zone.</p>
-<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon cannot accept NOTIFY
-    messages over TCP (RFC 5966). It does not support EDNS (RFC 6891). However,
-    NOTIFY messages and responses are very small, so following these
-    specifications should not be necessary in practice.</p>
+<p class="Pp">It does not support EDNS (RFC 6891). However, NOTIFY messages and
+    responses are very small, so following these specifications should not be
+    necessary in practice.</p>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE

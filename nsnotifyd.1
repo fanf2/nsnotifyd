@@ -6,7 +6,7 @@
 .Nd handle DNS NOTIFY messages by running a command
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46dVw
+.Op Fl 46dtVw
 .Op Fl l Ar facility
 .Op Fl P Ar pidfile
 .Op Fl u Ar user
@@ -98,10 +98,10 @@ and before dropping privilege.
 .It Fl p Ar port
 Listen on
 .Ar port ,
-which may be a service name or a UDP port number.
+which may be a service name or a port number.
 The default is the
 .Sy domain
-service, UDP port 53.
+service, port 53.
 .It Fl R Ar interval
 Override SOA
 .Sy refresh
@@ -146,6 +146,16 @@ options.
 Drop privilege to
 .Ar user
 after daemonizing.
+.It Fl t
+Listen for TCP connections instead of UDP.
+.Pp
+If you need
+.Nm
+to listen on both UDP and TCP,
+you can run it twice,
+with and without the
+.Fl t
+option.
 .It Fl V
 Print details about this version of
 .Nm .
@@ -208,7 +218,7 @@ to be context-sensitive.
 .Ss Server
 The
 .Nm
-daemon acts as a very simple UDP-only DNS server.
+daemon acts as a very simple UDP-only or TCP-only DNS server.
 The only DNS queries handled by
 .Nm
 are NOTIFY messages.
@@ -217,6 +227,21 @@ It rejects other queries with a
 response code, or
 .Sy FORMERR
 if the query is too mangled.
+.Pp
+In UDP-only mode (the default),
+.Nm
+handles one query at a time,
+which includes waiting for the script to finish.
+(A flood of NOTIFY messages cannot cause a fork bomb.)
+In TCP-only mode
+(the
+.Fl -t
+option),
+.Nm
+accepts one TCP connection at a time,
+and handles one query at a time on that connection
+in a similar manner to UDP-only mode.
+(A long-lasting TCP connection can prevent other connection attempts.)
 .Pp
 Normally
 .Nm
@@ -507,9 +532,11 @@ The
 .Nm
 daemon
 only handles one query at a time,
-which prevents it from becoming a fork bomb.
+which prevents it from becoming a fork bomb,
+and in TCP mode it only handles one connection at a time.
 However, you can easily overwhelm it
-with more notifications than it can handle.
+with more notifications than it can handle,
+or with a long-lived TCP connection.
 A spoofed NOTIFY will make
 .Nm
 send a SOA query to the spoofed source address
@@ -530,9 +557,6 @@ so it cannot filter spurious NOTIFY messages.
 It has a very simplistic mechanism
 for choosing which servers to query when refreshing a zone.
 .Pp
-The
-.Nm
-daemon cannot accept NOTIFY messages over TCP (RFC 5966).
 It does not support EDNS (RFC 6891).
 However,
 NOTIFY messages and responses are very small,

@@ -33,7 +33,7 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dV</code>] [<code class="Fl">-p</code>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
       <var class="Ar">port</var>] &#x27E8;<var class="Ar">zone</var>&#x27E9;
       &#x27E8;<var class="Ar">target</var>&#x27E9;...</td>
   </tr>
@@ -42,21 +42,43 @@
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dV</code>] [<code class="Fl">-p</code>
-      <var class="Ar">port</var>] [<code class="Fl">-f</code>
-      <var class="Ar">targets</var>]
-      &#x27E8;<var class="Ar">zone</var>&#x27E9;</td>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] <code class="Fl">-F</code>
+      <var class="Ar">zones</var>
+      &#x27E8;<var class="Ar">target</var>&#x27E9;...</td>
+  </tr>
+</table>
+<br/>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">nsnotify</code></td>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] <code class="Fl">-f</code>
+      <var class="Ar">targets</var>
+      &#x27E8;<var class="Ar">zones</var>&#x27E9;...</td>
+  </tr>
+</table>
+<br/>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">nsnotify</code></td>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] <code class="Fl">-F</code>
+      <var class="Ar">zones</var> <code class="Fl">-f</code>
+      <var class="Ar">targets</var></td>
   </tr>
 </table>
 </section>
 <section class="Sh">
 <h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
 <p class="Pp">The <code class="Nm">nsnotify</code> program sends DNS NOTIFY
-    messages for a <var class="Ar">zone</var> to a list of
+    messages for a list of <var class="Ar">zone</var>s to a list of
     <var class="Ar">target</var>s. You can either provide a list of
     <var class="Ar">target</var>s on the command line, or use the
     <code class="Fl">-f</code> <var class="Ar">targets</var> option to read from
-    a file.</p>
+    a file. To send a notifications about more than one zone, you can use the
+    <code class="Fl">-F</code> <var class="Ar">zones</var> option to read from a
+    file.</p>
 <p class="Pp">Note: <code class="Nm">nsnotify</code> (without
     &#x2018;<code class="Li">d</code>&#x2019;) is a client for sending DNS
     NOTIFY messages whereas <code class="Nm">nsnotifyd</code> (with
@@ -75,6 +97,14 @@
     <p class="Pp">Use once to print successful message sends.</p>
     <p class="Pp">Use twice to get dumps of DNS packets.</p>
   </dd>
+  <dt id="F"><a class="permalink" href="#F"><code class="Fl">-F</code></a>
+    <var class="Ar">zones</var></dt>
+  <dd>File containing list of zones to send NOTIFY messages about. There must be
+      one domain name per line, with no comments or extra white space.
+    <p class="Pp">If <var class="Ar">zones</var> is
+        &#x2018;<code class="Li">-</code>&#x2019; then the domain names are read
+        from <code class="Li">stdin</code>.</p>
+  </dd>
   <dt id="f"><a class="permalink" href="#f"><code class="Fl">-f</code></a>
     <var class="Ar">targets</var></dt>
   <dd>File containing list of addresses to send NOTIFY messages to. There must
@@ -85,10 +115,12 @@
   </dd>
   <dt id="p"><a class="permalink" href="#p"><code class="Fl">-p</code></a>
     <var class="Ar">port</var></dt>
-  <dd>Listen on <var class="Ar">port</var>, which may be a service name or a UDP
+  <dd>Connect to <var class="Ar">port</var>, which may be a service name or a
       port number. The default is the
       <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
-      service, UDP port 53.</dd>
+      service, port 53.</dd>
+  <dt id="t"><a class="permalink" href="#t"><code class="Fl">-t</code></a></dt>
+  <dd>Make TCP connections instead of using UDP.</dd>
   <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a></dt>
   <dd>Print details about this version of <code class="Nm">nsnotify</code>.</dd>
 </dl>

@@ -6,21 +6,31 @@
 .Nd send DNS NOTIFY messages
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46dV
+.Op Fl 46dtV
 .Op Fl p Ar port
 .Aq Ar zone
 .Ao Ar target Ac Ns ...
 .Nm
-.Op Fl 46dV
+.Op Fl 46dtV
 .Op Fl p Ar port
-.Op Fl f Ar targets
-.Aq Ar zone
+.Fl F Ar zones
+.Ao Ar target Ac Ns ...
+.Nm
+.Op Fl 46dtV
+.Op Fl p Ar port
+.Fl f Ar targets
+.Ao Ar zones Ac Ns ...
+.Nm
+.Op Fl 46dtV
+.Op Fl p Ar port
+.Fl F Ar zones
+.Fl f Ar targets
 .Sh DESCRIPTION
 The
 .Nm
 program
-sends DNS NOTIFY messages for a
-.Ar zone
+sends DNS NOTIFY messages for a list of
+.Ar zone Ns s
 to a list of
 .Ar target Ns s .
 You can either provide a list of
@@ -28,6 +38,10 @@ You can either provide a list of
 on the command line,
 or use the
 .Fl f Ar targets
+option to read from a file.
+To send a notifications about more than one zone,
+you can use the
+.Fl F Ar zones
 option to read from a file.
 .Pp
 Note:
@@ -54,6 +68,18 @@ Debugging mode.
 Use once to print successful message sends.
 .Pp
 Use twice to get dumps of DNS packets.
+.It Fl F Ar zones
+File containing list of zones
+to send NOTIFY messages about.
+There must be one domain name per line,
+with no comments or extra white space.
+.Pp
+If
+.Ar zones
+is
+.Ql -
+then the domain names are read from
+.Li stdin .
 .It Fl f Ar targets
 File containing list of addresses
 to send NOTIFY messages to.
@@ -67,12 +93,14 @@ is
 then the addresses are read from
 .Li stdin .
 .It Fl p Ar port
-Listen on
+Connect to
 .Ar port ,
-which may be a service name or a UDP port number.
+which may be a service name or a port number.
 The default is the
 .Sy domain
-service, UDP port 53.
+service, port 53.
+.It Fl t
+Make TCP connections instead of using UDP.
 .It Fl V
 Print details about this version of
 .Nm .
