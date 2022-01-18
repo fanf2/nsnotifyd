@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
+  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="https://dotat.at/prog/nsnotifyd/">
+	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
+	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+      </a>
+    </h1>
+  </header>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">METAZONE(5)</td>
+    <td class="head-vol">File Formats Manual (dns file formats manual)</td>
+    <td class="head-rtitle">METAZONE(5)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<p class="Pp"><code class="Nm">metazone</code> &#x2014; <span class="Nd">BIND
+    configuration in a DNS zone</span></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<p class="Pp">A &#x201C;metazone&#x201D; is a DNS zone that describes the
+    configuration of other DNS zones.</p>
+<p class="Pp">Metazones allow you to use standard DNS mechanisms - AXFR, IXFR,
+    NOTIFY, UPDATE - to control the configuration of multiple name servers,
+    instead of using a separate out-of-band distribution system.</p>
+<p class="Pp">The <code class="Nm">metazone</code> program converts between
+    metazones and <span class="Pa">named.conf</span> fragments in either
+    direction.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="STRUCTURE"><a class="permalink" href="#STRUCTURE">STRUCTURE</a></h1>
+<section class="Ss">
+<h2 class="Ss" id="Apex"><a class="permalink" href="#Apex">Apex</a></h2>
+<p class="Pp">A metazone has apex SOA and NS resource records as required by the
+    DNS protocol. The SOA record is used for zone refresh timing and to locate
+    the primary master, in the usual way. The NS resource records will never be
+    used and are just placeholders required by the protocol.</p>
+<p class="Pp">The SOA MINIMUM field is used for the version number of the
+    metazone format. The format specified in this manual is 44.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Views"><a class="permalink" href="#Views">Views</a></h2>
+<p class="Pp">Immediately under the apex are a number of single-label
+    subdomains. When the metazone is converted to
+    <span class="Pa">named.conf</span> syntax, the zone configurations are
+    written to multiple files, one for each subdomain:</p>
+<p class="Pp"></p>
+<div class="Bd
+  Bd-indent"><span class="Pa">named.zones.</span>&#x27E8;view&#x27E9;</div>
+<p class="Pp">This allows you to have a single metazone containing the
+    configuration for multiple views. (When you have <b class="Sy">in-view</b>
+    zones, the configurations for multiple views must be updated in sync.)</p>
+<p class="Pp">A number of view names are reserved for compatibility with other
+    metazone formats:</p>
+<table class="Bl-column Bd-indent">
+  <tr id="allow-query">
+    <td><a class="permalink" href="#allow-query"><b class="Sy">allow-query</b></a></td>
+    <td><a class="permalink" href="#allow-transfer"><b class="Sy" id="allow-transfer">allow-transfer</b></a></td>
+    <td><a class="permalink" href="#also-notify"><b class="Sy" id="also-notify">also-notify</b></a></td>
+  </tr>
+  <tr id="server-addresses">
+    <td><a class="permalink" href="#server-addresses"><b class="Sy">server-addresses</b></a></td>
+    <td><a class="permalink" href="#server-names"><b class="Sy" id="server-names">server-names</b></a></td>
+    <td><a class="permalink" href="#servers"><b class="Sy" id="servers">servers</b></a></td>
+  </tr>
+  <tr id="in-view">
+    <td><a class="permalink" href="#in-view"><b class="Sy">in-view</b></a></td>
+    <td><a class="permalink" href="#masters"><b class="Sy" id="masters">masters</b></a></td>
+    <td><a class="permalink" href="#zones"><b class="Sy" id="zones">zones</b></a></td>
+  </tr>
+  <tr id="view">
+    <td><a class="permalink" href="#view"><b class="Sy">view</b></a></td>
+    <td><a class="permalink" href="#zones~2"><b class="Sy" id="zones~2">zones</b></a></td>
+  </tr>
+</table>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Zones"><a class="permalink" href="#Zones">Zones</a></h2>
+<p class="Pp">Each zone configuration is represented in the metazone using one
+    TXT resource record. The owner of the TXT record is</p>
+<p class="Pp"></p>
+<div class="Bd
+  Bd-indent">&#x27E8;<var class="Ar">zone</var>&#x27E9;.&#x27E8;<var class="Ar">view</var>&#x27E9;.&#x27E8;<var class="Ar">metazone</var>&#x27E9;</div>
+.
+<p class="Pp">The TXT RDATA contains the zone's configuration clause.</p>
+<p class="Pp">Note that if you need a configuration clause longer than 255
+    bytes, you can use one TXT record containing multiple strings. The strings
+    are concatenated to form the configuration clause. You must not use multiple
+    TXT records because you cannot control their order.</p>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLE"><a class="permalink" href="#EXAMPLE">EXAMPLE</a></h1>
+<div class="Bd Li">
+<pre>; This name for the metazone cannot collide with a real domain.
+$ORIGIN _metazone.
+
+; The required apex records.
+$TTL	1h
+@	SOA	localhost. hostmaster.localhost. (
+		1436531696 1h 1h 1w 44 )
+@	NS	localhost.
+
+; Configuration for the &quot;int&quot; view
+$ORIGIN int._metazone.
+
+example.org	TXT	( &quot;{&quot;
+			&quot; type slave;&quot;
+			&quot; masters { ns-pri-int; };&quot;
+			&quot; allow-query { internal; };&quot;
+			&quot; allow-transfer { internal; };&quot;
+			&quot;};&quot; )
+
+; Configuration for the &quot;ext&quot; view
+$ORIGIN ext._metazone.
+
+example.org	TXT	( &quot;{&quot;
+			&quot; type slave;&quot;
+			&quot; masters { ns-pri-ext; };&quot;
+			&quot; allow-transfer { xfer-2nd; };&quot;
+			&quot; also-notify { notify-2nd; };&quot;
+			&quot;};&quot; )</pre>
+</div>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="COMPATIBILITY"><a class="permalink" href="#COMPATIBILITY">COMPATIBILITY</a></h1>
+<p class="Pp">The metazone structure described in this manual is significantly
+    different from the original metazone design by Paul Vixie.</p>
+<p class="Pp">We use Vixie's format numbering scheme. Vixie metazones have
+    format number 42. Our metazones have format number 44. The reserved view
+    names in our scheme are a superset of the keywords used by Vixie
+  metazones.</p>
+<p class="Pp">Vixie metazones encode the configuration for a zone in multiple
+    RRsets. This encoding requires a relatively complicated translated into a
+    name server configuration. However, Vixie metazones are designed to be
+    interoperable across multiple name server implementations.</p>
+<p class="Pp">Our metazones are specific to BIND, since they include literal
+    <span class="Pa">named.conf</span> snippets, and do not make any attempt to
+    support other name server implementations.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<p class="Pp"><a class="Xr">metazone(1)</a>, <a class="Xr">nsnotifyd(1)</a>,
+    <a class="Xr">named.conf(5)</a>.</p>
+<p class="Pp"><cite class="Rs"><span class="RsA">Paul Vixie</span>,
+    <span class="RsT">Federated domain name service using DNS metazones</span>,
+    <a class="RsU" href="http://ss.vix.su/~vixie/mz.pdf">http://ss.vix.su/~vixie/mz.pdf</a>,
+    <span class="RsD">June 2005</span>.</cite></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="AUTHOR"><a class="permalink" href="#AUTHOR">AUTHOR</a></h1>
+<p class="Pp"><span class="An">Tony Finch</span>
+    &#x27E8;<code class="Li">dot@dotat.at</code>&#x27E9;
+    &#x27E8;<code class="Li">fanf2@cam.ac.uk</code>&#x27E9;
+  <br/>
+  at Cambridge University Information Services</p>
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">July 11, 2015</td>
+    <td class="foot-os">DNS</td>
+  </tr>
+</table>
+<footer>
+  <address>
+    <a href="https://dotat.at/prog/nsnotifyd/"><tt>nsnotifyd</tt></a>
+    was written by
+    <a href="https://dotat.at/">Tony Finch</a>
+    &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+  </address>
+</footer>
+</body>
+</html>

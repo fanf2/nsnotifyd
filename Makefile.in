@@ -63,17 +63,28 @@ version.h::
 
 ################################################################
 
-DOCS = nsnotifyd.txt nsnotifyd.pdf index.html
+mandoc = mandoc -Werror -Ofragment -Thtml
 
-nsnotifyd.txt: nsnotifyd.1
-	groff -Tascii -mdoc nsnotifyd.1 | col -bx >nsnotifyd.txt
+manfiles_html = ${manfiles:=.html}
+manhtml = ${manfiles_html:%=html/%}
 
-nsnotifyd.pdf: nsnotifyd.1
-	groff -Tps -mdoc nsnotifyd.1 >nsnotifyd.ps
-	ps2pdf nsnotifyd.ps >nsnotifyd.pdf
+html:: html/index.html ${manhtml}
 
-index.html: README.md
-	markdown README.md >index.html
+${manhtml}: ${manfiles}
+	./version/man-up.sh ${manfiles}
+	for man in ${manfiles}; do \
+	(	cat html/_header.html; \
+		${mandoc} $$man; \
+		cat html/_footer.html; \
+	) > html/$$man.html; \
+	done
+
+html/index.html: README.md
+	(	cat html/_header.html; \
+		markdown README.md | \
+		perl -pe 's/\&#(\d+);/chr $$1/eg;s/\&#x(..);/chr hex $$1/eg'; \
+		cat html/_footer.html; \
+	) > html/index.html; \
 
 ################################################################
 

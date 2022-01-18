@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
+  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="https://dotat.at/prog/nsnotifyd/">
+	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
+	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+      </a>
+    </h1>
+  </header>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">NSNOTIFYD(1)</td>
+    <td class="head-vol">General Commands Manual (dns commands manual)</td>
+    <td class="head-rtitle">NSNOTIFYD(1)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<p class="Pp"><code class="Nm">nsnotifyd</code> &#x2014; <span class="Nd">handle
+    DNS NOTIFY messages by running a command</span></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">nsnotifyd</code></td>
+    <td>[<code class="Fl">-46dVw</code>] [<code class="Fl">-l</code>
+      <var class="Ar">facility</var>] [<code class="Fl">-P</code>
+      <var class="Ar">pidfile</var>] [<code class="Fl">-u</code>
+      <var class="Ar">user</var>] [<code class="Fl">-R</code>
+      <var class="Ar">min</var>:<var class="Ar">max</var>]
+      [<code class="Fl">-r</code>
+      <var class="Ar">min</var>:<var class="Ar">max</var>]
+      [<code class="Fl">-s</code> <var class="Ar">authority</var>]
+      [<code class="Fl">-a</code> <var class="Ar">addr</var>]
+      [<code class="Fl">-p</code> <var class="Ar">port</var>]
+      &#x27E8;<var class="Ar">command</var>&#x27E9;
+      &#x27E8;<var class="Ar">zone</var>&#x27E9;...</td>
+  </tr>
+</table>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon monitors a set of DNS
+    <var class="Ar">zone</var>s and runs a <var class="Ar">command</var> when
+    any of them change. It listens for DNS NOTIFY messages so it can respond to
+    changes promptly. It also uses each zone's SOA refresh and retry parameters
+    to poll for updates if <code class="Nm">nsnotifyd</code> does not receive
+    NOTIFY messages more frequently.</p>
+<p class="Pp">You should specify zone names without the trailing dot. The root
+    zone can be specified as &#x2018;<code class="Li">.</code>&#x2019; or
+    &#x2018;<code class="Li">root</code>&#x2019;.</p>
+<p class="Pp">Note: <code class="Nm">nsnotify</code> (without
+    &#x2018;<code class="Li">d</code>&#x2019;) is a client for sending DNS
+    NOTIFY messages whereas <code class="Nm">nsnotifyd</code> (with
+    &#x2018;<code class="Li">d</code>&#x2019;) is a daemon for handling DNS
+    NOTIFY messages.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="OPTIONS"><a class="permalink" href="#OPTIONS">OPTIONS</a></h1>
+<dl class="Bl-tag">
+  <dt id="4"><a class="permalink" href="#4"><code class="Fl">-4</code></a></dt>
+  <dd>Use IPv4 only (apart from the system resolver).</dd>
+  <dt id="6"><a class="permalink" href="#6"><code class="Fl">-6</code></a></dt>
+  <dd>Use IPv6 only (apart from the system resolver).</dd>
+  <dt id="a"><a class="permalink" href="#a"><code class="Fl">-a</code></a>
+    <var class="Ar">address</var></dt>
+  <dd>Listen on <var class="Ar">address</var> for NOTIFY messages. The default
+      is <code class="Li">127.0.0.1</code>.
+    <p class="Pp">You can specify an IP address or hostname. A hostname is
+        looked up using the system resolver. If it resolves to multiple
+        addresses then one arbitrary address is chosen, constrained by the
+        <code class="Fl">-4</code> or <code class="Fl">-6</code> options.</p>
+  </dd>
+  <dt id="d"><a class="permalink" href="#d"><code class="Fl">-d</code></a></dt>
+  <dd>Debugging mode.
+    <p class="Pp">Use once to prevent <code class="Nm">nsnotifyd</code> from
+        daemonizing and to make it print log messages to stderr.</p>
+    <p class="Pp">Use twice to get dumps of DNS packets.</p>
+  </dd>
+  <dt id="l"><a class="permalink" href="#l"><code class="Fl">-l</code></a>
+    <var class="Ar">facility</var></dt>
+  <dd>Set the <a class="Xr">syslog(3)</a> facility. The default is
+      <a class="permalink" href="#daemon"><b class="Sy" id="daemon">daemon</b></a>.</dd>
+  <dt id="P"><a class="permalink" href="#P"><code class="Fl">-P</code></a>
+    <var class="Ar">path</var></dt>
+  <dd>Write the <code class="Nm">nsnotifyd</code> PID to the given
+      <var class="Ar">path</var> after daemonizing and before dropping
+      privilege.</dd>
+  <dt id="p"><a class="permalink" href="#p"><code class="Fl">-p</code></a>
+    <var class="Ar">port</var></dt>
+  <dd>Listen on <var class="Ar">port</var>, which may be a service name or a UDP
+      port number. The default is the
+      <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
+      service, UDP port 53.</dd>
+  <dt id="R"><a class="permalink" href="#R"><code class="Fl">-R</code></a>
+    <var class="Ar">interval</var></dt>
+  <dd>Override SOA <b class="Sy">refresh</b> interval.</dd>
+  <dt id="R~2"><a class="permalink" href="#R~2"><code class="Fl">-R</code></a>
+    <var class="Ar">min</var>:<var class="Ar">max</var></dt>
+  <dd>Restrict SOA <b class="Sy">refresh</b> intervals to be between
+      <var class="Ar">min</var> and <var class="Ar">max</var>.</dd>
+  <dt id="r"><a class="permalink" href="#r"><code class="Fl">-r</code></a>
+    <var class="Ar">interval</var></dt>
+  <dd>Override SOA <b class="Sy">retry</b> interval.</dd>
+  <dt id="r~2"><a class="permalink" href="#r~2"><code class="Fl">-r</code></a>
+    <var class="Ar">min</var>:<var class="Ar">max</var></dt>
+  <dd>Restrict SOA <b class="Sy">retry</b> intervals to be between
+      <var class="Ar">min</var> and <var class="Ar">max</var>.</dd>
+  <dt id="s"><a class="permalink" href="#s"><code class="Fl">-s</code></a>
+    <var class="Ar">authority</var></dt>
+  <dd>Specify an authoritative server to use for zone SOA refresh queries. By
+      default <code class="Nm">nsnotifyd</code> does periodic refreshes using
+      the system recursive resolver, so its refresh queries may get stale cached
+      answers.
+    <p class="Pp">You can specify an IP address or hostname. A hostname is
+        looked up using the system resolver, constrained by the
+        <code class="Fl">-4</code> or <code class="Fl">-6</code> options.</p>
+  </dd>
+  <dt id="u"><a class="permalink" href="#u"><code class="Fl">-u</code></a>
+    <var class="Ar">user</var></dt>
+  <dd>Drop privilege to <var class="Ar">user</var> after daemonizing.</dd>
+  <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a></dt>
+  <dd>Print details about this version of
+    <code class="Nm">nsnotifyd</code>.</dd>
+  <dt id="w"><a class="permalink" href="#w"><code class="Fl">-w</code></a></dt>
+  <dd>Accept NOTIFY messages for unknown zones that are not given on the command
+      line. (Wildcard mode.)</dd>
+</dl>
+<section class="Ss">
+<h2 class="Ss" id="Interval_syntax"><a class="permalink" href="#Interval_syntax">Interval
+  syntax</a></h2>
+<p class="Pp">Time parameters for the <code class="Fl">-R</code> and
+    <code class="Fl">-r</code> options are in seconds, or you can use a
+    combination of the following time units, as in DNS master files. For
+    example, <code class="Li">1h1m1s</code> is 3661 seconds.</p>
+<p class="Pp"></p>
+<div class="Bd-indent">
+<dl class="Bl-tag Bl-compact">
+  <dt>w</dt>
+  <dd>weeks</dd>
+  <dt>d</dt>
+  <dd>days</dd>
+  <dt>h</dt>
+  <dd>hours</dd>
+  <dt>m</dt>
+  <dd>minutes</dd>
+  <dt>s</dt>
+  <dd>seconds</dd>
+</dl>
+</div>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DETAILS"><a class="permalink" href="#DETAILS">DETAILS</a></h1>
+<section class="Ss">
+<h2 class="Ss" id="Startup"><a class="permalink" href="#Startup">Startup</a></h2>
+<p class="Pp">Before daemonizing, <code class="Nm">nsnotifyd</code> makes SOA
+    queries for each <var class="Ar">zone</var> to initialize its refresh and
+    retry timers.</p>
+<p class="Pp">Daemonizing is configured using the <code class="Fl">-P</code>
+    <var class="Ar">pidfile</var> and <code class="Fl">-u</code>
+    <var class="Ar">user</var> options, or disabled with the
+    <code class="Fl">-d</code> debugging option.</p>
+<p class="Pp" id="not">When daemonizing, <code class="Nm">nsnotifyd</code> does
+    <a class="permalink" href="#not"><i class="Em">not</i></a> change its
+    working directory. This allows the <var class="Ar">command</var> to be
+    context-sensitive.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Server"><a class="permalink" href="#Server">Server</a></h2>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon acts as a very simple
+    UDP-only DNS server. The only DNS queries handled by
+    <code class="Nm">nsnotifyd</code> are NOTIFY messages. It rejects other
+    queries with a
+    <a class="permalink" href="#REFUSED"><b class="Sy" id="REFUSED">REFUSED</b></a>
+    response code, or
+    <a class="permalink" href="#FORMERR"><b class="Sy" id="FORMERR">FORMERR</b></a>
+    if the query is too mangled.</p>
+<p class="Pp">Normally <code class="Nm">nsnotifyd</code> only accepts NOTIFY
+    messages for <var class="Ar">zones</var> given on the command line. NOTIFY
+    messages are accepted for unknown zones if you use the
+    <code class="Fl">-w</code> wildcard option.</p>
+<p class="Pp">Messages are logged via <a class="Xr">syslog(3)</a>.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Zone_refresh"><a class="permalink" href="#Zone_refresh">Zone
+  refresh</a></h2>
+<p class="Pp">When <code class="Nm">nsnotifyd</code> receives a NOTIFY, or when
+    a refresh or retry timer expires, it makes a SOA query to see if the zone
+    has changed. The SOA query is sent to the source of the NOTIFY or, if a
+    timer expired, to the server given in the <code class="Fl">-s</code>
+  option.</p>
+<p class="Pp">If the NOTIFY message was accepted for an unknown zone because you
+    used the <code class="Fl">-w</code> wildcard option,
+    <code class="Nm">nsnotifyd</code> makes a SOA query to verify the zone
+    exists and to get its serial number, and runs the command if it succeeds.
+    (It is unable to verify the zone has changed in this case.)</p>
+<p class="Pp">Some jitter is applied to SOA refresh and retry timers, so polling
+    can occur up to 10% earlier than specified.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Command_invocation"><a class="permalink" href="#Command_invocation">Command
+  invocation</a></h2>
+<p class="Pp">When the SOA reply indicates the zone's serial number has
+    increased, <code class="Nm">nsnotifyd</code> runs the
+    <var class="Ar">command</var> with two or three arguments:</p>
+<ol class="Bl-enum">
+  <li>the <var class="Ar">zone</var> name without the trailing dot, except for
+      the root zone &#x2018;<code class="Li">.</code>&#x2019;;</li>
+  <li>its new serial number;</li>
+  <li>the source address of the NOTIFY, or no third argument if the update was
+      found via a periodic refresh or retry.</li>
+</ol>
+<p class="Pp">When the command exits successfully,
+    <code class="Nm">nsnotifyd</code> updates its copy of the zone's SOA
+    parameters. It will next poll the zone on its refresh interval.</p>
+<p class="Pp">If the SOA query or command fails,
+    <code class="Nm">nsnotifyd</code> does not update its SOA parameters, and
+    and will next poll the zone on its retry interval.</p>
+<p class="Pp">Unknown zones that were not mentioned on the command line are not
+    polled.</p>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLE_-_metazones"><a class="permalink" href="#EXAMPLE_-_metazones">EXAMPLE
+  - metazones</a></h1>
+<p class="Pp">Metazones allow you to use standard DNS mechanisms - AXFR, IXFR,
+    NOTIFY, UPDATE - to control the configuration of multiple name servers,
+    instead of using a separate out-of-band distribution system.</p>
+<p class="Pp">For details, see the <a class="Xr">metazone(1)</a> manual.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLE_-_zone_revision_history"><a class="permalink" href="#EXAMPLE_-_zone_revision_history">EXAMPLE
+  - zone revision history</a></h1>
+<p class="Pp">Say you have a zone, <b class="Sy">example.org</b>, which is
+    updated dynamically, and you want to automatically record its history in a
+    <a class="Xr">git(1)</a> repository.</p>
+<section class="Ss">
+<h2 class="Ss" id="Setup_git"><a class="permalink" href="#Setup_git">Setup
+  git</a></h2>
+<p class="Pp">On a server that is authoritative for
+    <b class="Sy">example.org</b>, run the following commands:</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ mkdir zone-history
+$ cd zone-history
+$ git init
+$ touch example.org
+$ git add example.org
+$ git commit -m 'add example.org (empty)'</pre>
+</div>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Monitor_the_zone"><a class="permalink" href="#Monitor_the_zone">Monitor
+  the zone</a></h2>
+<p class="Pp">The <code class="Nm">nsnotify2git</code> script is designed to
+    work with <code class="Nm">nsnotifyd</code> to record the history of a set
+    of zones. Continuing the transcript,</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ nsnotifyd -P nsnotifyd.pid -p 5309 nsnotify2git example.org</pre>
+</div>
+</section>
+<section class="Ss">
+<h2 class="Ss">Send notifies</h2>
+<p class="Pp">To configure BIND to send notifies to
+    <code class="Nm">nsnotifyd</code>, so it detects changes more efficiently,
+    look in your <a class="Xr">named.conf(5)</a> file for</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>zone example.org {
+    ...
+};</pre>
+</div>
+<p class="Pp">Inside the zone clause, add or modify the
+    &#x2018;<code class="Li">also-notify</code>&#x2019; setting so it includes
+    the address and port used by <code class="Nm">nsnotifyd</code>, like</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>also-notify { 127.0.0.1 port 5309; };</pre>
+</div>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Update_the_zone"><a class="permalink" href="#Update_the_zone">Update
+  the zone</a></h2>
+<p class="Pp">Now, when the zone changes, <code class="Nm">nsnotifyd</code> will
+    quickly record the change in your <a class="Xr">git</a> repository.</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ nsupdate -l
+&gt; add example.com 3600 IN TXT &quot;foo&quot;
+&gt; send
+&gt; quit
+$ git log --format=%s
+example.org IN SOA 1234
+add example.org (empty)</pre>
+</div>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLE_-_stealth_secondary_synchronization"><a class="permalink" href="#EXAMPLE_-_stealth_secondary_synchronization">EXAMPLE
+  - stealth secondary synchronization</a></h1>
+<p class="Pp">A stealth secondary is a server which transfers authoritative
+    copies of a zone, but which is not listed in the zone's NS records. It will
+    not normally get NOTIFY messages to tell it when to update the zone, so must
+    rely on the zone's SOA timers instead.</p>
+<p class="Pp">We would like stealth secondaries to get updates promptly, but
+    without extra manual configuration of
+    &#x2018;<code class="Li">also-notify</code>&#x2019; lists.</p>
+<p class="Pp">To do this, <code class="Nm">nsnotifyd</code> includes
+    <code class="Nm">nsnotify-liststealth</code> which analyzes a BIND log file
+    to extract lists of AXFR and IXFR clients for each zone (excluding clients
+    that use TSIG), and <code class="Nm">nsnotify</code> which takes zone and a
+    list of clients that should be notified. The
+    <code class="Nm">nsnotify2stealth</code> script bridges between
+    <code class="Nm">nsnotifyd</code> and these two helpers.</p>
+<section class="Ss">
+<h2 class="Ss" id="Create_working_directory"><a class="permalink" href="#Create_working_directory">Create
+  working directory</a></h2>
+<p class="Pp">The working directory contains the client lists, one per zone, and
+    a symlink to the log file used by BIND. You only need to run this command
+    once when creating the directory.</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ mkdir notify-stealth
+$ cd notify-stealth
+$ ln -s /var/log/messages .log</pre>
+</div>
+<p class="Pp">This directory will also contain a <span class="Pa">.pid</span>
+    file for <code class="Nm">nsnotifyd</code>, and occasionally a
+    <span class="Pa">.once</span> file to stop
+    <code class="Nm">nsnotify2stealth</code> from running more than one
+    <code class="Nm">nsnotify-liststealth</code> at a time.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Pre-populate_the_directory"><a class="permalink" href="#Pre-populate_the_directory">Pre-populate
+  the directory</a></h2>
+<p class="Pp">This gets us a file per zone, each containing a list of clients
+    for that zone. The <code class="Nm">nsnotify2stealth</code> script will
+    automatically update the client lists once per day.</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ nsnotify-liststealth .log</pre>
+</div>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Monitor_the_zones"><a class="permalink" href="#Monitor_the_zones">Monitor
+  the zones</a></h2>
+<p class="Pp">Because we have a file per zone, we can invoke
+    <code class="Nm">nsnotifyd</code> with a glob instead of listing the zones
+    explicitly. The special files (<span class="Pa">.log .once .pid</span>) are
+    dotted so that the glob works as expected.</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ nsnotifyd -P .pid -p 5307 nsnotify2stealth *</pre>
+</div>
+</section>
+<section class="Ss">
+<h2 class="Ss">Send notifies</h2>
+<p class="Pp">You will also need to reconfigure BIND to send notifies to
+    <code class="Nm">nsnotifyd</code>, as described in the previous example.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Tune_BIND"><a class="permalink" href="#Tune_BIND">Tune
+  BIND</a></h2>
+<p class="Pp">If you have a lot of stealth secondaries,
+    <code class="Nm">nsnotify2stealth</code> can cause a large flood of zone
+    transfers. You may need to change BIND's capacity settings as described in
+    the ISC Knowledge Base article cited in the
+    <a class="Sx" href="#SEE_ALSO">SEE ALSO</a> section below.</p>
+</section>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="EXAMPLE_-_bump-in-the-wire_DNSSEC"><a class="permalink" href="#EXAMPLE_-_bump-in-the-wire_DNSSEC">EXAMPLE
+  - bump-in-the-wire DNSSEC</a></h1>
+<p class="Pp">The <a class="Xr">nsdiff(1)</a> utility creates an
+    <a class="Xr">nsupdate(1)</a> script from the differences between two
+    versions of a zone. It can be used as an alternative to BIND's
+    <code class="Cd">inline-signing</code> option, amongst other things.</p>
+<p class="Pp">You can use <code class="Nm">nsnotifyd</code> together with
+    <code class="Nm">nsdiff</code> to implement a zone signer that operates as a
+    &quot;bump in the wire&quot; between a DNSSEC-unaware hidden master server
+    and the zone's public name servers.</p>
+<p class="Pp">Configure your hidden master server to send notifies and allow
+    zone transfers to your signing server:</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>also-notify { signer port 5305; };
+allow-transfer { signer; };</pre>
+</div>
+<p class="Pp">Configure the signer with dynamic signed master zones, and
+    generate keys for them:</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>zone example.org {
+    type master;
+    update-policy local;
+    auto-dnssec maintain;
+};</pre>
+</div>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ dnssec-keygen -fk example.org
+$ dnssec-keygen example.org</pre>
+</div>
+<p class="Pp">Run <code class="Nm">nsnotifyd</code> on the signer to trigger an
+    update of the signed zone as soon as an update occurs on the hidden
+  master:</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>$ nsnotifyd -P nsnotifyd.pid -p 5305 nsnotify2update example.org</pre>
+</div>
+<p class="Pp">Configure your public name servers to transfer your zones from the
+    signer instead of from the hidden master.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon is not very
+  secure.</p>
+<p class="Pp">It accepts any well-formed NOTIFY message, regardless of the
+    source. It does not support TSIG authentication (RFC 2845) for access
+    control.</p>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon only handles one
+    query at a time, which prevents it from becoming a fork bomb. However, you
+    can easily overwhelm it with more notifications than it can handle. A
+    spoofed NOTIFY will make <code class="Nm">nsnotifyd</code> send a SOA query
+    to the spoofed source address and wait for a reply (which will probably not
+    arrive), during which time it is unresponsive.</p>
+<p class="Pp">You should configure <code class="Nm">nsnotifyd</code> to listen
+    on a loopback address (which is the default) or use a packet filter to block
+    unwanted traffic.</p>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon is not aware of the
+    authoritative servers for a zone, so it cannot filter spurious NOTIFY
+    messages. It has a very simplistic mechanism for choosing which servers to
+    query when refreshing a zone.</p>
+<p class="Pp">The <code class="Nm">nsnotifyd</code> daemon cannot accept NOTIFY
+    messages over TCP (RFC 5966). It does not support EDNS (RFC 6891). However,
+    NOTIFY messages and responses are very small, so following these
+    specifications should not be necessary in practice.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<p class="Pp"><a class="Xr">git(1)</a>, <a class="Xr">metazone(1)</a>,
+    <a class="Xr">named(8)</a>, <a class="Xr">named.conf(5)</a>,
+    <a class="Xr">nsdiff(1)</a>, <a class="Xr">nsnotify(1)</a>,
+    <a class="Xr">nspatch(1)</a>, <a class="Xr">nsupdate(1)</a>,
+    <a class="Xr">syslog(3)</a>.</p>
+<p class="Pp"><cite class="Rs"><span class="RsA">Cathy Almond</span>,
+    <span class="RsT">Tuning BIND for zone transfers</span>,
+    <i class="RsI">Internet Systems Consortium</i>, <i class="RsJ">ISC Knowledge
+    Base</i>, <span class="RsN">AA-00726</span>,
+    <a class="RsU" href="https://kb.isc.org/article/AA-00726">https://kb.isc.org/article/AA-00726</a>.</cite></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="STANDARDS"><a class="permalink" href="#STANDARDS">STANDARDS</a></h1>
+<p class="Pp"><cite class="Rs"><span class="RsA">Paul Mockapetris</span>,
+    <span class="RsT">Domain names - concepts and facilities</span>,
+    <span class="RsR">RFC 1034</span>, <span class="RsD">November
+    1987</span>.</cite></p>
+<p class="Pp"><cite class="Rs"><span class="RsA">Paul Mockapetris</span>,
+    <span class="RsT">Domain names - implementation and specification</span>,
+    <span class="RsR">RFC 1035</span>, <span class="RsD">November
+    1987</span>.</cite></p>
+<p class="Pp"><cite class="Rs"><span class="RsA">Robert Elz</span> and
+    <span class="RsA">Randy Bush</span>, <span class="RsT">Serial number
+    arithmetic</span>, <span class="RsR">RFC 1982</span>,
+    <span class="RsD">August 1996</span>.</cite></p>
+<p class="Pp"><cite class="Rs"><span class="RsA">Paul Vixie</span>,
+    <span class="RsT">A mechanism for prompt notification of zone changes (DNS
+    NOTIFY)</span>, <span class="RsR">RFC 1996</span>, <span class="RsD">August
+    1996</span>.</cite></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="AUTHOR"><a class="permalink" href="#AUTHOR">AUTHOR</a></h1>
+<p class="Pp"><span class="An">Tony Finch</span>
+    &#x27E8;<code class="Li">dot@dotat.at</code>&#x27E9;
+    &#x27E8;<code class="Li">fanf2@cam.ac.uk</code>&#x27E9;
+  <br/>
+  at Cambridge University Information Services</p>
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">July 10, 2015</td>
+    <td class="foot-os">DNS</td>
+  </tr>
+</table>
+<footer>
+  <address>
+    <a href="https://dotat.at/prog/nsnotifyd/"><tt>nsnotifyd</tt></a>
+    was written by
+    <a href="https://dotat.at/">Tony Finch</a>
+    &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+  </address>
+</footer>
+</body>
+</html>

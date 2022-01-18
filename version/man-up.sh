@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -eux
 
 for file in "$@"
 do

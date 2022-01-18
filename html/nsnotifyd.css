@@ -1,0 +1,34 @@
+/*
+ * nsnotifyd-specific additions to mandoc.css
+ *
+ * Written by Tony Finch <dot@dotat.at>
+ * You may do anything with this. It has no warranty.
+ * <http://creativecommons.org/publicdomain/zero/1.0/>
+ * SPDX-License-Identifier: CC0-1.0
+ */
+
+h1 img {
+    vertical-align: middle;
+}
+
+h1 a {
+    text-decoration: none;
+    color: initial;
+}
+
+hr {
+    border: 0px;
+    border-top: 1px dotted;
+}
+
+header h1 {
+    padding-bottom: 0.5em;
+    margin-bottom: 0em;
+    border-bottom: 1px dotted;
+}
+
+footer {
+    padding: 0.5em 0em;
+    border-top: 1px dotted;
+    border-bottom: 1px dotted;
+}

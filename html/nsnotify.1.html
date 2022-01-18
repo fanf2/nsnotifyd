@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
+  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="https://dotat.at/prog/nsnotifyd/">
+	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
+	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+      </a>
+    </h1>
+  </header>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">NSNOTIFY(1)</td>
+    <td class="head-vol">General Commands Manual (dns commands manual)</td>
+    <td class="head-rtitle">NSNOTIFY(1)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<p class="Pp"><code class="Nm">nsnotify</code> &#x2014; <span class="Nd">send
+    DNS NOTIFY messages</span></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">nsnotify</code></td>
+    <td>[<code class="Fl">-46dV</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] &#x27E8;<var class="Ar">zone</var>&#x27E9;
+      &#x27E8;<var class="Ar">target</var>&#x27E9;...</td>
+  </tr>
+</table>
+<br/>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">nsnotify</code></td>
+    <td>[<code class="Fl">-46dV</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] [<code class="Fl">-f</code>
+      <var class="Ar">targets</var>]
+      &#x27E8;<var class="Ar">zone</var>&#x27E9;</td>
+  </tr>
+</table>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<p class="Pp">The <code class="Nm">nsnotify</code> program sends DNS NOTIFY
+    messages for a <var class="Ar">zone</var> to a list of
+    <var class="Ar">target</var>s. You can either provide a list of
+    <var class="Ar">target</var>s on the command line, or use the
+    <code class="Fl">-f</code> <var class="Ar">targets</var> option to read from
+    a file.</p>
+<p class="Pp">Note: <code class="Nm">nsnotify</code> (without
+    &#x2018;<code class="Li">d</code>&#x2019;) is a client for sending DNS
+    NOTIFY messages whereas <code class="Nm">nsnotifyd</code> (with
+    &#x2018;<code class="Li">d</code>&#x2019;) is a daemon for handling DNS
+    NOTIFY messages.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="OPTIONS"><a class="permalink" href="#OPTIONS">OPTIONS</a></h1>
+<dl class="Bl-tag">
+  <dt id="4"><a class="permalink" href="#4"><code class="Fl">-4</code></a></dt>
+  <dd>Use IPv4 only (apart the system resolver).</dd>
+  <dt id="6"><a class="permalink" href="#6"><code class="Fl">-6</code></a></dt>
+  <dd>Use IPv6 only (apart the system resolver).</dd>
+  <dt id="d"><a class="permalink" href="#d"><code class="Fl">-d</code></a></dt>
+  <dd>Debugging mode.
+    <p class="Pp">Use once to print successful message sends.</p>
+    <p class="Pp">Use twice to get dumps of DNS packets.</p>
+  </dd>
+  <dt id="f"><a class="permalink" href="#f"><code class="Fl">-f</code></a>
+    <var class="Ar">targets</var></dt>
+  <dd>File containing list of addresses to send NOTIFY messages to. There must
+      be one target address per line, with no comments or extra white space.
+    <p class="Pp">If <var class="Ar">targets</var> is
+        &#x2018;<code class="Li">-</code>&#x2019; then the addresses are read
+        from <code class="Li">stdin</code>.</p>
+  </dd>
+  <dt id="p"><a class="permalink" href="#p"><code class="Fl">-p</code></a>
+    <var class="Ar">port</var></dt>
+  <dd>Listen on <var class="Ar">port</var>, which may be a service name or a UDP
+      port number. The default is the
+      <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
+      service, UDP port 53.</dd>
+  <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a></dt>
+  <dd>Print details about this version of <code class="Nm">nsnotify</code>.</dd>
+</dl>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<p class="Pp"><a class="Xr">nsnotifyd(1)</a>.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="AUTHOR"><a class="permalink" href="#AUTHOR">AUTHOR</a></h1>
+<p class="Pp"><span class="An">Tony Finch</span>
+    &#x27E8;<code class="Li">dot@dotat.at</code>&#x27E9;
+    &#x27E8;<code class="Li">fanf2@cam.ac.uk</code>&#x27E9;
+  <br/>
+  at Cambridge University Information Services</p>
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">July 7, 2015</td>
+    <td class="foot-os">DNS</td>
+  </tr>
+</table>
+<footer>
+  <address>
+    <a href="https://dotat.at/prog/nsnotifyd/"><tt>nsnotifyd</tt></a>
+    was written by
+    <a href="https://dotat.at/">Tony Finch</a>
+    &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+  </address>
+</footer>
+</body>
+</html>
