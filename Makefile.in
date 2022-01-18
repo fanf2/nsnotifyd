@@ -131,11 +131,8 @@ cleanest: cleaner
 release: version.h
 	version/release.sh
 
-upload: ${DOCS}
-	git push --tags github master
-	git push --tags chiark master
-	git push --tags origin master
-	rsync -i ${DOCS} nsnotifyd-*.tar.xz nsnotifyd-*.tar.gz nsnotifyd-*.zip \
-		chiark:public-html/prog/nsnotifyd/
+upload:
+	rsync -ri --exclude=*~ \
+		html/ chiark:public-html/prog/nsnotifyd-tcp/
 
 ################################################################
