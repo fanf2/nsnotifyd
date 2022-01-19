@@ -40,39 +40,17 @@ static const char what_ident[] =
     "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
 ;
 
-static void
+static int
 version(void) {
 	const char *p = what_ident;
 	for(;;) {
 		while(*++p != '$')
 			if(*p == '\0')
-				exit(0);
+				return(0);
 		while(*++p != '$')
 			putchar(*p);
 		putchar('\n');
 	}
-}
-
-static void
-usage(void) {
-	fprintf(stderr,
-"usage: nsnotify [-46dpV] [-f targets] zone [targets]\n"
-"	-4		send on IPv4 only\n"
-"	-6		send on IPv6 only\n"
-"	-d		debugging mode\n"
-"			(use twice to print DNS messages)\n"
-"	-f zones	read domain names from file instead of command line\n"
-"	-f targets	read targets from file instead of command line\n"
-"	-p port		send notifies to this port number\n"
-"			(default 53)\n"
-"	-t		send notifies over TCP instead of UDP\n"
-"	-V		print version information\n"
-"	zone		the zone for which to send notifies\n"
-"	targets		destinations of notify messages\n"
-"			(may be command-line arguments\n"
-"			 or read from stdin, one per line)\n"
-		);
-	exit(1);
 }
 
 /*
@@ -279,6 +257,28 @@ make_messages(const byte ***msgvp, const char *file, int debug) {
 	return(msgc);
 }
 
+static int
+usage(void) {
+	fprintf(stderr,
+"usage: nsnotify [-46dpV] [-f targets] zone [targets]\n"
+"	-4		send on IPv4 only\n"
+"	-6		send on IPv6 only\n"
+"	-d		debugging mode\n"
+"			(use twice to print DNS messages)\n"
+"	-f zones	read domain names from file instead of command line\n"
+"	-f targets	read targets from file instead of command line\n"
+"	-p port		send notifies to this port number\n"
+"			(default 53)\n"
+"	-t		send notifies over TCP instead of UDP\n"
+"	-V		print version information\n"
+"	zone		the zone for which to send notifies\n"
+"	targets		destinations of notify messages\n"
+"			(may be command-line arguments\n"
+"			 or read from stdin, one per line)\n"
+		);
+	return(1);
+}
+
 int
 main(int argc, char *argv[]) {
 	const char *port = "domain";
@@ -313,9 +313,9 @@ main(int argc, char *argv[]) {
 			protocol = SOCK_STREAM;
 			continue;
 		case('V'):
-			version();
+			exit(version());
 		default:
-			usage();
+			exit(usage());
 		}
 
 	res_init();
