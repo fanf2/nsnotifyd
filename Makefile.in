@@ -12,7 +12,7 @@ man5dest=	${DESTDIR}${man5dir}
 
 # compiler flags
 
-CFLAGS	= -std=c99 -fno-strict-aliasing -O2 -Weverything
+CFLAGS	= -std=c99 -fno-strict-aliasing -O2 -Wall -Wextra
 
 # resolver library
 
