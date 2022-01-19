@@ -61,7 +61,7 @@ version(void) {
  * little select() loop.
  */
 static int
-tcp_write(int s, const byte *msgv[], size_t msgc) {
+tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 	static byte rdbuf[1 << 16];
 	int r;
 
@@ -103,6 +103,9 @@ tcp_write(int s, const byte *msgv[], size_t msgc) {
 				return(-1);
 			}
 			rdpos += (size_t)n;
+			if(debug)
+				fprintf(stderr, "; R %zu %zi %zu/%zu\n",
+					rdmsg, n, rdpos, rdlen);
 			if(rdpos == 2) {
 				rdlen = rdbuf[0]*256 +
 					rdbuf[1] + 2;
@@ -123,7 +126,10 @@ tcp_write(int s, const byte *msgv[], size_t msgc) {
 				warn("write");
 				return(-1);
 			}
-			wrpos += (size_t)r;
+			wrpos += (size_t)n;
+			if(debug)
+				fprintf(stderr, "; W %zu %zi %zu/%zu\n",
+					wrmsg, n, wrpos, wrlen);
 			if(wrpos >= wrlen) {
 				wrmsg += 1;
 				wrpos = 0;
@@ -141,11 +147,14 @@ tcp_write(int s, const byte *msgv[], size_t msgc) {
  * When sending over UDP, there's no need to handle replies
  */
 static int
-udp_write(int s, const byte *msgv[], size_t msgc) {
+udp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 	for(size_t msgi = 0; msgi < msgc; msgi++) {
 		size_t len = msgv[msgi][0]*256
 			+ msgv[msgi][1];
 		ssize_t r = write(s, msgv[msgi] + 2, len);
+		if(debug)
+			fprintf(stderr, "; W %zu %zi/%zu\n",
+				msgi, r, len);
 		if(r < 0) {
 			warn("write");
 			return(-1);
@@ -197,9 +206,9 @@ notify(const char *target, const char *port, int family, int protocol,
 			continue;
 		}
 		if(protocol == SOCK_STREAM)
-			r |= tcp_write(s, msgv, msgc);
+			r |= tcp_write(s, msgv, msgc, debug);
 		else
-			r |= udp_write(s, msgv, msgc);
+			r |= udp_write(s, msgv, msgc, debug);
 		close(s);
 	}
 	freeaddrinfo(ai0);
