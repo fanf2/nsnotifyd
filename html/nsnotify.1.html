@@ -100,11 +100,8 @@
   <dt id="F"><a class="permalink" href="#F"><code class="Fl">-F</code></a>
     <var class="Ar">zones</var></dt>
   <dd>File containing list of zones to send NOTIFY messages about. There must be
-      one domain name per line, with no comments or extra white space.
-    <p class="Pp">If <var class="Ar">zones</var> is
-        &#x2018;<code class="Li">-</code>&#x2019; then the domain names are read
-        from <code class="Li">stdin</code>.</p>
-  </dd>
+      one domain name per line, with no comments or extra white space. The file
+      must be seekable (not a pipe, for example).</dd>
   <dt id="f"><a class="permalink" href="#f"><code class="Fl">-f</code></a>
     <var class="Ar">targets</var></dt>
   <dd>File containing list of addresses to send NOTIFY messages to. There must
@@ -134,7 +131,6 @@
 <h1 class="Sh" id="AUTHOR"><a class="permalink" href="#AUTHOR">AUTHOR</a></h1>
 <p class="Pp"><span class="An">Tony Finch</span>
     &#x27E8;<code class="Li">dot@dotat.at</code>&#x27E9;
-    &#x27E8;<code class="Li">fanf2@cam.ac.uk</code>&#x27E9;
   <br/>
   at Cambridge University Information Services</p>
 </section>

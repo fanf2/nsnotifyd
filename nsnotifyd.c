@@ -1,6 +1,6 @@
 /* nsnotifyd: handle DNS NOTIFY messages by running a command
  *
- * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
+ * Written by Tony Finch <dot@dotat.at>
  * at Cambridge University Information Services.
  *
  * You may do anything with this. It has no warranty.
@@ -59,7 +59,7 @@ static const char what_ident[] =
     "@(#) $Program: nsnotifyd $\n"
     "@(#) $Version: " VERSION " $\n"
     "@(#) $Date:    " REVDATE " $\n"
-    "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
+    "@(#) $Author:  Tony Finch (dot@dotat.at) $\n"
     "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
 ;
 

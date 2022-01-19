@@ -1,6 +1,6 @@
 /* nsnotify: send DNS NOTIFY messages to lots of targets
  *
- * Written by Tony Finch <dot@dotat.at> <fanf2@cam.ac.uk>
+ * Written by Tony Finch <dot@dotat.at>
  * at Cambridge University Information Services.
  *
  * You may do anything with this. It has no warranty.
@@ -64,7 +64,7 @@ static const char what_ident[] =
     "@(#) $Program: nsnotify $\n"
     "@(#) $Version: " VERSION " $\n"
     "@(#) $Date:    " REVDATE " $\n"
-    "@(#) $Author:  Tony Finch (dot@dotat.at) (fanf2@cam.ac.uk) $\n"
+    "@(#) $Author:  Tony Finch (dot@dotat.at) $\n"
     "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
 ;
 
@@ -89,9 +89,11 @@ usage(void) {
 "	-6		send on IPv6 only\n"
 "	-d		debugging mode\n"
 "			(use twice to print DNS messages)\n"
+"	-f zones	read domain names from file instead of command line\n"
 "	-f targets	read targets from file instead of command line\n"
 "	-p port		send notifies to this port number\n"
 "			(default 53)\n"
+"	-t		send notifies over TCP instead of UDP\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
 "	targets		destinations of notify messages\n"
