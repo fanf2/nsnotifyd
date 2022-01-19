@@ -11,7 +11,7 @@ elif
 	cc -E -dM -I/usr/include/bind - |
 	grep 'define __RES 200' >/dev/null
 then
-	# Debian with libbind4-dev
+	# old Debian with libbind4-dev
 	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind|;
 		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile

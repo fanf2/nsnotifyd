@@ -73,9 +73,10 @@ Dependencies
 ------------
 
 The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
-with a sufficiently recent resolver. On a Debian-like Linux you should
-`apt install libbind4-dev`. Otherwise, the configure script will download
-libbind and build and link with it statically.
+with a suitable resolver. On old Debian-like Linux you can `apt
+install libbind4-dev` (but it is no longer present in more recent
+distributions). Otherwise, the configure script will download libbind
+and build and link with it statically.
 
 
 Latest release
