@@ -24,7 +24,7 @@
  /*%
   * Constants for getnameinfo()
 --- libbind-6.0/include/arpa/nameser.h~	2009-03-03 01:52:48.000000000 +0000
-+++ libbind-6.0/include/arpa/nameser.h	2022-01-20 12:11:52.000000000 +0000
++++ libbind-6.0/include/arpa/nameser.h	2022-01-20 18:02:00.000000000 +0000
 @@ -490,9 +490,9 @@
   */
  #define NS_GET16(s, cp) do { \
@@ -36,5 +36,30 @@
 +			| ((u_int16_t)t_cp[1]) \
 +			); \
  	(cp) += NS_INT16SZ; \
+ } while (0)
+ 
+@@ -509,18 +509,18 @@
+ #define NS_PUT16(s, cp) do { \
+ 	register u_int16_t t_s = (u_int16_t)(s); \
+ 	register u_char *t_cp = (u_char *)(cp); \
+-	*t_cp++ = t_s >> 8; \
+-	*t_cp   = t_s; \
++	*t_cp++ = (u_char)(t_s >> 8); \
++	*t_cp   = (u_char)(t_s); \
+ 	(cp) += NS_INT16SZ; \
+ } while (0)
+ 
+ #define NS_PUT32(l, cp) do { \
+ 	register u_int32_t t_l = (u_int32_t)(l); \
+ 	register u_char *t_cp = (u_char *)(cp); \
+-	*t_cp++ = t_l >> 24; \
+-	*t_cp++ = t_l >> 16; \
+-	*t_cp++ = t_l >> 8; \
+-	*t_cp   = t_l; \
++	*t_cp++ = (u_char)(t_l >> 24); \
++	*t_cp++ = (u_char)(t_l >> 16); \
++	*t_cp++ = (u_char)(t_l >> 8); \
++	*t_cp   = (u_char)(t_l); \
+ 	(cp) += NS_INT32SZ; \
  } while (0)
  
