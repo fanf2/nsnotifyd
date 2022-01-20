@@ -77,7 +77,7 @@ version(void) {
 }
 
 #ifdef __GNUC__
-#define dummy dummy __attribute__((unused))
+#define dummy dumdum __attribute__((unused))
 #endif
 
 static bool quit;
