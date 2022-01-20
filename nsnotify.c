@@ -62,7 +62,8 @@ version(void) {
  */
 static int
 tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
-	static byte rdbuf[1 << 16];
+	/* length followed by maximum message size */
+	static byte rdbuf[2 + 0xffff];
 	int r;
 
 	r = fcntl(s, F_GETFL, 0);
