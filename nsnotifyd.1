@@ -145,7 +145,6 @@ or
 options.
 .It Fl T Ar interval
 Set the read timeout for TCP connections.
-The default is 4 seconds.
 .It Fl t
 Listen for TCP connections instead of UDP.
 .Pp
@@ -180,6 +179,10 @@ as in DNS master files.
 For example,
 .Li 1h1m1s
 is 3661 seconds.
+.Pp
+The usage message printed by
+.Ic nsnotifyd -?
+includes the default intervals.
 .Pp
 .Bl -tag -compact -width indent -offset indent
 .It w

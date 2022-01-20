@@ -129,7 +129,7 @@
   </dd>
   <dt id="T"><a class="permalink" href="#T"><code class="Fl">-T</code></a>
     <var class="Ar">interval</var></dt>
-  <dd>Set the read timeout for TCP connections. The default is 4 seconds.</dd>
+  <dd>Set the read timeout for TCP connections.</dd>
   <dt id="t"><a class="permalink" href="#t"><code class="Fl">-t</code></a></dt>
   <dd>Listen for TCP connections instead of UDP.
     <p class="Pp">If you need <code class="Nm">nsnotifyd</code> to listen on
@@ -154,6 +154,8 @@
     seconds, or you can use a combination of the following time units, as in DNS
     master files. For example, <code class="Li">1h1m1s</code> is 3661
   seconds.</p>
+<p class="Pp">The usage message printed by <code class="Ic">nsnotifyd -?</code>
+    includes the default intervals.</p>
 <p class="Pp"></p>
 <div class="Bd-indent">
 <dl class="Bl-tag Bl-compact">
