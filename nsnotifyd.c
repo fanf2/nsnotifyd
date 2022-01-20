@@ -196,10 +196,11 @@ res_server_name(int family, const char *name) {
 	if(r) errx(1, "%s: %s", name, gai_strerror(r));
 	if(ai0 == NULL) errx(1, "%s not found", name);
 
-	int n;
+	size_t n;
 	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++)
 		;
-	res_sockaddr_t addr[n];
+	res_sockaddr_t *addr = calloc(n, sizeof(*addr));
+	if(addr == NULL) err(1, "malloc");
 
 	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++) {
 		memset(&addr[n], 0, sizeof(addr[n]));
