@@ -23,3 +23,18 @@
  
  /*%
   * Constants for getnameinfo()
+--- libbind-6.0/include/arpa/nameser.h~	2009-03-03 01:52:48.000000000 +0000
++++ libbind-6.0/include/arpa/nameser.h	2022-01-20 12:11:52.000000000 +0000
+@@ -490,9 +490,9 @@
+  */
+ #define NS_GET16(s, cp) do { \
+ 	register const u_char *t_cp = (const u_char *)(cp); \
+-	(s) = ((u_int16_t)t_cp[0] << 8) \
+-	    | ((u_int16_t)t_cp[1]) \
+-	    ; \
++	(s) = (u_int16_t)(((u_int16_t)t_cp[0] << 8) \
++			| ((u_int16_t)t_cp[1]) \
++			); \
+ 	(cp) += NS_INT16SZ; \
+ } while (0)
+ 

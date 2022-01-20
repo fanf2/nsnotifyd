@@ -76,19 +76,17 @@ version(void) {
 	}
 }
 
-#ifdef __GNUC__
-#define dummy dumdum __attribute__((unused))
-#endif
-
 static bool quit;
 
 static void
 sigexit(int dummy) {
+	(void)dummy;
 	quit = true;
 }
 
 static void
 signoop(int dummy) {
+	(void)dummy;
 }
 
 static void
@@ -196,10 +194,10 @@ res_server_name(int family, const char *name) {
 	if(r) errx(1, "%s: %s", name, gai_strerror(r));
 	if(ai0 == NULL) errx(1, "%s not found", name);
 
-	size_t n;
+	int n;
 	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++)
 		;
-	res_sockaddr_t *addr = calloc(n, sizeof(*addr));
+	res_sockaddr_t *addr = calloc((size_t)n, sizeof(*addr));
 	if(addr == NULL) err(1, "malloc");
 
 	for(n = 0, ai = ai0; ai != NULL; ai = ai->ai_next, n++) {
@@ -216,7 +214,7 @@ static int res_saved_server_count;
 static void
 res_saveservers(void) {
 	int n = res_getservers(&_res, NULL, 0);
-	res_saved_servers = calloc(n, sizeof(res_sockaddr_t));
+	res_saved_servers = calloc((size_t)n, sizeof(res_sockaddr_t));
 	if(res_saved_servers == NULL) err(1, "malloc");
 	res_saved_server_count = res_getservers(&_res, res_saved_servers, n);
 }
@@ -238,7 +236,7 @@ soa_server_name(int family, const char *name) {
 	_res.options |= RES_RECURSE;
 	if(name != NULL) {
 		res_server_name(family, name);
-		_res.options &= ~RES_RECURSE;
+		_res.options &= (u_long)~RES_RECURSE;
 	}
 }
 
@@ -253,16 +251,16 @@ soa_server_addr(struct sockaddr *sa, socklen_t sa_len) {
 	memcpy(&addr, sa, sa_len);
 	addr.sin.sin_port = htons(53);
 	res_setservers(&_res, &addr, 1);
-	_res.options &= ~RES_RECURSE;
+	_res.options &= (u_long)~RES_RECURSE;
 }
 
 /*
  * Sanity checking for SOA timing parameters.
  */
-uint32_t refresh_min = 1<<9;
-uint32_t refresh_max = 1<<15;
-uint32_t retry_min   = 1<<6;
-uint32_t retry_max   = 1<<12;
+static uint32_t refresh_min = 1<<9;
+static uint32_t refresh_max = 1<<15;
+static uint32_t retry_min   = 1<<6;
+static uint32_t retry_max   = 1<<12;
 
 static void
 ttl_pair(char *str, uint32_t *min, uint32_t *max) {
@@ -273,14 +271,14 @@ ttl_pair(char *str, uint32_t *min, uint32_t *max) {
 	if(ns_parse_ttl(str, &ttl) < 0)
 		errx(1, "invalid%s refresh time: %s",
 		    sep != NULL ? " minimum" : "", str);
-	*min = ttl;
+	*min = (uint32_t)ttl;
 	if(sep == NULL) {
 		*max = *min;
 		return;
 	}
 	if(ns_parse_ttl(sep, &ttl) < 0)
 		errx(1, "invalid maximum refresh time: %s", sep);
-	*max = ttl;
+	*max = (uint32_t)ttl;
 	return;
 }
 
@@ -298,7 +296,9 @@ refresh_alarm(zone z[]) {
 			n = z;
 	if(n->name == NULL) return;
 	log_debug("%s refresh at %s", n->name, isotime(n->refresh));
-	alarm(n->refresh - time(NULL));
+	uint32_t interval = (uint32_t)(n->refresh - time(NULL));
+	if(interval > refresh_max) interval = refresh_max;
+	alarm(interval);
 }
 
 static void
@@ -325,7 +325,8 @@ zone_soa(zone *z) {
 		p += r = ns_name_uncompress(msg, eom, p, name, sizeof(name));
 		if(r < 0) return("bad owner");
 		if(eom - p < 10) return("truncated RR");
-		uint32_t type, class, ttl, rdlength;
+		uint16_t type, class, rdlength;
+		uint32_t ttl;
 		NS_GET16(type, p);
 		NS_GET16(class, p);
 		NS_GET32(ttl, p);
@@ -408,7 +409,8 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 			master,
 			NULL
 		};
-		execvp(cmd, (char**)cmdv);
+		/* quietly cast away const, sigh */
+		execvp(cmd, (char**)(void*)cmdv);
 		err(1, "exec %s", cmd);
 	default:;
 		int r;
@@ -555,7 +557,7 @@ main(int argc, char *argv[]) {
 
 	soa_server_name(family, authority);
 	zone *zones;
-	zones = malloc(sizeof(*zones) * (argc + 1));
+	zones = calloc((size_t)(argc + 1), sizeof(*zones));
 	if(zones == NULL)
 		err(1, "malloc");
 	memset(&zones[argc], 0, sizeof(zone));
@@ -645,7 +647,7 @@ main(int argc, char *argv[]) {
 		if(debug > 1) {
 			log_debug("%s query length %ld",
 				  sockstr(sa, sa_len), len);
-			res_pquery(&_res, msg, len, stderr);
+			res_pquery(&_res, msg, (int)len, stderr);
 		}
 		byte *eom = msg + len;
 		byte *p = msg + sizeof(HEADER);
@@ -657,7 +659,7 @@ main(int argc, char *argv[]) {
 		p += r = ns_name_uncompress(msg, eom, p, qname, sizeof(qname));
 		if(r < 0 || eom - p < 4) goto formerr;
 
-		int qtype, qclass;
+		uint16_t qtype, qclass;
 		NS_GET16(qtype, p);
 		NS_GET16(qclass, p);
 		if(h->opcode != ns_o_notify ||
@@ -703,9 +705,9 @@ main(int argc, char *argv[]) {
 		if(debug > 1) {
 			log_debug("%s reply length %ld",
 				  sockstr(sa, sa_len), p - msg);
-			res_pquery(&_res, msg, p - msg, stdout);
+			res_pquery(&_res, msg, (int)(p - msg), stdout);
 		}
-		len = sendto(s, msg, p - msg, 0, sa, sa_len);
+		len = sendto(s, msg, (size_t)(p - msg), 0, sa, sa_len);
 		if(len < 0)
 			log_err("sendto %s: %m", sockstr(sa, sa_len));
 		continue;
