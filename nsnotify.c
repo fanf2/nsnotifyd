@@ -219,10 +219,11 @@ notify(const char *target, const char *port, int family, int protocol,
 static const byte *
 make_a_message(const char *zone, int debug) {
 	byte msg[512];
-	int msglen = res_mkquery(ns_o_notify, zone, ns_c_in, ns_t_soa,
+	int msglen = res_mkquery(ns_o_query, zone, ns_c_in, ns_t_soa,
 				 NULL, 0, NULL, msg, sizeof(msg));
 	if(msglen < 0)
 		errx(1, "could not make DNS NOTIFY message for %s", zone);
+	((HEADER *)msg)->opcode = ns_o_notify;
 	((HEADER *)msg)->rd = 0;
 	if(debug > 1)
 		res_pquery(&_res, msg, msglen, stderr);
