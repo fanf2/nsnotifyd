@@ -144,7 +144,7 @@ or
 .Fl 6
 options.
 .It Fl T Ar interval
-Set the idle timeout for TCP connections.
+Set the read timeout for TCP connections.
 The default is 4 seconds.
 .It Fl t
 Listen for TCP connections instead of UDP.
@@ -237,16 +237,19 @@ In UDP-only mode (the default),
 .Nm
 handles one query at a time,
 which includes waiting for the script to finish.
-(A flood of NOTIFY messages cannot cause a fork bomb.)
 In TCP-only mode
 (the
-.Fl -t
+.Fl t
 option),
 .Nm
 accepts one TCP connection at a time,
 and handles one query at a time on that connection
 in a similar manner to UDP-only mode.
-(A long-lasting TCP connection can prevent other connection attempts.)
+See
+.Sx BUGS
+for more discussion of
+.Nm Ns 's
+limitations.
 .Pp
 Normally
 .Nm
