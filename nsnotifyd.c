@@ -63,13 +63,13 @@ static const char what_ident[] =
     "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
 ;
 
-static void
+static int
 version(void) {
 	const char *p = what_ident;
 	for(;;) {
 		while(*++p != '$')
 			if(*p == '\0')
-				exit(0);
+				return(0);
 		while(*++p != '$')
 			putchar(*p);
 		putchar('\n');
@@ -428,7 +428,7 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 	}
 }
 
-static void
+static int
 usage(void) {
 	fprintf(stderr,
 "usage: nsnotifyd [-46dV] [-l facility] [-P pidfile] [-u user]\n"
@@ -453,7 +453,7 @@ usage(void) {
 "	zone...		list of zones for which to accept notifies\n",
 	    refresh_min, refresh_max,
 	    retry_min, retry_max);
-	exit(1);
+	return(1);
 }
 
 int
@@ -514,9 +514,9 @@ main(int argc, char *argv[]) {
 			wild = true;
 			continue;
 		case('V'):
-			version();
+			exit(version());
 		default:
-			usage();
+			exit(usage());
 		}
 
 	openlog(basename(argv[0]), debug ? LOG_PERROR : LOG_PID, facility);
@@ -538,7 +538,7 @@ main(int argc, char *argv[]) {
 	argc -= optind;
 	argv += optind;
 	if(argc < 1 || (argc == 1 && !wild))
-		usage();
+		exit(usage());
 
 	cmd = *argv++; argc--;
 
