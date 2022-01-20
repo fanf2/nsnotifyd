@@ -84,9 +84,12 @@ sigexit(int dummy) {
 	quit = true;
 }
 
+static bool timeout;
+
 static void
-signoop(int dummy) {
+sigalarm(int dummy) {
 	(void)dummy;
+	timeout = true;
 }
 
 static void
@@ -105,7 +108,7 @@ sigactions(void) {
 	if(r < 0) err(1, "sigaction(SIGINT)");
 	r = sigaction(SIGTERM, &sa, NULL);
 	if(r < 0) err(1, "sigaction(SIGTERM)");
-	sa.sa_handler = signoop;
+	sa.sa_handler = sigalarm;
 	sa.sa_flags = 0;
 	r = sigaction(SIGALRM, &sa, NULL);
 	if(r < 0) err(1, "sigaction(SIGALRM)");
@@ -148,14 +151,14 @@ ai_sockstr(struct addrinfo *ai) {
 }
 
 static int
-listen_udp(int family, const char *addr, const char *port) {
+listen_sock(bool tcp, int family, const char *addr, const char *port) {
 	struct addrinfo hints, *ai0, *ai;
 	int r, s;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = family;
 	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_DGRAM;
+	hints.ai_socktype = tcp ? SOCK_STREAM : SOCK_DGRAM;
 	r = getaddrinfo(addr, port, &hints, &ai0);
 	if(r) errx(1, "%s/%s: %s", addr, port, gai_strerror(r));
 
@@ -174,12 +177,56 @@ listen_udp(int family, const char *addr, const char *port) {
 			warn("bind %s", ai_sockstr(ai));
 			goto next;
 		}
+		/* backlog value from Stevens, UNIX network programming */
+		if(tcp && listen(s, 1024) < 0) {
+			warn("listen %s", ai_sockstr(ai));
+			goto next;
+		}
 		log_notice("listening on %s", ai_sockstr(ai));
 		freeaddrinfo(ai0);
 		return(s);
 	next:	close(s);
 	}
 	errx(1, "could not listen on %s/%s", addr, port);
+}
+
+static int
+tcp_read(int s, byte *buf, ssize_t len) {
+	for(;;) {
+		if(len < 0)
+			return(errno = EINVAL);
+		ssize_t n = read(s, buf, (size_t)len);
+		if(n == 0 && len > 0) {
+			return(errno = ENOTCONN);
+		}
+		if(n < 0 && errno == EINTR && timeout) {
+			timeout = false;
+			return(errno = ETIMEDOUT);
+		}
+		if(n < 0 && errno == EINTR && quit)
+			return(errno = ECHILD);
+		if(n < 0 && errno == EINTR)
+			continue;
+		if(n < 0)
+			return(errno);
+		buf += (size_t)n;
+		len -= (size_t)n;
+		if(len == 0)
+			return(0);
+	}
+}
+
+static int
+tcp_write(int s, byte *buf, ssize_t len) {
+	for(;;) {
+		ssize_t n = write(s, buf, (size_t)len);
+		if(n < 0)
+			return(-1);
+		buf += (size_t)n;
+		len -= (size_t)n;
+		if(len == 0)
+			return(0);
+	}
 }
 
 static void
@@ -261,6 +308,7 @@ static uint32_t refresh_min = 1<<9;
 static uint32_t refresh_max = 1<<15;
 static uint32_t retry_min   = 1<<6;
 static uint32_t retry_max   = 1<<12;
+static uint32_t tcp_timeout = 1<<2;
 
 static void
 ttl_pair(char *str, uint32_t *min, uint32_t *max) {
@@ -449,13 +497,16 @@ usage(void) {
 "	-R min:max	limit SOA refresh times (default %d:%d)\n"
 "	-r min:max	limit SOA retry times (default %d:%d)\n"
 "	-s addr		authoritative server for refresh queries\n"
+"	-T max		TCP read timeout (default %d)\n"
+"	-t		accept NOTIFYs over TCP instead of UDP\n"
 "	-u user		drop privileges to user\n"
 "	-V		print version information\n"
 "	-w		wildcard: accept notifies on any zone\n"
 "	command		the command to run when a zone changes\n"
 "	zone...		list of zones for which to accept notifies\n",
-	    refresh_min, refresh_max,
-	    retry_min, retry_max);
+		refresh_min, refresh_max,
+		retry_min, retry_max,
+		tcp_timeout);
 	return(1);
 }
 
@@ -470,10 +521,11 @@ main(int argc, char *argv[]) {
 	const char *port = "domain";
 	const char *authority = NULL;
 	bool wild = false;
+	bool tcp = false;
 	char *cmd = NULL;
 	int debug = 0;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:R:r:s:u:Vw")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:R:r:s:T:tu:Vw")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -509,6 +561,15 @@ main(int argc, char *argv[]) {
 			continue;
 		case('s'):
 			authority = optarg;
+			continue;
+		case('T'): {
+			u_long ttl;
+			if(ns_parse_ttl(optarg, &ttl) < 0)
+				errx(1, "invalid time: %s", optarg);
+			tcp_timeout = (uint32_t)ttl;
+		} continue;
+		case('t'):
+			tcp = true;
 			continue;
 		case('u'):
 			user = optarg;
@@ -570,7 +631,7 @@ main(int argc, char *argv[]) {
 	}
 
 	res_resetservers();
-	int s = listen_udp(family, addr, port);
+	int s = listen_sock(tcp, family, addr, port);
 
 	sigactions();
 
@@ -603,29 +664,35 @@ main(int argc, char *argv[]) {
 	}
 
 	for(;;) {
-		byte msg[NS_PACKETSZ];
+		static byte msg[0xffff];
 		char qname[NS_MAXDNAME];
 		struct sockaddr_storage sa_buf;
 		struct sockaddr *sa = (void *) &sa_buf;
 		socklen_t sa_len;
-		ssize_t len;
+		ssize_t len = 0;
+		int t = -1;
 
 		refresh_alarm(zones);
-		memset(msg, 0, sizeof(HEADER));
-		sa_len = sizeof(sa_buf);
-		len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
+		if(tcp) {
+			sa_len = sizeof(sa_buf);
+			t = r = accept(s, sa, &sa_len);
+			log_info("connection from %s", sockstr(sa, sa_len));
+		} else {
+			memset(msg, 0, sizeof(HEADER));
+			sa_len = sizeof(sa_buf);
+			len = recvfrom(s, msg, sizeof(msg), 0, sa, &sa_len);
+			r = (int)len;
+		}
 		alarm(0);
 
-		if(len < 0) {
-			if(quit) {
-				log_notice("exiting");
-				if(pidfile != NULL) unlink(pidfile);
-				exit(0);
-			}
+		if(r < 0) {
+			if(quit)
+				break;
 			if(errno != EINTR) {
-				log_err("recv: %m");
+				log_err("%s: %m", tcp ? "accept" : "recv");
 				continue;
 			}
+			timeout = false;
 			// keep refreshing until there is nothing to do
 			soa_server_name(family, authority);
 			bool refreshed = true;
@@ -642,6 +709,26 @@ main(int argc, char *argv[]) {
 			}
 			continue;
 		}
+
+	more:
+		if(tcp) {
+			alarm(tcp_timeout);
+			r = tcp_read(t, msg, 2);
+			if(r == 0) {
+				byte *p = msg;
+				NS_GET16(len, p);
+				r = tcp_read(t, msg, len);
+			}
+			if(r == ECHILD)
+				break;
+			if(r != 0) {
+				log_err("disconnected %s: %m",
+					sockstr(sa, sa_len));
+				close(t);
+				continue;
+			}
+		}
+
 		if(debug > 1) {
 			log_debug("%s query length %ld",
 				  sockstr(sa, sa_len), len);
@@ -649,7 +736,7 @@ main(int argc, char *argv[]) {
 		}
 		byte *eom = msg + len;
 		byte *p = msg + sizeof(HEADER);
-		HEADER *h = (void *) msg;
+		HEADER *h = (void *)msg;
 
 		if(eom < p) goto formerr;
 		if(h->qdcount != htons(1)) goto formerr;
@@ -700,14 +787,32 @@ main(int argc, char *argv[]) {
 		h->nscount = 0;
 		h->arcount = 0;
 		// TODO: call ns_sign() to add TSIG
+		len = p - msg;
 		if(debug > 1) {
 			log_debug("%s reply length %ld",
-				  sockstr(sa, sa_len), p - msg);
-			res_pquery(&_res, msg, (int)(p - msg), stdout);
+				  sockstr(sa, sa_len), (long)len);
+			res_pquery(&_res, msg, (int)len, stdout);
 		}
-		len = sendto(s, msg, (size_t)(p - msg), 0, sa, sa_len);
-		if(len < 0)
-			log_err("sendto %s: %m", sockstr(sa, sa_len));
+		if(tcp) {
+			byte msglen[2];
+			p = msglen;
+			NS_PUT16((uint16_t)len, p);
+			if(tcp_write(t, msglen, 2) < 0 ||
+			   tcp_write(t, msg, len) < 0) {
+				log_err("write %s: %m", sockstr(sa, sa_len));
+				close(t);
+				if(quit) break;
+			} else if(h->rcode == ns_r_formerr) {
+				log_err("disconnected %s", sockstr(sa, sa_len));
+				close(t);
+			} else {
+				goto more;
+			}
+		} else {
+			len = sendto(s, msg, (size_t)len, 0, sa, sa_len);
+			if(len < 0)
+				log_err("sendto %s: %m", sockstr(sa, sa_len));
+		}
 		continue;
 	formerr:
 		log_info("%s formerr", sockstr(sa, sa_len));
@@ -720,4 +825,8 @@ main(int argc, char *argv[]) {
 		h->rcode = ns_r_refused;
 		goto reply;
 	}
+
+	log_notice("exiting");
+	if(pidfile != NULL) unlink(pidfile);
+	exit(0);
 }
