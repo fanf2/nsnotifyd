@@ -676,7 +676,9 @@ main(int argc, char *argv[]) {
 		if(tcp) {
 			sa_len = sizeof(sa_buf);
 			t = r = accept(s, sa, &sa_len);
-			log_info("connection from %s", sockstr(sa, sa_len));
+			if(debug)
+				log_info("connection from %s",
+					 sockstr(sa, sa_len));
 		} else {
 			memset(msg, 0, sizeof(HEADER));
 			sa_len = sizeof(sa_buf);
@@ -722,8 +724,9 @@ main(int argc, char *argv[]) {
 			if(r == ECHILD)
 				break;
 			if(r != 0) {
-				log_err("disconnected %s: %m",
-					sockstr(sa, sa_len));
+				if(r != ENOTCONN || debug > 0)
+					log_err("disconnected %s: %m",
+						 sockstr(sa, sa_len));
 				close(t);
 				continue;
 			}
@@ -803,7 +806,9 @@ main(int argc, char *argv[]) {
 				close(t);
 				if(quit) break;
 			} else if(h->rcode == ns_r_formerr) {
-				log_err("disconnected %s", sockstr(sa, sa_len));
+				if(debug)
+					log_info("disconnected %s",
+						 sockstr(sa, sa_len));
 				close(t);
 			} else {
 				goto more;
