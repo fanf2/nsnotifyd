@@ -721,6 +721,7 @@ main(int argc, char *argv[]) {
 				NS_GET16(len, p);
 				r = tcp_read(t, msg, len);
 			}
+			alarm(0);
 			if(r == ECHILD)
 				break;
 			if(r != 0) {
