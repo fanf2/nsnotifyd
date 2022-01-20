@@ -12,6 +12,7 @@
 .Op Fl u Ar user
 .Op Fl R Ar min : Ns Ar max
 .Op Fl r Ar min : Ns Ar max
+.Op Fl T Ar max
 .Op Fl s Ar authority
 .Op Fl a Ar addr
 .Op Fl p Ar port
@@ -142,10 +143,9 @@ constrained by the
 or
 .Fl 6
 options.
-.It Fl u Ar user
-Drop privilege to
-.Ar user
-after daemonizing.
+.It Fl T Ar interval
+Set the idle timeout for TCP connections.
+The default is 4 seconds.
 .It Fl t
 Listen for TCP connections instead of UDP.
 .Pp
@@ -156,6 +156,10 @@ you can run it twice,
 with and without the
 .Fl t
 option.
+.It Fl u Ar user
+Drop privilege to
+.Ar user
+after daemonizing.
 .It Fl V
 Print details about this version of
 .Nm .
@@ -166,6 +170,7 @@ that are not given on the command line.
 .El
 .Ss Interval syntax
 Time parameters for the
+.Fl T ,
 .Fl R
 and
 .Fl r
