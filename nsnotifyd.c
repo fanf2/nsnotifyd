@@ -560,9 +560,7 @@ main(int argc, char *argv[]) {
 	zones = calloc((size_t)(argc + 1), sizeof(*zones));
 	if(zones == NULL)
 		err(1, "malloc");
-	memset(&zones[argc], 0, sizeof(zone));
 	for(zone *z = zones; argc > 0; z++) {
-		memset(z, 0, sizeof(*z));
 		z->name = *argv++; argc--;
 		if(strcmp(z->name, "root") == 0)
 			z->name = ".";
