@@ -333,13 +333,13 @@ main(int argc, char *argv[]) {
 	argc -= optind;
 	argv += optind;
 	if(targets_fn == NULL && zones_fn == NULL && argc < 2)
-		usage();
+		exit(usage());
 	if(targets_fn != NULL && zones_fn == NULL && argc < 1)
-		usage();
+		exit(usage());
 	if(targets_fn == NULL && zones_fn != NULL && argc < 1)
-		usage();
+		exit(usage());
 	if(targets_fn != NULL && zones_fn != NULL && argc > 0)
-		usage();
+		exit(usage());
 
 	const byte **msgv, *msg1;
 	size_t msgc;
