@@ -553,7 +553,10 @@ main(int argc, char *argv[]) {
 	}
 
 	soa_server_name(family, authority);
-	zone zones[argc + 1];
+	zone *zones;
+	zones = malloc(sizeof(*zones) * (argc + 1));
+	if(zones == NULL)
+		err(1, "malloc");
 	memset(&zones[argc], 0, sizeof(zone));
 	for(zone *z = zones; argc > 0; z++) {
 		memset(z, 0, sizeof(*z));
