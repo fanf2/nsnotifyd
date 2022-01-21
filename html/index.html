@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
+  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="https://dotat.at/prog/nsnotifyd/">
+	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
+	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+      </a>
+    </h1>
+  </header>
+<p>The <code>nsnotifyd</code> daemon monitors a set of DNS zones and runs a command
+when any of them change. It listens for DNS NOTIFY messages so it can
+respond to changes promptly. It also uses each zone's SOA refresh and
+retry parameters to poll for updates if <code>nsnotifyd</code> does not receive
+NOTIFY messages more frequently.</p>
+
+<p>Anywhere you currently have a cron job which is monitoring updates to
+DNS zones, you might want to run it under <code>nsnotifyd</code> instead of cron,
+so your script runs as soon as the zone changes instead of running at
+fixed intervals.</p>
+
+<p>There is also a client program <code>nsnotify</code> for sending notify messages.</p>
+
+<p>The 2.0 release (January 2022) adds TCP support to <code>nsnotifyd</code> and <code>nsnotify</code>
+(for interoperability with <a href="https://www.knot-dns.cz/">Knot DNS</a>),
+and <code>nsnotify</code> can now rapidly send notifications for multiple zones.
+Many thanks to <a href="https://www.dk-hostmaster.dk/">DK Hostmaster</a>
+for sponsoring this work.</p>
+
+<h2>Examples</h2>
+
+<p>There are four example scripts described in the manual:</p>
+
+<p><code>metazone</code> allows you to use standard DNS mechanisms - AXFR, IXFR,
+NOTIFY, UPDATE - to control the configuration of multiple name
+servers, instead of using a separate out-of-band distribution system.</p>
+
+<p><code>nsnotify2git</code> records the history of changes to a set of zones.</p>
+
+<p><code>nsnotify2stealth</code> uses nsnotify-liststealth and nsnotify to
+notify stealth secondaries so they get updates faster.</p>
+
+<p><code>nsnotify2update</code> uses nsdiff and nsupdate as part of a bump-in-the-wire
+DNSSEC signer.</p>
+
+<h2>Documentation</h2>
+
+<p>To read the <code>nsnotifyd</code> manual, run</p>
+
+<pre><code>    $ man ./nsnotifyd.1
+</code></pre>
+
+<p>There are an HTML versions of the manual pages:</p>
+
+<ul>
+<li><a href="nsnotifyd.1.html">nsnotifyd.1</a>, the daemon</li>
+<li><a href="nsnotify.1.html">nsnotify.1</a>, the notifier</li>
+<li><a href="metazone.1.html">metazone.1</a>, the <code>metazone</code> example script</li>
+<li><a href="metazone.5.html">metazone.5</a>, the <code>metazone</code> file format</li>
+</ul>
+
+<p>The <code>nsnotifyd</code> homepage is <a href="http://dotat.at/prog/nsnotifyd/">http://dotat.at/prog/nsnotifyd/</a></p>
+
+<h2>Build and install</h2>
+
+<p>To install in your home directory,</p>
+
+<pre><code>    $ ./configure
+    $ make all
+    $ make install
+</code></pre>
+
+<p>See the top of the Makefile for variables that control the install
+location, for example,</p>
+
+<pre><code>    $ sudo make prefix=/usr/local install
+</code></pre>
+
+<p>You need to use GNU make to build the preformatted documentation.</p>
+
+<p><a href="https://www.freshports.org/dns/nsnotifyd/">On FreeBSD, use the <code>nsnotifyd</code> port or package</a></p>
+
+<h2>Dependencies</h2>
+
+<p>The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
+with a suitable resolver. On old Debian-like Linux you can <code>apt
+install libbind4-dev</code> (but it is no longer present in more recent
+distributions). Otherwise, the configure script will download libbind
+and build and link with it statically.</p>
+
+<h2>Latest release</h2>
+
+<p>Download the full source archives:</p>
+
+<ul>
+<li><a href="http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz">http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz</a></li>
+<li><a href="http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz">http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz</a></li>
+<li><a href="http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip">http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip</a></li>
+</ul>
+
+<p>(Do not use GitHub's "Download ZIP" feature because it gives you
+a broken partial copy that contains neither dev support files nor
+release build output files.)</p>
+
+<h2>Source repositories</h2>
+
+<p>You can clone or browse the repository from:</p>
+
+<ul>
+<li>git://dotat.at/nsnotifyd.git</li>
+<li><a href="http://dotat.at/cgi/git/nsnotifyd.git">http://dotat.at/cgi/git/nsnotifyd.git</a></li>
+<li><a href="https://github.com/fanf2/nsnotifyd.git">https://github.com/fanf2/nsnotifyd.git</a></li>
+</ul>
+
+<h2>Articles about nsnotifyd</h2>
+
+<ul>
+<li><a href="http://fanf.livejournal.com/134988.html">http://fanf.livejournal.com/134988.html</a> nsnotifyd-1.0 announcement</li>
+<li><a href="http://fanf.livejournal.com/135257.html">http://fanf.livejournal.com/135257.html</a> nsnotifyd-1.1 announcement</li>
+<li><a href="http://jpmens.net/2015/06/16/alert-on-dns-notify/">http://jpmens.net/2015/06/16/alert-on-dns-notify/</a> review by JP Mens</li>
+<li><a href="https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53">https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53</a> how the Guardian synchronized their DNS between Dyn and AWS Route 53 with <code>nsnotifyd</code></li>
+</ul>
+
+<p>And in other media...</p>
+
+<ul>
+<li><a href="http://www.jupiterbroadcasting.com/116921/teeny-weeny-dns-server-techsnap-329/">TechSNAP 329: teeny weeny DNS server</a> -
+video review by Dan Langille</li>
+</ul>
+
+<h2>Contributing</h2>
+
+<p>Please send bug reports or patches by email to me. I accept
+contributions made under the terms of CC0. Thanks to Gavin Brown,
+Niels Haarbo, JP Mens, and Richard James Salts for helpful feedback
+and encouragement.</p>
+
+<p>You may do anything with this. It has no warranty. <br />
+<a href="http://creativecommons.org/publicdomain/zero/1.0/">http://creativecommons.org/publicdomain/zero/1.0/</a></p>
+<footer>
+  <address>
+    <a href="https://dotat.at/prog/nsnotifyd/"><tt>nsnotifyd</tt></a>
+    was written by
+    <a href="https://dotat.at/">Tony Finch</a>
+    &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+  </address>
+</footer>
+</body>
+</html>

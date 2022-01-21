@@ -14,6 +14,12 @@ fixed intervals.
 
 There is also a client program `nsnotify` for sending notify messages.
 
+The 2.0 release (January 2022) adds TCP support to `nsnotifyd` and `nsnotify`
+(for interoperability with [Knot DNS](https://www.knot-dns.cz/)),
+and `nsnotify` can now rapidly send notifications for multiple zones.
+Many thanks to [DK Hostmaster](https://www.dk-hostmaster.dk/)
+for sponsoring this work.
+
 
 Examples
 --------
@@ -121,8 +127,9 @@ Contributing
 ------------
 
 Please send bug reports or patches by email to me. I accept
-contributions made under the terms of CC0. Thanks to JP Mens, Gavin
-Brown, and Richard James Salts for helpful feedback and encouragement.
+contributions made under the terms of CC0. Thanks to Gavin Brown,
+Niels Haarbo, JP Mens, and Richard James Salts for helpful feedback
+and encouragement.
 
 You may do anything with this. It has no warranty.  
 <http://creativecommons.org/publicdomain/zero/1.0/>
