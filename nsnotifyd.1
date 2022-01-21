@@ -147,14 +147,6 @@ options.
 Set the read timeout for TCP connections.
 .It Fl t
 Listen for TCP connections instead of UDP.
-.Pp
-If you need
-.Nm
-to listen on both UDP and TCP,
-you can run it twice,
-with and without the
-.Fl t
-option.
 .It Fl u Ar user
 Drop privilege to
 .Ar user
@@ -227,6 +219,15 @@ to be context-sensitive.
 The
 .Nm
 daemon acts as a very simple UDP-only or TCP-only DNS server.
+(BIND sends NOTIFY messages over UDP,
+whereas Knot DNS uses TCP.)
+If you need to support both UDP and TCP,
+you can run two copies of
+.Nm
+with and without the
+.Fl t
+option.
+.Pp
 The only DNS queries handled by
 .Nm
 are NOTIFY messages.
@@ -539,21 +540,6 @@ regardless of the source.
 It does not support TSIG authentication (RFC 2845)
 for access control.
 .Pp
-The
-.Nm
-daemon
-only handles one query at a time,
-which prevents it from becoming a fork bomb,
-and in TCP mode it only handles one connection at a time.
-However, you can easily overwhelm it
-with more notifications than it can handle,
-or with a long-lived TCP connection.
-A spoofed NOTIFY will make
-.Nm
-send a SOA query to the spoofed source address
-and wait for a reply (which will probably not arrive),
-during which time it is unresponsive.
-.Pp
 You should configure
 .Nm
 to listen on a loopback address
@@ -567,6 +553,22 @@ is not aware of the authoritative servers for a zone,
 so it cannot filter spurious NOTIFY messages.
 It has a very simplistic mechanism
 for choosing which servers to query when refreshing a zone.
+.Pp
+The
+.Nm
+daemon
+only handles one query at a time,
+which prevents it from becoming a fork bomb,
+and in TCP mode it only handles one connection at a time.
+However, you can easily overwhelm it
+with more notifications than it can handle,
+or with a long-lived TCP connection.
+.Pp
+A spoofed NOTIFY will make
+.Nm
+send a SOA query to the spoofed source address
+and wait for a reply (which will probably not arrive),
+during which time it is unresponsive.
 .Pp
 It does not support EDNS (RFC 6891).
 However,
