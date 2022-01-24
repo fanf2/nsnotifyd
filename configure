@@ -12,7 +12,7 @@ elif
 	grep 'define __RES 200' >/dev/null
 then
 	# old Debian with libbind4-dev
-	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind|;
+	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-D_DEFAULT_SOURCE -I/usr/include/bind|;
 		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile
 	echo 'Using libbind4'
@@ -27,7 +27,7 @@ then
 	echo 'Using libresolv'
 else
 	sed '	s|^LIBDEPS=.*|LIBDEPS=${RESLIB}|;
-		s|^LIBFLAGS=.*|LIBFLAGS=-I${RES}/include -L${RES}|;
+		s|^LIBFLAGS=.*|LIBFLAGS=-D_DEFAULT_SOURCE -I${RES}/include -L${RES}|;
 		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile
 	make resconfig
