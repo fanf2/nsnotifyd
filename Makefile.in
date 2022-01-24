@@ -96,8 +96,11 @@ html/index.html: README.md html/_*.html
 
 resconfig: ${RES}/Makefile
 
+# dusty old libbind no longer compiles cleanly with modern compilers,
+# so suppress warnings
+
 ${RESLIB}: ${RES}/Makefile
-	cd ${RES} && make all
+	cd ${RES} && make STD_CWARNINGS="-w -fno-strict-aliasing" all
 
 ${RES}/Makefile: ${RES}/configure
 	cd ${RES} && ./configure
