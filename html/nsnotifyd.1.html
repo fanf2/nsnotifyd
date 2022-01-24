@@ -4,14 +4,14 @@
   <meta charset="utf-8"/>
   <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
   <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
-  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+  <title>nsnotifyd: scripted DNS NOTIFY handler</title>
 </head>
 <body>
   <header>
     <h1>
       <a href="https://dotat.at/prog/nsnotifyd/">
 	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
-	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+	<tt>nsnotifyd</tt>: scripted DNS NOTIFY handler
       </a>
     </h1>
   </header>
@@ -204,8 +204,8 @@
     finish. In TCP-only mode (the <code class="Fl">-t</code> option),
     <code class="Nm">nsnotifyd</code> accepts one TCP connection at a time, and
     handles one query at a time on that connection in a similar manner to
-    UDP-only mode. See <a class="Sx" href="#BUGS">BUGS</a> for more discussion
-    of <code class="Nm">nsnotifyd</code>'s limitations.</p>
+    UDP-only mode. The TCP connection is dropped if a complete request does not
+    arrive within the <code class="Fl">-T</code> read timeout interval.</p>
 <p class="Pp">Normally <code class="Nm">nsnotifyd</code> only accepts NOTIFY
     messages for <var class="Ar">zones</var> given on the command line. NOTIFY
     messages are accepted for unknown zones if you use the
@@ -249,6 +249,30 @@
     and will next poll the zone on its retry interval.</p>
 <p class="Pp">Unknown zones that were not mentioned on the command line are not
     polled.</p>
+</section>
+<section class="Ss">
+<h2 class="Ss" id="Performance_considerations"><a class="permalink" href="#Performance_considerations">Performance
+  considerations</a></h2>
+<p class="Pp">The speed of your <var class="Ar">command</var> determines how
+    fast <code class="Nm">nsnotifyd</code> can process NOTIFY messages.</p>
+<p class="Pp">When NOTIFYs arrive faster than they can be processed,
+    <code class="Nm">nsnotifyd</code> relies on network buffers to hold the
+    queue of pending requests. The time to clear the queue is the average
+    <var class="Ar">command</var> running time multiplied by the length of the
+    queue. This time is also the maximum latency between sending a NOTIFY
+    request and receiving a response from <code class="Nm">nsnotifyd</code>.</p>
+<p class="Pp">For example, if you rapidly update 100 zones, and your
+    <var class="Ar">command</var> takes about 1 second to run,
+    <code class="Nm">nsnotifyd</code> will take about 1 minute and 40 seconds to
+    process the queue and respond to the last NOTIFY.</p>
+<p class="Pp">You should aim to keep this maximum latency (your
+    <var class="Ar">command</var> running time times your NOTIFY batch size)
+    less than your DNS server's NOTIFY timeout. If your
+    <var class="Ar">command</var> is too slow, you can alter it to fork and do
+    the bulk of its work in the background, but then you are responsible for
+    avoiding a forkbomb. You might limit how many NOTIFY messages your DNS
+    server sends at once, or alter your <var class="Ar">command</var> to limit
+    its own concurrency.</p>
 </section>
 </section>
 <section class="Sh">
@@ -310,7 +334,8 @@ $ git commit -m 'add example.org (empty)'</pre>
 <h2 class="Ss" id="Update_the_zone"><a class="permalink" href="#Update_the_zone">Update
   the zone</a></h2>
 <p class="Pp">Now, when the zone changes, <code class="Nm">nsnotifyd</code> will
-    quickly record the change in your <a class="Xr">git</a> repository.</p>
+    quickly record the change in your <code class="Ic">git</code>
+  repository.</p>
 <div class="Bd Pp Bd-indent Li">
 <pre>$ nsupdate -l
 &gt; add example.com 3600 IN TXT &quot;foo&quot;
@@ -437,9 +462,8 @@ $ dnssec-keygen example.org</pre>
   secure.</p>
 <p class="Pp">It accepts any well-formed NOTIFY message, regardless of the
     source. It does not support TSIG authentication (RFC 2845) for access
-    control.</p>
-<p class="Pp">You should configure <code class="Nm">nsnotifyd</code> to listen
-    on a loopback address (which is the default) or use a packet filter to block
+    control. You should configure <code class="Nm">nsnotifyd</code> to listen on
+    a loopback address (which is the default) or use a packet filter to block
     unwanted traffic.</p>
 <p class="Pp">The <code class="Nm">nsnotifyd</code> daemon is not aware of the
     authoritative servers for a zone, so it cannot filter spurious NOTIFY
@@ -448,8 +472,10 @@ $ dnssec-keygen example.org</pre>
 <p class="Pp">The <code class="Nm">nsnotifyd</code> daemon only handles one
     query at a time, which prevents it from becoming a fork bomb, and in TCP
     mode it only handles one connection at a time. However, you can easily
-    overwhelm it with more notifications than it can handle, or with a
-    long-lived TCP connection.</p>
+    overwhelm it with more notifications than it can handle, or exclude other
+    clients with a long-lived TCP connection. See the
+    <a class="Sx" href="#Performance_considerations">Performance
+    considerations</a> section for further discussion.</p>
 <p class="Pp">A spoofed NOTIFY will make <code class="Nm">nsnotifyd</code> send
     a SOA query to the spoofed source address and wait for a reply (which will
     probably not arrive), during which time it is unresponsive.</p>
@@ -464,7 +490,7 @@ $ dnssec-keygen example.org</pre>
     <a class="Xr">named(8)</a>, <a class="Xr">named.conf(5)</a>,
     <a class="Xr">nsdiff(1)</a>, <a class="Xr">nsnotify(1)</a>,
     <a class="Xr">nspatch(1)</a>, <a class="Xr">nsupdate(1)</a>,
-    <a class="Xr">syslog(3)</a>.</p>
+    <a class="Xr">syslog(3)</a></p>
 <p class="Pp"><cite class="Rs"><span class="RsA">Cathy Almond</span>,
     <span class="RsT">Tuning BIND for zone transfers</span>,
     <i class="RsI">Internet Systems Consortium</i>, <i class="RsJ">ISC Knowledge

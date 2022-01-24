@@ -4,14 +4,14 @@
   <meta charset="utf-8"/>
   <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
   <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
-  <title>nsnotifyd: handle DNS NOTIFY messages by running a command</title>
+  <title>nsnotifyd: scripted DNS NOTIFY handler</title>
 </head>
 <body>
   <header>
     <h1>
       <a href="https://dotat.at/prog/nsnotifyd/">
 	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
-	<tt>nsnotifyd</tt>: handle DNS NOTIFY messages by running a command
+	<tt>nsnotifyd</tt>: scripted DNS NOTIFY handler
       </a>
     </h1>
   </header>
@@ -83,6 +83,7 @@
   <tr id="view">
     <td><a class="permalink" href="#view"><b class="Sy">view</b></a></td>
     <td><a class="permalink" href="#zones~2"><b class="Sy" id="zones~2">zones</b></a></td>
+    <td><b class="Sy"></b></td>
   </tr>
 </table>
 </section>
@@ -93,7 +94,6 @@
 <p class="Pp"></p>
 <div class="Bd
   Bd-indent">&#x27E8;<var class="Ar">zone</var>&#x27E9;.&#x27E8;<var class="Ar">view</var>&#x27E9;.&#x27E8;<var class="Ar">metazone</var>&#x27E9;</div>
-.
 <p class="Pp">The TXT RDATA contains the zone's configuration clause.</p>
 <p class="Pp">Note that if you need a configuration clause longer than 255
     bytes, you can use one TXT record containing multiple strings. The strings
@@ -154,7 +154,7 @@ example.org	TXT	( &quot;{&quot;
 <h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
   ALSO</a></h1>
 <p class="Pp"><a class="Xr">metazone(1)</a>, <a class="Xr">nsnotifyd(1)</a>,
-    <a class="Xr">named.conf(5)</a>.</p>
+    <a class="Xr">named.conf(5)</a></p>
 <p class="Pp"><cite class="Rs"><span class="RsA">Paul Vixie</span>,
     <span class="RsT">Federated domain name service using DNS metazones</span>,
     <a class="RsU" href="http://ss.vix.su/~vixie/mz.pdf">http://ss.vix.su/~vixie/mz.pdf</a>,
