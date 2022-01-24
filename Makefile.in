@@ -63,23 +63,26 @@ version.h::
 
 ################################################################
 
-mandoc = mandoc -Werror -Ofragment -Thtml
-
 manfiles_html = ${manfiles:=.html}
 manhtml = ${manfiles_html:%=html/%}
 
+manlint::
+	for man in ${manfiles}; do \
+		mandoc -Werror -Tlint $$man; \
+	done
+
 html:: html/index.html ${manhtml}
 
-${manhtml}: ${manfiles}
+${manhtml}: ${manfiles} html/_*.html
 	./version/man-up.sh ${manfiles}
 	for man in ${manfiles}; do \
 	(	cat html/_header.html; \
-		${mandoc} $$man; \
+		mandoc -Werror -Ofragment -Thtml $$man; \
 		cat html/_footer.html; \
 	) > html/$$man.html; \
 	done
 
-html/index.html: README.md
+html/index.html: README.md html/_*.html
 	(	cat html/_header.html; \
 		tail -n +3 README.md | \
 		sed 's|(html/|(|' | \
