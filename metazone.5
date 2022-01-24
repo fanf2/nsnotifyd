@@ -59,14 +59,14 @@ metazone formats:
 .It Sy allow-query      Ta Sy allow-transfer Ta Sy also-notify
 .It Sy server-addresses Ta Sy server-names   Ta Sy servers
 .It Sy in-view          Ta Sy masters        Ta Sy zones
-.It Sy view             Ta Sy zones
+.It Sy view             Ta Sy zones          Ta Sy ""
 .El
 .Ss Zones
 Each zone configuration is represented in the metazone
 using one TXT resource record.
 The owner of the TXT record is
 .Pp
-.D1 Ao Ar zone Ac Ns . Ns Ao Ar view Ac Ns . Ns Ao Ar metazone Ac Ns .
+.D1 Ao Ar zone Ac . Ns Ao Ar view Ac . Ns Ao Ar metazone Ac Ns
 .Pp
 The TXT RDATA contains the zone's configuration clause.
 .Pp
@@ -131,7 +131,7 @@ and do not make any attempt to support other name server implementations.
 .Sh SEE ALSO
 .Xr metazone 1 ,
 .Xr nsnotifyd 1 ,
-.Xr named.conf 5 .
+.Xr named.conf 5
 .Rs
 .%A Paul Vixie
 .%T Federated domain name service using DNS metazones
