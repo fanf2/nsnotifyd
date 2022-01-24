@@ -249,11 +249,9 @@ option),
 accepts one TCP connection at a time,
 and handles one query at a time on that connection
 in a similar manner to UDP-only mode.
-See
-.Sx BUGS
-for more discussion of
-.Nm Ns 's
-limitations.
+The TCP connection is dropped if a complete request does not arrive within the
+.Fl T
+read timeout interval.
 .Pp
 Normally
 .Nm
@@ -321,6 +319,46 @@ and and will next poll the zone on its retry interval.
 .Pp
 Unknown zones that were not mentioned on the command line
 are not polled.
+.Ss Performance considerations
+The speed of your
+.Ar command
+determines how fast
+.Nm
+can process NOTIFY messages.
+.Pp
+When NOTIFYs arrive faster than they can be processed,
+.Nm
+relies on network buffers to hold the queue of pending requests.
+The time to clear the queue is the average
+.Ar command
+running time multiplied by the length of the queue.
+This time is also the maximum latency between
+sending a NOTIFY request and receiving a response from
+.Nm .
+.Pp
+For example,
+if you rapidly update 100 zones,
+and your
+.Ar command
+takes about 1 second to run,
+.Nm
+will take about 1 minute and 40 seconds to process the queue
+and respond to the last NOTIFY.
+.Pp
+You should aim to keep this maximum latency
+(your
+.Ar command
+running time times your NOTIFY batch size)
+less than your DNS server's NOTIFY timeout.
+If your
+.Ar command
+is too slow,
+you can alter it to fork and do the bulk of its work in the background,
+but then you are responsible for avoiding a forkbomb.
+You might limit how many NOTIFY messages your DNS server sends at once,
+or alter your
+.Ar command
+to limit its own concurrency.
 .Sh EXAMPLE - metazones
 Metazones allow you to use standard DNS mechanisms -
 AXFR, IXFR, NOTIFY, UPDATE -
@@ -386,7 +424,7 @@ also-notify { 127.0.0.1 port 5309; };
 Now, when the zone changes,
 .Nm
 will quickly record the change in your
-.Xr git
+.Ic git
 repository.
 .Bd -literal -offset indent
 $ nsupdate -l
@@ -399,9 +437,9 @@ add example.org (empty)
 .Ed
 .Sh EXAMPLE - stealth secondary synchronization
 A stealth secondary is a server which transfers authoritative copies
-of a zone, but which is not listed in the zone's NS records. It will
-not normally get NOTIFY messages to tell it when to update the zone,
-so must rely on the zone's SOA timers instead.
+of a zone, but which is not listed in the zone's NS records.
+It will not normally get NOTIFY messages to tell it when to update the
+zone, so must rely on the zone's SOA timers instead.
 .Pp
 We would like stealth secondaries to get updates promptly,
 but without extra manual configuration of
@@ -514,7 +552,6 @@ zone example.org {
     auto-dnssec maintain;
 };
 .Ed
-.Pp
 .Bd -literal -offset indent
 $ dnssec-keygen -fk example.org
 $ dnssec-keygen example.org
@@ -539,7 +576,6 @@ It accepts any well-formed NOTIFY message,
 regardless of the source.
 It does not support TSIG authentication (RFC 2845)
 for access control.
-.Pp
 You should configure
 .Nm
 to listen on a loopback address
@@ -562,7 +598,10 @@ which prevents it from becoming a fork bomb,
 and in TCP mode it only handles one connection at a time.
 However, you can easily overwhelm it
 with more notifications than it can handle,
-or with a long-lived TCP connection.
+or exclude other clients with a long-lived TCP connection.
+See the
+.Sx Performance considerations
+section for further discussion.
 .Pp
 A spoofed NOTIFY will make
 .Nm
@@ -583,7 +622,7 @@ so following these specifications should not be necessary in practice.
 .Xr nsnotify 1 ,
 .Xr nspatch 1 ,
 .Xr nsupdate 1 ,
-.Xr syslog 3 .
+.Xr syslog 3
 .Rs
 .%T Tuning BIND for zone transfers
 .%A Cathy Almond
