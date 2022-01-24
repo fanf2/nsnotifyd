@@ -25,6 +25,7 @@ header h1 {
     padding-bottom: 0.5em;
     margin-bottom: 0em;
     border-bottom: 1px dotted;
+    font-size: 200%;
 }
 
 footer {

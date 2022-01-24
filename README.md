@@ -1,5 +1,5 @@
-nsnotifyd: handle DNS NOTIFY messages by running a command
-==========================================================
+nsnotifyd: scripted DNS NOTIFY handler
+======================================
 
 The `nsnotifyd` daemon monitors a set of DNS zones and runs a command
 when any of them change. It listens for DNS NOTIFY messages so it can
