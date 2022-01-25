@@ -88,9 +88,9 @@ Latest release
 
 Download the full source archives:
 
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.xz>
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.tar.gz>
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-1.6.zip>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.xz>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.gz>
+  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.zip>
 
 (Do not use GitHub's "Download ZIP" feature because it gives you
 a broken partial copy that contains neither dev support files nor
