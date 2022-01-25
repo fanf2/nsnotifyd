@@ -134,11 +134,14 @@ cleanest: cleaner
 
 ################################################################
 
+WEBSITE=chiark:public-html/prog/nsnotifyd/
+
 release: version.h
 	version/release.sh
 
 upload:
-	rsync -ri --exclude=*~ \
-		html/ chiark:public-html/prog/nsnotifyd-tcp/
+	git push --follow-tags all
+	rsync -ri --exclude=*~ html/ ${WEBSITE}
+	rsync -ri nsnotifyd-*.{tar.gz,tar.xz,zip} ${WEBSITE}
 
 ################################################################

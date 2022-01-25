@@ -1,0 +1,1 @@
+RedirectMatch permanent "(.*).(txt|pdf)" https://dotat.at/prog/nsnotifyd/$1.html
