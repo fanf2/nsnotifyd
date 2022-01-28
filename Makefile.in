@@ -141,6 +141,7 @@ release: version.h
 
 upload:
 	git push --follow-tags all
+	git remote update
 	rsync -ri --exclude=*~ html/ ${WEBSITE}
 	rsync -ri nsnotifyd-*.{tar.gz,tar.xz,zip} ${WEBSITE}
 
