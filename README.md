@@ -112,6 +112,7 @@ Articles about nsnotifyd
 
   * <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
   * <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
+  * <https://fanf.dreamwidth.org/137120.html> nsnotifyd-2.0 announcement
   * <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
   * <https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53> how the Guardian synchronized their DNS between Dyn and AWS Route 53 with `nsnotifyd`
 
