@@ -53,7 +53,7 @@ There are an HTML versions of the manual pages:
   * [metazone.1](html/metazone.1.html), the `metazone` example script
   * [metazone.5](html/metazone.5.html), the `metazone` file format
 
-The `nsnotifyd` homepage is <http://dotat.at/prog/nsnotifyd/>
+The `nsnotifyd` homepage is <https://dotat.at/prog/nsnotifyd/>
 
 
 Build and install
@@ -88,9 +88,9 @@ Latest release
 
 Download the full source archives:
 
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.xz>
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.gz>
-  * <http://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.zip>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.xz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.gz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.zip>
 
 (Do not use GitHub's "Download ZIP" feature because it gives you
 a broken partial copy that contains neither dev support files nor
@@ -103,18 +103,22 @@ Source repositories
 You can clone or browse the repository from:
 
   * git://dotat.at/nsnotifyd.git
-  * <http://dotat.at/cgi/git/nsnotifyd.git>
+  * <https://dotat.at/cgi/git/nsnotifyd.git>
   * <https://github.com/fanf2/nsnotifyd.git>
 
 
 Articles about nsnotifyd
 ------------------------
 
-  * <http://fanf.livejournal.com/134988.html> nsnotifyd-1.0 announcement
-  * <http://fanf.livejournal.com/135257.html> nsnotifyd-1.1 announcement
-  * <https://fanf.dreamwidth.org/137120.html> nsnotifyd-2.0 announcement
-  * <http://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
-  * <https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53> how the Guardian synchronized their DNS between Dyn and AWS Route 53 with `nsnotifyd`
+  * [https://dotat.at/@/2022-01-25](https://dotat.at/@/2022-01-25-nsnotifyd-2-0-released.html)
+    nsnotifyd-2.0 announcement
+  * [https://dotat.at/@/2015-07-02](https://dotat.at/@/2015-07-02-nsnotifyd-1-1-prompt-dns-zone-transfers-for-stealth-secondaries.html)
+    nsnotifyd-1.1 announcement
+  * [https://dotat.at/@/2015-06-15](https://dotat.at/@/2015-06-15-nsnotifyd-handle-dns-notify-messages-by-running-a-command.html)
+    nsnotifyd-1.0 announcement
+  * <https://jpmens.net/2015/06/16/alert-on-dns-notify/> review by JP Mens
+  * [https://www.theguardian.com/info/developer-blog/2016/dec/23/](https://www.theguardian.com/info/developer-blog/2016/dec/23/multiple-dns-synchronising-dyn-to-aws-route-53)
+    how the Guardian synchronized their DNS between Dyn and AWS Route 53 with `nsnotifyd`
 
 And in other media...
 
@@ -126,9 +130,26 @@ Contributing
 ------------
 
 Please send bug reports or patches by email to me. I accept
-contributions made under the terms of CC0. Thanks to Gavin Brown,
-Niels Haarbo, JP Mens, and Richard James Salts for helpful feedback
-and encouragement.
+contributions made under the terms of [0BSD][] or [MIT-0][].
+hanks to Gavin Brown, Niels Haarbo, JP Mens, and Richard James Salts
+for helpful feedback and encouragement.
 
-You may do anything with this. It has no warranty.  
-<http://creativecommons.org/publicdomain/zero/1.0/>
+[0BSD]: https://opensource.org/licenses/0BSD
+[MIT-0]: https://opensource.org/licenses/MIT-0
+
+
+Licence
+-------
+
+Written by Tony Finch <<dot@dotat.at>> in Cambridge.
+
+Permission is hereby granted to use, copy, modify, and/or
+distribute this software for any purpose with or without fee.
+
+This software is provided 'as is', without warranty of any kind.
+In no event shall the authors be liable for any damages arising
+from the use of this software.
+
+    SPDX-License-Identifier: 0BSD OR MIT-0
+
+_[this is a zero-conditions libre software licence](https://dotat.at/0lib.html)_

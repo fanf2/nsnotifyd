@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# SPDX-License-Identifier: 0BSD OR MIT-0
+
 (	zone=$1 serial=$2 master=${3:+@$3}
 	case $zone in
 	(.) zone=root

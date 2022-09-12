@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+#
+# SPDX-License-Identifier: 0BSD OR MIT-0
 
 use warnings;
 use strict;

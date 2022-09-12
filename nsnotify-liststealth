@@ -4,6 +4,8 @@
 # hosts that are taking zone transfers for each zone.
 #
 # It is used by nsnotify2stealth.
+#
+# SPDX-License-Identifier: 0BSD OR MIT-0
 
 use warnings;
 use strict;

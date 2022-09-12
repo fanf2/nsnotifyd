@@ -1,10 +1,15 @@
 /* nsnotifyd: handle DNS NOTIFY messages by running a command
  *
- * Written by Tony Finch <dot@dotat.at>
- * at Cambridge University Information Services.
+ * Written by Tony Finch <dot@dotat.at> in Cambridge.
  *
- * You may do anything with this. It has no warranty.
- * <http://creativecommons.org/publicdomain/zero/1.0/>
+ * Permission is hereby granted to use, copy, modify, and/or
+ * distribute this software for any purpose with or without fee.
+ *
+ * This software is provided 'as is', without warranty of any kind.
+ * In no event shall the authors be liable for any damages arising
+ * from the use of this software.
+ *
+ * SPDX-License-Identifier: 0BSD OR MIT-0
  */
 
 #define BIND_8_COMPAT
