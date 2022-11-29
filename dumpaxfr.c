@@ -71,21 +71,69 @@ dump_bytes(byte *buf, size_t max, size_t off, size_t len, const char *caption) {
 
 static size_t
 dump_name(byte *buf, size_t max, size_t off) {
-	char label[64];
-	unsigned len = buf[off];
-	if (len == 0) {
-		return(dump_bytes(buf, max, off, 1, "."));
-	} else if (len < 64) {
-		memcpy(label, buf + off + 1, len);
-		label[len] = 0;
-		off = dump_bytes(buf, max, off, len + 1, label);
-		return(dump_name(buf, max, off));
-	} else {
-		len = get16(buf, max, off);
-		assert(len >= 0xC000);
-		snprintf(label, sizeof(label), "-> %x", len & 0x3FFF);
-		return(dump_bytes(buf, max, off, 2, label));
+	char name[512];
+	char *cp = name;
+	size_t name_len = 0;
+
+	uint8_t *end = buf + max;
+	uint8_t *start = buf + off;
+	uint8_t *marker = start;
+	uint8_t *cursor = start;
+	uint8_t *consumed = NULL;
+	uint8_t *firsthop = NULL;
+
+	while (cursor < end) {
+		uint8_t label_len = *cursor++;
+		if (label_len < 64) {
+			name_len += label_len + 1;
+			assert(name_len <= 255);
+			assert(cursor + label_len <= end);
+			if (label_len == 0) {
+				goto root_label;
+			}
+			while (label_len-- > 0) {
+				uint8_t c = *cursor++;
+				if (c == '-' || c == '_' ||
+				    ('0' <= c && c <= '9') ||
+				    ('A' <= c && c <= 'Z') ||
+				    ('a' <= c && c <= 'z')) {
+					*cp++ = c;
+				} else {
+					*cp++ = '?';
+				}
+			}
+			*cp++ = '.';
+		} else {
+			assert(label_len >= 192);
+			uint32_t hi = label_len & 0x3F;
+			assert(cursor < end);
+			uint32_t lo = *cursor++;
+			uint8_t *pointer = buf + (256 * hi + lo);
+			assert(pointer < marker);
+			if (firsthop == NULL) {
+				firsthop = pointer;
+				consumed = cursor;
+				*cp++ = '(';
+				*cp++ = '.';
+			}
+			cursor = marker = pointer;
+		}
 	}
+	assert(cursor < end);
+
+root_label:
+	if (name_len == 1) {
+		*cp++ = '.';
+	}
+	if (firsthop == NULL) {
+		consumed = cursor;
+		*cp++ = ' ';
+		*cp++ = '@';
+	} else {
+		size_t space = name + sizeof(name) - cp;
+		snprintf(cp, space, ") @ %04x", (unsigned)(firsthop - buf));
+	}
+	return(dump_bytes(buf, max, off, consumed - start, name));
 }
 
 static size_t
