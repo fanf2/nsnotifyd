@@ -5,7 +5,7 @@ set -e
 # build will fail if there is neither .git nor version.h
 [ ! -d .git ] && exit
 
-G=$(git describe --dirty=.XXX)
+G=$(git describe --dirty=.XXX --always)
 V=$(echo $G | sed 's|-g*|.|g;s|[.]|-|')
 
 case $V in
