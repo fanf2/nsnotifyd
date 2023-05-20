@@ -626,7 +626,11 @@ main(int argc, char *argv[]) {
 		err(1, "malloc");
 	for(zone *z = zones; argc > 0; z++) {
 		z->name = *argv++; argc--;
-		if(strcmp(z->name, "root") == 0)
+		char *end = strchr(z->name, '\0');
+		char *dot = strrchr(z->name, '.');
+		if(dot != NULL && dot != z->name && dot + 1 == end)
+			*dot = '\0';
+		else if(strcmp(z->name, "root") == 0)
 			z->name = ".";
 		const char *e = zone_soa(z);
 		if(e != NULL) errx(1, "%s IN SOA: %s", z->name, e);
