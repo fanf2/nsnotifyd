@@ -125,12 +125,11 @@ root_label:
 	if (name_len == 1) {
 		*cp++ = '.';
 	}
+	size_t space = name + sizeof(name) - cp;
 	if (firsthop == NULL) {
 		consumed = cursor;
-		*cp++ = ' ';
-		*cp++ = '@';
+		snprintf(cp, space, " @");
 	} else {
-		size_t space = name + sizeof(name) - cp;
 		snprintf(cp, space, ") @ %04x", (unsigned)(firsthop - buf));
 	}
 	return(dump_bytes(buf, max, off, consumed - start, name));
