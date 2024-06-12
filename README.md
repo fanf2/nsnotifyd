@@ -52,6 +52,7 @@ There are an HTML versions of the manual pages:
   * [nsnotify.1](html/nsnotify.1.html), the notifier
   * [metazone.1](html/metazone.1.html), the `metazone` example script
   * [metazone.5](html/metazone.5.html), the `metazone` file format
+  * [dumpaxfr.1](html/dumpaxfr.1.html), the `dumpaxfr` debugging utility
 
 The `nsnotifyd` homepage is <https://dotat.at/prog/nsnotifyd/>
 

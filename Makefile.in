@@ -42,7 +42,7 @@ LIBS=
 
 # targets
 
-EXE	=	nsnotify nsnotifyd
+EXE	=	dumpaxfr nsnotify nsnotifyd
 
 scripts	=	nsnotify2git \
 		nsnotify2stealth \
@@ -51,7 +51,7 @@ scripts	=	nsnotify2git \
 
 binfiles =	${EXE} ${scripts}
 
-man1files =	metazone.1 nsnotify.1 nsnotifyd.1
+man1files =	dumpaxfr.1 metazone.1 nsnotify.1 nsnotifyd.1
 man5files =	metazone.5
 manfiles =	${man1files} ${man5files}
 
@@ -64,6 +64,9 @@ all: ${ALL}
 Makefile: Makefile.in configure
 	@echo make: You need to re-run ./configure
 	@false
+
+dumpaxfr: dumpaxfr.c version.h ${LIBDEPS}
+	${CC} ${CFLAGS} ${LIBFLAGS} -o dumpaxfr dumpaxfr.c ${LIBS}
 
 nsnotify: nsnotify.c version.h ${LIBDEPS}
 	${CC} ${CFLAGS} ${LIBFLAGS} -o nsnotify nsnotify.c ${LIBS}
