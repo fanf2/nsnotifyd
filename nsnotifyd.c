@@ -354,7 +354,8 @@ refresh_alarm(zone z[]) {
 
 static void
 refresh_jitter(zone *z, uint32_t interval) {
-	interval -= res_randomid() % (interval / 10);
+	if(interval > 10)
+		interval -= res_randomid() % (interval / 10);
 	z->refresh = time(NULL) + interval;
 }
 
