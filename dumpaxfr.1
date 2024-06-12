@@ -1,0 +1,85 @@
+.Dd June 12, 2024
+.Dt DUMPAXFR 1 "DNS Commands Manual"
+.Os DNS
+.Sh NAME
+.Nm dumpaxfr
+.Nd capture a DNS zone transfer
+.Sh SYNOPSIS
+.Nm
+.Op Fl 46dx
+.Op Fl p Ar port
+.Aq Ar server
+.Aq Ar zone
+.Op Ar prefix
+.Sh DESCRIPTION
+The
+.Nm
+program
+sends a DNS AXFR zone transfer query to
+.Ar server
+for
+.Ar zone
+and saves the response in one or more files.
+The files are named like
+.Sm off
+.D1 Ar prefix Li _ Ar server Li _ Ar zone Li _ Va N Li .bin
+.Sm on
+.Pp
+You specify the
+.Ar server ,
+.Ar zone ,
+and
+.Ar prefix
+on the command line.
+The default
+.Ar prefix
+is
+.Li xfer .
+.Pp
+A zone transfer can consist of multiple DNS messages.
+Each message is written to a different file numbered
+.Va N
+starting from 0.
+.Pp
+The
+.Li .bin
+suffix indicates that the file is a binary dump.
+.Sh OPTIONS
+.Bl -tag -width indent
+.It Fl 4
+Use IPv4 only.
+.It Fl 6
+Use IPv6 only.
+.It Fl d
+Print query and responses in a similar manner to
+.Xr dig 1 .
+.It Fl x
+Print partially-parsed hex dump of responses.
+.It Fl p Ar port
+Connect to
+.Ar port ,
+which may be a service name or a port number.
+The default is the
+.Sy domain
+service, port 53.
+.El
+.Sh BUGS
+The
+.Nm
+program incorrectly uses a
+.Fn read
+timeout to detect the end of the zone transfer;
+it always finishes by reporting an error.
+The DNS protocol indicates the end of a zone transfer
+with a message whose last record is a second copy of the zone's SOA record.
+The
+.Nm
+program does not parse responses
+(except when printing decoded messages)
+so it is too stupid to detect the end of the zone transfer correctly.
+.Sh SEE ALSO
+.Xr dig 1
+.Sh AUTHOR
+.An Tony Finch
+.Aq Li dot@dotat.at
+.\" SPDX-License-Identifier: 0BSD OR MIT-0

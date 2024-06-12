@@ -1,0 +1,134 @@
+<!--
+
+HTML for nsnotifyd web pages
+
+Written by Tony Finch <dot@dotat.at> in Cambridge.
+
+Permission is hereby granted to use, copy, modify, and/or
+distribute this software for any purpose with or without fee.
+
+This software is provided 'as is', without warranty of any kind.
+In no event shall the authors be liable for any damages arising
+from the use of this software.
+
+SPDX-License-Identifier: 0BSD OR MIT-0
+
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link rel="stylesheet" href="mandoc.css" type="text/css" media="all"/>
+  <link rel="stylesheet" href="nsnotifyd.css" type="text/css" media="all"/>
+  <title>nsnotifyd: scripted DNS NOTIFY handler</title>
+</head>
+<body>
+  <header>
+    <h1>
+      <a href="https://dotat.at/prog/nsnotifyd/">
+	<img src="https://dotat.at/graphics/dotat-32.png" alt="dotat">
+	<tt>nsnotifyd</tt>: scripted DNS NOTIFY handler
+      </a>
+    </h1>
+  </header>
+<table class="head">
+  <tr>
+    <td class="head-ltitle">DUMPAXFR(1)</td>
+    <td class="head-vol">General Commands Manual (dns commands manual)</td>
+    <td class="head-rtitle">DUMPAXFR(1)</td>
+  </tr>
+</table>
+<div class="manual-text">
+<section class="Sh">
+<h1 class="Sh" id="NAME"><a class="permalink" href="#NAME">NAME</a></h1>
+<p class="Pp"><code class="Nm">dumpaxfr</code> &#x2014; <span class="Nd">capture
+    a DNS zone transfer</span></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SYNOPSIS"><a class="permalink" href="#SYNOPSIS">SYNOPSIS</a></h1>
+<table class="Nm">
+  <tr>
+    <td><code class="Nm">dumpaxfr</code></td>
+    <td>[<code class="Fl">-46dx</code>] [<code class="Fl">-p</code>
+      <var class="Ar">port</var>] &#x27E8;<var class="Ar">server</var>&#x27E9;
+      &#x27E8;<var class="Ar">zone</var>&#x27E9;
+      [<var class="Ar">prefix</var>]</td>
+  </tr>
+</table>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="DESCRIPTION"><a class="permalink" href="#DESCRIPTION">DESCRIPTION</a></h1>
+<p class="Pp">The <code class="Nm">dumpaxfr</code> program sends a DNS AXFR zone
+    transfer query to <var class="Ar">server</var> for
+    <var class="Ar">zone</var> and saves the response in one or more files. The
+    files are named like</p>
+<div class="Bd
+  Bd-indent"><var class="Ar">prefix</var><code class="Li">_</code><var class="Ar">server</var><code class="Li">_</code><var class="Ar">zone</var><code class="Li">_</code><var class="Va">N</var><code class="Li">.bin</code></div>
+<p class="Pp">You specify the <var class="Ar">server</var>,
+    <var class="Ar">zone</var>, and <var class="Ar">prefix</var> on the command
+    line. The default <var class="Ar">prefix</var> is
+    <code class="Li">xfer</code>.</p>
+<p class="Pp">A zone transfer can consist of multiple DNS messages. Each message
+    is written to a different file numbered <var class="Va">N</var> starting
+    from 0.</p>
+<p class="Pp">The <code class="Li">.bin</code> suffix indicates that the file is
+    a binary dump.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="OPTIONS"><a class="permalink" href="#OPTIONS">OPTIONS</a></h1>
+<dl class="Bl-tag">
+  <dt id="4"><a class="permalink" href="#4"><code class="Fl">-4</code></a></dt>
+  <dd>Use IPv4 only.</dd>
+  <dt id="6"><a class="permalink" href="#6"><code class="Fl">-6</code></a></dt>
+  <dd>Use IPv6 only.</dd>
+  <dt id="d"><a class="permalink" href="#d"><code class="Fl">-d</code></a></dt>
+  <dd>Print query and responses in a similar manner to
+    <a class="Xr">dig(1)</a>.</dd>
+  <dt id="x"><a class="permalink" href="#x"><code class="Fl">-x</code></a></dt>
+  <dd>Print partially-parsed hex dump of responses.</dd>
+  <dt id="p"><a class="permalink" href="#p"><code class="Fl">-p</code></a>
+    <var class="Ar">port</var></dt>
+  <dd>Connect to <var class="Ar">port</var>, which may be a service name or a
+      port number. The default is the
+      <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
+      service, port 53.</dd>
+</dl>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="BUGS"><a class="permalink" href="#BUGS">BUGS</a></h1>
+<p class="Pp">The <code class="Nm">dumpaxfr</code> program incorrectly uses a
+    <code class="Fn">read</code>() timeout to detect the end of the zone
+    transfer; it always finishes by reporting an error. The DNS protocol
+    indicates the end of a zone transfer with a message whose last record is a
+    second copy of the zone's SOA record. The <code class="Nm">dumpaxfr</code>
+    program does not parse responses (except when printing decoded messages) so
+    it is too stupid to detect the end of the zone transfer correctly.</p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="SEE_ALSO"><a class="permalink" href="#SEE_ALSO">SEE
+  ALSO</a></h1>
+<p class="Pp"><a class="Xr">dig(1)</a></p>
+</section>
+<section class="Sh">
+<h1 class="Sh" id="AUTHOR"><a class="permalink" href="#AUTHOR">AUTHOR</a></h1>
+<p class="Pp"><span class="An">Tony Finch</span>
+    &#x27E8;<code class="Li">dot@dotat.at</code>&#x27E9;</p>
+</section>
+</div>
+<table class="foot">
+  <tr>
+    <td class="foot-date">June 12, 2024</td>
+    <td class="foot-os">DNS</td>
+  </tr>
+</table>
+<!-- SPDX-License-Identifier: 0BSD OR MIT-0 -->
+<footer>
+  <address>
+    <a href="https://dotat.at/prog/nsnotifyd/"><tt>nsnotifyd</tt></a>
+    was written by
+    <a href="https://dotat.at/">Tony Finch</a>
+    &lt;<a href="mailto:dot@dotat.at">dot@dotat.at</a>&gt;
+  </address>
+</footer>
+</body>
+</html>
