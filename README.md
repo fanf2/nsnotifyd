@@ -76,7 +76,7 @@ location, for example,
 Dependencies
 ------------
 
-The main requirement is the BIND-8 libc resolver. BSD and Mac OS ship
+The main requirement is the BIND-8 libc resolver. Most BSDs ship
 with a suitable resolver. On old Debian-like Linux you can `apt
 install libbind4-dev` (but it is no longer present in more recent
 distributions). Otherwise, the configure script will download libbind
