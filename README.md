@@ -89,9 +89,9 @@ Latest release
 
 Download the full source archives:
 
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.xz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.tar.gz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.0.zip>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.1.tar.xz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.1.tar.gz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.1.zip>
 
 (Do not use GitHub's "Download ZIP" feature because it gives you
 a broken partial copy that contains neither dev support files nor
@@ -111,6 +111,8 @@ You can clone or browse the repository from:
 Articles about nsnotifyd
 ------------------------
 
+  * [https://dotat.at/@/2024-06-12](https://dotat.at/@/2024-06-12-nsnotifyd-2-1-released.html)
+    nsnotifyd-2.1 announcement
   * [https://dotat.at/@/2022-01-25](https://dotat.at/@/2022-01-25-nsnotifyd-2-0-released.html)
     nsnotifyd-2.0 announcement
   * [https://dotat.at/@/2015-07-02](https://dotat.at/@/2015-07-02-nsnotifyd-1-1-prompt-dns-zone-transfers-for-stealth-secondaries.html)
