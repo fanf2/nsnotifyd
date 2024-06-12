@@ -7,7 +7,14 @@ set -e
 # build will fail if there is neither .git nor version.h
 [ ! -d .git ] && exit
 
-G=$(git describe --dirty=.XXX)
+if ! G=$(git describe --dirty=.XXX)
+then
+	echo "Your git repository lacks tags! Please run:"
+	echo "	git fetch --tags https://dotat.at/git/nsnotifyd.git"
+	echo "	git push --tags"
+	exit 1
+fi
+
 V=$(echo $G | sed 's|-g*|.|g;s|[.]|-|')
 
 case $V in
