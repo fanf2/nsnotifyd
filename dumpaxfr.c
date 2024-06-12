@@ -17,7 +17,30 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "version.h"
+
 typedef unsigned char byte;
+
+static const char what_ident[] =
+    "@(#) $Program: dumpaxfr $\n"
+    "@(#) $Version: " VERSION " $\n"
+    "@(#) $Date:    " REVDATE " $\n"
+    "@(#) $Author:  Tony Finch (dot@dotat.at) $\n"
+    "@(#) $URL:     http://dotat.at/prog/nsnotifyd/ $\n"
+;
+
+static int
+version(void) {
+	const char *p = what_ident;
+	for(;;) {
+		while(*++p != '$')
+			if(*p == '\0')
+				return(0);
+		while(*++p != '$')
+			putchar(*p);
+		putchar('\n');
+	}
+}
 
 static void
 noop(int sig) {
@@ -235,7 +258,7 @@ main(int argc, char *argv[]) {
 	bool expand = false;
 	int r;
 
-	while ((r = getopt(argc, argv, "46dp:x")) != -1)
+	while ((r = getopt(argc, argv, "46dp:xV")) != -1)
 		switch (r) {
 		case ('4'):
 			family = PF_INET;
@@ -252,6 +275,8 @@ main(int argc, char *argv[]) {
 		case ('x'):
 			expand = true;
 			continue;
+		case('V'):
+			exit(version());
 		default:
 			exit(usage());
 		}

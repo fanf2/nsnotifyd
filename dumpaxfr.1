@@ -6,7 +6,7 @@
 .Nd capture a DNS zone transfer
 .Sh SYNOPSIS
 .Nm
-.Op Fl 46dx
+.Op Fl 46dxV
 .Op Fl p Ar port
 .Aq Ar server
 .Aq Ar zone
@@ -62,6 +62,9 @@ which may be a service name or a port number.
 The default is the
 .Sy domain
 service, port 53.
+.It Fl V
+Print details about this version of
+.Nm .
 .El
 .Sh BUGS
 The
