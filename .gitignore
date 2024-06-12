@@ -1,3 +1,4 @@
+dumpaxfr
 nsnotify
 nsnotifyd
 Makefile
@@ -11,3 +12,5 @@ version/dirty-date
 nsnotifyd-*.tar.gz
 nsnotifyd-*.tar.xz
 nsnotifyd-*.zip
+xfer
+xfer_*
