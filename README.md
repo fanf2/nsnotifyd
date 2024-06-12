@@ -131,8 +131,9 @@ Contributing
 
 Please send bug reports or patches by email to me. I accept
 contributions made under the terms of [0BSD][] or [MIT-0][].
-hanks to Gavin Brown, Niels Haarbo, JP Mens, and Richard James Salts
-for helpful feedback and encouragement.
+Thanks to Gavin Brown, Niels Haarbo, Jonathan Hewlett, Dan Langille,
+Lars-Johann Liman, JP Mens, and Richard James Salts for helpful
+feedback and encouragement.
 
 [0BSD]: https://opensource.org/licenses/0BSD
 [MIT-0]: https://opensource.org/licenses/MIT-0
