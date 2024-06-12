@@ -684,7 +684,7 @@ main(int argc, char *argv[]) {
 		if(tcp) {
 			sa_len = sizeof(sa_buf);
 			t = r = accept(s, sa, &sa_len);
-			if(debug)
+			if(debug && r > 0)
 				log_info("connection from %s",
 					 sockstr(sa, sa_len));
 		} else {
