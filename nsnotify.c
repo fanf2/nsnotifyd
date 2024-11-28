@@ -168,14 +168,12 @@ udp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 }
 
 static int
-notify(const char *target, const char *port, int family, int protocol,
+notify(struct addrinfo *hints, struct addrinfo *sai,
+       const char *target, const char *port,
        const byte *msgv[], size_t msgc, int debug) {
 
-	struct addrinfo hints, *ai0, *ai;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = family;
-	hints.ai_socktype = protocol;
-	int r = getaddrinfo(target, port, &hints, &ai0);
+	struct addrinfo *ai0, *ai;
+	int r = getaddrinfo(target, port, hints, &ai0);
 	if(r != 0) {
 		warnx("%s: %s", target, gai_strerror(r));
 		return(-1);
@@ -194,20 +192,26 @@ notify(const char *target, const char *port, int family, int protocol,
 				fprintf(stderr, "; -> %s [%s]\n",
 					target, gai_strerror(e));
 		}
-		int s = socket(ai->ai_family, protocol, 0);
+		int s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if(s < 0) {
 			warn("socket");
-			r |= s;
+			r |= -1;
 			continue;
 		}
-		int e = connect(s, ai->ai_addr, ai->ai_addrlen);
-		if(e < 0) {
+		const char *f = NULL;
+		if(sai != NULL && bind(s, sai->ai_addr, sai->ai_addrlen) < 0) {
+			f = "bind";
+		}
+		if(f == NULL && connect(s, ai->ai_addr, ai->ai_addrlen) < 0) {
+			f = "connect";
+		}
+		if(f != NULL) {
 			close(s);
-			warn("connect");
-			r |= e;
+			warn("%s", f);
+			r |= -1;
 			continue;
 		}
-		if(protocol == SOCK_STREAM)
+		if(ai->ai_socktype == SOCK_STREAM)
 			r |= tcp_write(s, msgv, msgc, debug);
 		else
 			r |= udp_write(s, msgv, msgc, debug);
@@ -272,7 +276,7 @@ make_messages(const byte ***msgvp, const char *file, int debug) {
 static int
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify [-46dFfptV] zone [targets]\n"
+"usage: nsnotify [-46dFfpstV] zone [targets]\n"
 "	-4		send on IPv4 only\n"
 "	-6		send on IPv6 only\n"
 "	-d		debugging mode\n"
@@ -281,6 +285,7 @@ usage(void) {
 "	-f targets	read targets from file instead of command line\n"
 "	-p port		send notifies to this port number\n"
 "			(default 53)\n"
+"	-s addr		source address and optional port\n"
 "	-t		send notifies over TCP instead of UDP\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
@@ -296,12 +301,13 @@ main(int argc, char *argv[]) {
 	const char *port = "domain";
 	const char *targets_fn = NULL;
 	const char *zones_fn = NULL;
+	char *source = NULL;
 	int protocol = SOCK_DGRAM;
 	int family = PF_UNSPEC;
 	int debug = 0;
 	int r;
 
-	while((r = getopt(argc, argv, "46dF:f:p:tV")) != -1)
+	while((r = getopt(argc, argv, "46dF:f:p:s:tV")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
@@ -320,6 +326,9 @@ main(int argc, char *argv[]) {
 			continue;
 		case('p'):
 			port = optarg;
+			continue;
+		case('s'):
+			source = optarg;
 			continue;
 		case('t'):
 			protocol = SOCK_STREAM;
@@ -344,6 +353,37 @@ main(int argc, char *argv[]) {
 	if(targets_fn != NULL && zones_fn != NULL && argc > 0)
 		exit(usage());
 
+	struct addrinfo hints, *sai = NULL;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = family;
+	hints.ai_socktype = protocol;
+
+	if(source != NULL) {
+		hints.ai_flags = AI_PASSIVE;
+		r = getaddrinfo(source, NULL, &hints, &sai);
+		if(r != 0) {
+			errx(1, "%s: %s", source, gai_strerror(r));
+		}
+		if(sai->ai_next != NULL) {
+			errx(1, "%s: ambiguous source address", source);
+		}
+		if(debug) {
+			char host[NI_MAXHOST], serv[NI_MAXSERV];
+			int e = getnameinfo(sai->ai_addr, sai->ai_addrlen,
+					    host, sizeof(host),
+					    serv, sizeof(serv),
+					    NI_NUMERICHOST | NI_NUMERICSERV);
+			if(e == 0)
+				fprintf(stderr, "; source %s#%s\n",
+					host, serv);
+			else
+				fprintf(stderr, "; source %s: %s\n",
+					source,	gai_strerror(e));
+		}
+		hints.ai_family = sai->ai_family;
+		hints.ai_flags = 0;
+	}
+
 	const byte **msgv, *msg1;
 	size_t msgc;
 	if(zones_fn != NULL) {
@@ -366,7 +406,7 @@ main(int argc, char *argv[]) {
 
 	r = 0;
 	for(int i = 0; i < argc; i++)
-		r |= notify(argv[i], port, family, protocol, msgv, msgc, debug);
+		r |= notify(&hints, sai, argv[i], port, msgv, msgc, debug);
 
 	if(targets_fn == NULL)
 		exit(!!r);
@@ -386,7 +426,7 @@ main(int argc, char *argv[]) {
 		size_t len = strlen(target);
 		if(len > 0 && target[len-1] == '\n')
 			target[--len] = '\0';
-		r |= notify(target, port, family, protocol, msgv, msgc, debug);
+		r |= notify(&hints, sai, target, port, msgv, msgc, debug);
 	}
 	if(ferror(fh) || fclose(fh))
 		err(1, "read %s", targets_fn);

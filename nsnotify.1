@@ -7,21 +7,25 @@
 .Sh SYNOPSIS
 .Nm
 .Op Fl 46dtV
+.Op Fl s Ar addr
 .Op Fl p Ar port
 .Aq Ar zone
 .Ao Ar target Ac Ns ...
 .Nm
 .Op Fl 46dtV
+.Op Fl s Ar addr
 .Op Fl p Ar port
 .Fl F Ar zones
 .Ao Ar target Ac Ns ...
 .Nm
 .Op Fl 46dtV
+.Op Fl s Ar addr
 .Op Fl p Ar port
 .Fl f Ar targets
 .Ao Ar zones Ac Ns ...
 .Nm
 .Op Fl 46dtV
+.Op Fl s Ar addr
 .Op Fl p Ar port
 .Fl F Ar zones
 .Fl f Ar targets
@@ -92,6 +96,8 @@ which may be a service name or a port number.
 The default is the
 .Sy domain
 service, port 53.
+.It Fl s Ar addr
+Send NOTIFY messages from a specific source IP address.
 .It Fl t
 Make TCP connections instead of using UDP.
 .It Fl V
