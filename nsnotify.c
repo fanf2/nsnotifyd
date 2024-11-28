@@ -181,8 +181,6 @@ notify(const char *target, const char *port, int family, int protocol,
 		return(-1);
 	}
 	for(ai = ai0; ai != NULL; ai = ai->ai_next) {
-		if(ai->ai_family != family && family != PF_UNSPEC)
-			continue;
 		if(debug) {
 			char host[NI_MAXHOST], serv[NI_MAXSERV];
 			int e = getnameinfo(ai->ai_addr, ai->ai_addrlen,
