@@ -49,7 +49,8 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-s</code>
+      <var class="Ar">addr</var>] [<code class="Fl">-p</code>
       <var class="Ar">port</var>] &#x27E8;<var class="Ar">zone</var>&#x27E9;
       &#x27E8;<var class="Ar">target</var>&#x27E9;...</td>
   </tr>
@@ -58,7 +59,8 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-s</code>
+      <var class="Ar">addr</var>] [<code class="Fl">-p</code>
       <var class="Ar">port</var>] <code class="Fl">-F</code>
       <var class="Ar">zones</var>
       &#x27E8;<var class="Ar">target</var>&#x27E9;...</td>
@@ -68,7 +70,8 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-s</code>
+      <var class="Ar">addr</var>] [<code class="Fl">-p</code>
       <var class="Ar">port</var>] <code class="Fl">-f</code>
       <var class="Ar">targets</var>
       &#x27E8;<var class="Ar">zones</var>&#x27E9;...</td>
@@ -78,7 +81,8 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <table class="Nm">
   <tr>
     <td><code class="Nm">nsnotify</code></td>
-    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-p</code>
+    <td>[<code class="Fl">-46dtV</code>] [<code class="Fl">-s</code>
+      <var class="Ar">addr</var>] [<code class="Fl">-p</code>
       <var class="Ar">port</var>] <code class="Fl">-F</code>
       <var class="Ar">zones</var> <code class="Fl">-f</code>
       <var class="Ar">targets</var></td>
@@ -105,9 +109,9 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <h1 class="Sh" id="OPTIONS"><a class="permalink" href="#OPTIONS">OPTIONS</a></h1>
 <dl class="Bl-tag">
   <dt id="4"><a class="permalink" href="#4"><code class="Fl">-4</code></a></dt>
-  <dd>Use IPv4 only (apart the system resolver).</dd>
+  <dd>Use IPv4 only (apart from the system resolver).</dd>
   <dt id="6"><a class="permalink" href="#6"><code class="Fl">-6</code></a></dt>
-  <dd>Use IPv6 only (apart the system resolver).</dd>
+  <dd>Use IPv6 only (apart from the system resolver).</dd>
   <dt id="d"><a class="permalink" href="#d"><code class="Fl">-d</code></a></dt>
   <dd>Debugging mode.
     <p class="Pp">Use once to print successful message sends.</p>
@@ -131,6 +135,9 @@ SPDX-License-Identifier: 0BSD OR MIT-0
       port number. The default is the
       <a class="permalink" href="#domain"><b class="Sy" id="domain">domain</b></a>
       service, port 53.</dd>
+  <dt id="s"><a class="permalink" href="#s"><code class="Fl">-s</code></a>
+    <var class="Ar">addr</var></dt>
+  <dd>Send NOTIFY messages from a specific source IP address.</dd>
   <dt id="t"><a class="permalink" href="#t"><code class="Fl">-t</code></a></dt>
   <dd>Make TCP connections instead of using UDP.</dd>
   <dt id="V"><a class="permalink" href="#V"><code class="Fl">-V</code></a></dt>
@@ -150,7 +157,7 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">June 12, 2024</td>
+    <td class="foot-date">November 28, 2024</td>
     <td class="foot-os">DNS</td>
   </tr>
 </table>
