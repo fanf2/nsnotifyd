@@ -695,13 +695,15 @@ main(int argc, char *argv[]) {
 		}
 		alarm(0);
 
-		if(r < 0) {
-			if(quit)
-				break;
-			if(errno != EINTR) {
-				log_err("%s: %m", tcp ? "accept" : "recv");
-				continue;
-			}
+		if((r < 0 && errno != EINTR) ||
+		   (r < 0 && errno == EINTR && !quit && !timeout)) {
+			log_err("%s: %m", tcp ? "accept" : "recv");
+			continue;
+		}
+
+		if(quit) goto quit;
+
+		if(timeout) {
 			timeout = false;
 			// keep refreshing until there is nothing to do
 			soa_server_name(family, authority);
@@ -715,6 +717,7 @@ main(int argc, char *argv[]) {
 					log_info("%s refresh", z->name);
 					zone_refresh(z, cmd, NULL);
 					refreshed = true;
+					if(quit) goto quit;
 				}
 			}
 			continue;
@@ -730,7 +733,7 @@ main(int argc, char *argv[]) {
 				r = tcp_read(t, msg, len);
 			}
 			alarm(0);
-			if(quit) break;
+			if(quit) goto quit;
 			if(r != 0) {
 				if(r != ENOTCONN || debug > 0)
 					log_err("disconnected %s: %m",
@@ -778,6 +781,7 @@ main(int argc, char *argv[]) {
 		log_info("%s notify from %s", z->name, sockstr(sa, sa_len));
 		soa_server_addr(sa, sa_len);
 		zone_refresh(z, cmd, addrstr(sa, sa_len));
+		if(quit) goto quit;
 
 		// build the reply mostly by echoing the query up to
 		// p, which points to the end of the part we parsed
@@ -812,7 +816,7 @@ main(int argc, char *argv[]) {
 			   tcp_write(t, msg, len) < 0) {
 				log_err("write %s: %m", sockstr(sa, sa_len));
 				close(t);
-				if(quit) break;
+				if(quit) goto quit;
 			} else if(h->rcode == ns_r_formerr) {
 				if(debug)
 					log_info("disconnected %s",
@@ -838,7 +842,7 @@ main(int argc, char *argv[]) {
 		h->rcode = ns_r_refused;
 		goto reply;
 	}
-
+quit:
 	log_notice("exiting");
 	if(pidfile != NULL) unlink(pidfile);
 	exit(0);
