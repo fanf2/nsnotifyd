@@ -79,7 +79,7 @@ version(void) {
 	}
 }
 
-static bool quit;
+static volatile sig_atomic_t quit; // bool
 
 static void
 sigexit(int dummy) {
@@ -87,7 +87,7 @@ sigexit(int dummy) {
 	quit = true;
 }
 
-static bool timeout;
+static volatile sig_atomic_t timeout; // bool
 
 static void
 sigalarm(int dummy) {
