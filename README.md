@@ -83,9 +83,9 @@ Latest release
 
 Download the full source archives:
 
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.2.tar.xz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.2.tar.gz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.2.zip>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.xz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.gz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.zip>
 
 (Do not use GitHub's "Download ZIP" feature because it gives you
 a broken partial copy that contains neither dev support files nor
@@ -105,6 +105,8 @@ You can clone or browse the repository from:
 Articles about nsnotifyd
 ------------------------
 
+  * [https://dotat.at/@/2024-12-05](https://dotat.at/@/2024-12-05-nsnotifyd-2-3-released.html)
+    nsnotifyd-2.3 announcement
   * [https://dotat.at/@/2024-11-28](https://dotat.at/@/2024-11-28-nsnotifyd-2-2-released.html)
     nsnotifyd-2.2 announcement
   * [https://dotat.at/@/2024-06-12](https://dotat.at/@/2024-06-12-nsnotifyd-2-1-released.html)
