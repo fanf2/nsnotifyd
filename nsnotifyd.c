@@ -207,7 +207,7 @@ tcp_read(int s, byte *buf, ssize_t len) {
 			return(errno = ETIMEDOUT);
 		}
 		if(n < 0 && errno == EINTR && quit)
-			return(errno = ECHILD);
+			return(errno);
 		if(n < 0 && errno == EINTR)
 			continue;
 		if(n < 0)
@@ -730,8 +730,7 @@ main(int argc, char *argv[]) {
 				r = tcp_read(t, msg, len);
 			}
 			alarm(0);
-			if(r == ECHILD)
-				break;
+			if(quit) break;
 			if(r != 0) {
 				if(r != ENOTCONN || debug > 0)
 					log_err("disconnected %s: %m",
