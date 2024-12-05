@@ -360,7 +360,7 @@ main(int argc, char *argv[]) {
 
 	struct sigaction sa = { 0 };
 	sa.sa_handler = noop;
-	sigaction(SIGALRM, &sa, &sa);
+	sigaction(SIGALRM, &sa, NULL);
 
 	for (int message = 0;; message++) {
 		if (expand || debug)
