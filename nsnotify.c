@@ -83,8 +83,7 @@ tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 	size_t wrmsg = 0, wrlen = 0, wrpos = 0;
 	size_t rdmsg = 0, rdlen = 0, rdpos = 0;
 
-	wrlen = msgv[wrmsg][0]*256 +
-		msgv[wrmsg][1] + 2;
+	wrlen = ns_get16(msgv[wrmsg]);
 	rdlen = 2;
 
 	for(;;) {
@@ -111,8 +110,7 @@ tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 				fprintf(stderr, "; R %zu %zi %zu/%zu\n",
 					rdmsg, n, rdpos, rdlen);
 			if(rdpos == 2) {
-				rdlen = rdbuf[0]*256 +
-					rdbuf[1] + 2;
+				rdlen = ns_get16(rdbuf);
 			} else if(rdpos >= rdlen) {
 				rdmsg += 1;
 				rdpos = 0;
@@ -138,8 +136,7 @@ tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 				wrmsg += 1;
 				wrpos = 0;
 				if(wrmsg < msgc)
-					wrlen = msgv[wrmsg][0]*256 +
-						msgv[wrmsg][1] + 2;
+					wrlen = ns_get16(msgv[wrmsg]);
 				else
 					wrlen = 0;
 			}
@@ -153,8 +150,7 @@ tcp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 static int
 udp_write(int s, const byte *msgv[], size_t msgc, int debug) {
 	for(size_t msgi = 0; msgi < msgc; msgi++) {
-		size_t len = msgv[msgi][0]*256
-			+ msgv[msgi][1];
+		size_t len = ns_get16(msgv[msgi]);
 		ssize_t r = write(s, msgv[msgi] + 2, len);
 		if(debug)
 			fprintf(stderr, "; W %zu %zi/%zu\n",
@@ -237,8 +233,7 @@ make_a_message(const char *zone, int debug) {
 	byte *tcpmsg = malloc((size_t)msglen + 2);
 	if(tcpmsg == NULL)
 		err(1, "could not make DNS NOTIFY message for %s", zone);
-	tcpmsg[0] = (msglen & 0xff00) >> 8;
-	tcpmsg[1] = (msglen & 0xff);
+	ns_put16(msglen, tcpmsg);
 	memcpy(tcpmsg + 2, msg, (size_t)msglen);
 	return(tcpmsg);
 }
