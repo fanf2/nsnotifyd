@@ -25,7 +25,7 @@ man5dest=	${DESTDIR}${man5dir}
 
 # compiler flags
 
-CFLAGS	= -std=c99 -fno-strict-aliasing -O2 -Wall -Wextra
+CFLAGS	= -std=c99 -fno-strict-aliasing -D_DEFAULT_SOURCE -O2 -Wall -Wextra
 
 # resolver library
 
