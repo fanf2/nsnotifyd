@@ -255,7 +255,7 @@ make_messages(const byte ***msgvp, const char *file, int debug) {
 	if(msgv == NULL)
 		err(1, "malloc");
 
-	char zone[256];
+	char zone[NS_MAXDNAME];
 	while(fgets(zone, sizeof(zone), fh) != NULL) {
 		size_t len = strlen(zone);
 		if(len > 0 && zone[len-1] == '\n')
