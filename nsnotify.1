@@ -48,6 +48,24 @@ you can use the
 .Fl F Ar zones
 option to read from a file.
 .Pp
+The following commands have a similar effect:
+.Bd -literal -offset indent
+nsnotify -p 53 example.net ::1
+.Ed
+.Bd -literal -offset indent
+dig +opcode=notify -t soa -p 53 example.net @::1
+.Ed
+.Pp
+The
+.Nm
+command is quieter than
+.Nm dig
+by default.
+It is more convenient to notify multiple servers with
+.Nm
+than with
+.Nm dig .
+.Pp
 Note:
 .Nm nsnotify
 (without
