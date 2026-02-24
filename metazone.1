@@ -64,13 +64,13 @@ each of which corresponds to a
 .Pa named.conf
 fragment written to the file:
 .Pp
-.D1 Pa named.zones. Ns Aq view
+.D1 Pa named.zones\&. Ns Aq view
 .Pp
 If you are using multiple views,
 your main
 .Pa named.conf
 will typically include each
-.Pa named.zones. Ns Aq view
+.Pa named.zones\&. Ns Aq view
 file in the corresponding view clause.
 However it is not required for your
 metazone views to correspond to your BIND views.
@@ -110,7 +110,7 @@ from the server
 .Li localhost
 if none is specified).
 It will then convert the zone to a set of
-.Pa named.zones. Ns Aq view
+.Pa named.zones\&. Ns Aq view
 files,
 written to the current directory.
 If any of the files has changed,
@@ -123,7 +123,7 @@ to inform the name server
 option).
 .Ss named.zones.* to metazone
 To convert a set of
-.Pa named.zones. Ns Aq view
+.Pa named.zones\&. Ns Aq view
 files to a metazone,
 run
 .Pp

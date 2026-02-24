@@ -10,8 +10,8 @@
 .Op Fl l Ar facility
 .Op Fl P Ar pidfile
 .Op Fl u Ar user
-.Op Fl R Ar min Ns Li : Ns Ar max
-.Op Fl r Ar min Ns Li : Ns Ar max
+.Op Fl R Ar min Ns Li \&: Ns Ar max
+.Op Fl r Ar min Ns Li \&: Ns Ar max
 .Op Fl T Ar max
 .Op Fl S Ar authority
 .Op Fl s Ar authority
@@ -107,7 +107,7 @@ service, port 53.
 Override SOA
 .Sy refresh
 interval.
-.It Fl R Ar min Ns Li : Ns Ar max
+.It Fl R Ar min Ns Li \&: Ns Ar max
 Restrict SOA
 .Sy refresh
 intervals
@@ -119,7 +119,7 @@ and
 Override SOA
 .Sy retry
 interval.
-.It Fl r Ar min Ns Li : Ns Ar max
+.It Fl r Ar min Ns Li \&: Ns Ar max
 Restrict SOA
 .Sy retry
 intervals
@@ -175,7 +175,7 @@ For example,
 is 3661 seconds.
 .Pp
 The usage message printed by
-.Ic nsnotifyd -?
+.Ic nsnotifyd Fl \&?
 includes the default intervals.
 .Pp
 .Bl -tag -compact -width indent -offset indent
