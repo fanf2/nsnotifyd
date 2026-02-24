@@ -83,14 +83,14 @@ version.h::
 manfiles_html = ${manfiles:=.html}
 manhtml = ${manfiles_html:%=html/%}
 
+doc:: ${manhtml} html/index.html
+
 manlint::
 	! for man in ${manfiles}; do \
 		mandoc -Werror -Tlint $$man; \
 	done 2>&1 | fgrep -v -f html/man-lint-ok
 
-html:: html/index.html ${manhtml}
-
-${manhtml}: ${manfiles} html/_*.html
+${manhtml}: version.h ${manfiles} html/_*.html
 	./version/man-up.sh ${manfiles}
 	for man in ${manfiles}; do \
 	(	cat html/_header.html; \

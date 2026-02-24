@@ -89,10 +89,6 @@ Download the full source archives:
   * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.gz>
   * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.zip>
 
-(Do not use GitHub's "Download ZIP" feature because it gives you
-a broken partial copy that contains neither dev support files nor
-release build output files.)
-
 
 Source repositories
 -------------------
