@@ -223,7 +223,7 @@ make_a_message(const char *zone, int debug) {
 	HEADER *header = (void*)&buf;
 	byte *msg = (void*)&buf;
 	int msglen = res_mkquery(ns_o_query, zone, ns_c_in, ns_t_soa,
-				 NULL, 0, NULL, msg, sizeof(msg));
+				 NULL, 0, NULL, msg, sizeof(buf));
 	if(msglen < 0)
 		errx(1, "could not make DNS NOTIFY message for %s", zone);
 	header->opcode = ns_o_notify;
