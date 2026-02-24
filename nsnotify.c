@@ -273,7 +273,10 @@ make_messages(const byte ***msgvp, const char *file, int debug) {
 static int
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotify [-46dFfpstV] zone [targets]\n"
+"usage:	nsnotify [-46dtV] [-s addr] [-p port] zone target...\n"
+"	nsnotify [-46dtV] [-s addr] [-p port] -F zones target...\n"
+"	nsnotify [-46dtV] [-s addr] [-p port] -f targets zones...\n"
+"	nsnotify [-46dtV] [-s addr] [-p port] -F zones -f targets\n"
 "	-4		send on IPv4 only\n"
 "	-6		send on IPv6 only\n"
 "	-d		debugging mode\n"
@@ -286,9 +289,7 @@ usage(void) {
 "	-t		send notifies over TCP instead of UDP\n"
 "	-V		print version information\n"
 "	zone		the zone for which to send notifies\n"
-"	targets		destinations of notify messages\n"
-"			(may be command-line arguments\n"
-"			 or read from stdin, one per line)\n"
+"	targets		destination addresses of notify messages\n"
 		);
 	return(1);
 }
