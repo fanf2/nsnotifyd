@@ -13,29 +13,50 @@
 #
 # SPDX-License-Identifier: 0BSD OR MIT-0
 
-if	echo '#include <resolv.h>' |
-	cc -E -dM - |
-	grep 'define __RES 200' >/dev/null
-then
-	cp Makefile.in Makefile
-	echo 'Using system resolver'
-elif
-	echo '#include <resolv.h>' |
-	cc -E -dM -I/usr/include/bind - |
-	grep 'define __RES 200' >/dev/null
-then
-	# old Debian with libbind4-dev
-	sed '	s|^LIBFLAGS=.*|LIBFLAGS=-I/usr/include/bind|;
-		s|^LIBS=.*|LIBS=-lbind|;
+set -eu
+
+with_libc() {
+	cat <Makefile.in >Makefile
+	echo 'Using libc resolver'
+}
+
+with_libresolv() {
+	sed '	s|^LIBS=.*|LIBS=-lresolv|;
 	' <Makefile.in >Makefile
-	echo 'Using libbind4'
-else
+	echo 'Using libresolv'
+}
+
+with_libbind() {
 	sed '	s|^LIBDEPS=.*|LIBDEPS=${RESLIB}|;
 		s|^LIBFLAGS=.*|LIBFLAGS=-I${RES}/include -L${RES}|;
 		s|^LIBS=.*|LIBS=-lbind|;
 	' <Makefile.in >Makefile
 	make resconfig
 	echo 'Using static libbind'
-fi
+}
+
+check_compile() {
+	[ ! -f libbind-6.0.tar.gz ] &&
+	cc -o /dev/null version/config-check.c "$@" 2>/dev/null
+}
+
+case "$*" in
+(--with-libc)
+	with_libc
+	;;
+(--with-libresolv)
+	with_libresolv
+	;;
+(--with-libbind)
+	with_libbind
+	;;
+(*)	if	check_compile
+	then	with_libc
+	elif	check_compile -lresolv
+	then	with_libresolv
+	else	with_libbind
+	fi
+	;;
+esac
 
 echo 'Now run make...'
