@@ -1,0 +1,7 @@
+run bsdmakewhatis
+WARNING: unusual Xr order
+STYLE: referenced manual not found: Xr
+STYLE: operating system explicitly specified: Os DNS
+STYLE: possible typo in section name: Sh AUTHOR instead of AUTHORS
+STYLE: possible typo in section name: Sh EXAMPLE instead of EXAMPLES
+WARNING: sections out of conventional order: Sh SEE ALSO
