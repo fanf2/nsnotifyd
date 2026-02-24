@@ -99,7 +99,7 @@ You can clone or browse the repository from:
 
   * git://dotat.at/nsnotifyd.git
   * <https://dotat.at/cgi/git/nsnotifyd.git>
-  * <https://github.com/fanf2/nsnotifyd.git>
+  * <https://codeberg.org/fanf/nsnotifyd>
 
 
 Articles about nsnotifyd
