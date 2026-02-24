@@ -33,6 +33,7 @@ RES	= libbind-6.0
 RESLIB	= ${RES}/libbind.a
 RESTGZ	= ${RES}.tar.gz
 RESURL	= https://ftp.isc.org/isc/libbind/cur/${RESTGZ}
+RESHASH	= b98b6aa6e7c403f5a6522ffb68325785a87ea8b13377ada8ba87953a3e8cb29d
 
 # filled in by ./configure
 
@@ -127,7 +128,9 @@ ${RES}/configure: ${RESTGZ}
 	touch ${RES}/configure
 
 ${RESTGZ}:
-	curl -O ${RESURL}
+	curl -o ${RESTGZ} ${RESURL}
+	echo ${RESHASH} ${RESTGZ} | \
+	sha256sum --check --quiet /dev/stdin
 
 ################################################################
 
