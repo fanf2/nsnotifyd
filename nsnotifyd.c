@@ -531,7 +531,7 @@ main(int argc, char *argv[]) {
 	char *cmd = NULL;
 	int debug = 0;
 
-	while((r = getopt(argc, argv, "46a:dl:P:p:R:r:s:T:tu:Vw")) != -1)
+	while((r = getopt(argc, argv, "46a:dl:P:p:R:r:S:s:T:tu:Vw")) != -1)
 		switch(r) {
 		case('4'):
 			family = PF_INET;
