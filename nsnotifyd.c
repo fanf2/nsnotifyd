@@ -610,6 +610,7 @@ main(int argc, char *argv[]) {
 
 	cmd = *argv++; argc--;
 
+	// report unknown user before doing loads of work
 	struct passwd *pw = NULL;
 	if(user != NULL) {
 		errno = 0;
@@ -620,6 +621,7 @@ main(int argc, char *argv[]) {
 			err(1, "getpwnam %s", user);
 	}
 
+	// initialize SOA refresh/retry parameters
 	soa_server_name(family, authority);
 	zone *zones;
 	zones = calloc((size_t)(argc + 1), sizeof(*zones));
@@ -638,6 +640,8 @@ main(int argc, char *argv[]) {
 		log_info("%s IN SOA %u", z->name, z->serial);
 	}
 
+	// report problems with socket before daemonizing but
+	// don't open socket until everything else is ready
 	res_resetservers();
 	int s = listen_sock(tcp, family, addr, port);
 
