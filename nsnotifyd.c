@@ -486,7 +486,8 @@ zone_refresh(zone *zp, const char *cmd, const char *master) {
 static int
 usage(void) {
 	fprintf(stderr,
-"usage: nsnotifyd [-46dtVw] [-l facility] [-P pidfile] [-u user] [-T max]\n"
+"usage: nsnotifyd [-46dtVw] [-l facility] [-P pidfile] [-u user]\n"
+"		[-R min:max] [-r min:max] [-T max]\n"
 "		[-S addr] [-s addr] [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
