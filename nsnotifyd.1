@@ -144,7 +144,7 @@ Like the
 .Fl S
 option,
 but the authoritative server is used for
-zone refresh SOA queries only.
+periodic zone refresh SOA queries only.
 .It Fl T Ar interval
 Set the read timeout for TCP connections.
 .It Fl t
@@ -276,7 +276,7 @@ When a refresh or retry timer expires,
 it makes a SOA query
 using the system recursive resolver
 (which can return a cached response).
-The
+Alternatively, the
 .Fl S
 and
 .Fl s
