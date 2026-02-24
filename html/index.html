@@ -98,25 +98,24 @@ location, for example,</p>
 
 <h2>Dependencies</h2>
 
-<p>The main requirement is the BIND-8 libc resolver. Most BSDs ship
-with a suitable resolver. On old Debian-like Linux you can <code>apt
-install libbind4-dev</code> (but it is no longer present in more recent
-distributions). Otherwise, the configure script will download libbind
-and build and link with it statically.</p>
+<p>The main requirement is the BIND-8 stub resolver. Most BSDs (including
+Mac OS) ship with a suitable resolver. Otherwise, the configure script
+will download libbind and build and link with it statically.</p>
+
+<p>You can build with libbind instead of the system resolver with</p>
+
+<pre><code>    $ ./configure --with-libbind
+</code></pre>
 
 <h2>Latest release</h2>
 
 <p>Download the full source archives:</p>
 
 <ul>
-<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.xz">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.xz</a></li>
-<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.gz">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.gz</a></li>
-<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.zip">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.zip</a></li>
+<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.xz">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.xz</a></li>
+<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.gz">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.gz</a></li>
+<li><a href="https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.zip">https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.zip</a></li>
 </ul>
-
-<p>(Do not use GitHub's "Download ZIP" feature because it gives you
-a broken partial copy that contains neither dev support files nor
-release build output files.)</p>
 
 <h2>Source repositories</h2>
 
@@ -125,7 +124,7 @@ release build output files.)</p>
 <ul>
 <li>git://dotat.at/nsnotifyd.git</li>
 <li><a href="https://dotat.at/cgi/git/nsnotifyd.git">https://dotat.at/cgi/git/nsnotifyd.git</a></li>
-<li><a href="https://github.com/fanf2/nsnotifyd.git">https://github.com/fanf2/nsnotifyd.git</a></li>
+<li><a href="https://codeberg.org/fanf/nsnotifyd">https://codeberg.org/fanf/nsnotifyd</a></li>
 </ul>
 
 <h2>Articles about nsnotifyd</h2>
@@ -159,9 +158,9 @@ video review by Dan Langille</li>
 
 <p>Please send bug reports or patches by email to me. I accept
 contributions made under the terms of <a href="https://opensource.org/licenses/0BSD">0BSD</a> or <a href="https://opensource.org/licenses/MIT-0">MIT-0</a>. Thanks to
-Adam Augustine, Athanasius, Gavin Brown, Niels Haarbo, Jonathan
-Hewlett, Dan Langille, Lars-Johann Liman, JP Mens, and Richard James
-Salts for helpful feedback and encouragement.</p>
+Adam Augustine, Athanasius, Gavin Brown, Mark Felder, Niels Haarbo,
+Jonathan Hewlett, Dan Langille, Lars-Johann Liman, JP Mens, and
+Richard James Salts for helpful feedback and encouragement.</p>
 
 <p>Many thanks to <a href="https://www.dk-hostmaster.dk/">DK Hostmaster</a>
 for sponsoring the 2.0 release.</p>

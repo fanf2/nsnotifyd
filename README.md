@@ -85,9 +85,9 @@ Latest release
 
 Download the full source archives:
 
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.xz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.tar.gz>
-  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.3.zip>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.xz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.tar.gz>
+  * <https://dotat.at/prog/nsnotifyd/nsnotifyd-2.4.zip>
 
 
 Source repositories

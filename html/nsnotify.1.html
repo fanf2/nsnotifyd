@@ -99,6 +99,17 @@ SPDX-License-Identifier: 0BSD OR MIT-0
     a file. To send a notifications about more than one zone, you can use the
     <code class="Fl">-F</code> <var class="Ar">zones</var> option to read from a
     file.</p>
+<p class="Pp">The following commands have a similar effect:</p>
+<div class="Bd Pp Bd-indent Li">
+<pre>nsnotify -p 53 example.net ::1</pre>
+</div>
+<div class="Bd Pp Bd-indent Li">
+<pre>dig +opcode=notify -t soa -p 53 example.net @::1</pre>
+</div>
+<p class="Pp">The <code class="Nm">nsnotify</code> command is quieter than
+    <code class="Nm">dig</code> by default. It is more convenient to notify
+    multiple servers with <code class="Nm">nsnotify</code> than with
+    <code class="Nm">dig</code>.</p>
 <p class="Pp">Note: <code class="Nm">nsnotify</code> (without
     &#x2018;<code class="Li">d</code>&#x2019;) is a client for sending DNS
     NOTIFY messages whereas <code class="Nm">nsnotifyd</code> (with
@@ -157,7 +168,7 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">December 5, 2024</td>
+    <td class="foot-date">February 24, 2026</td>
     <td class="foot-os">DNS</td>
   </tr>
 </table>

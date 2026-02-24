@@ -53,10 +53,11 @@ SPDX-License-Identifier: 0BSD OR MIT-0
       <var class="Ar">facility</var>] [<code class="Fl">-P</code>
       <var class="Ar">pidfile</var>] [<code class="Fl">-u</code>
       <var class="Ar">user</var>] [<code class="Fl">-R</code>
-      <var class="Ar">min</var>:<var class="Ar">max</var>]
+      <var class="Ar">min</var><code class="Li">:</code><var class="Ar">max</var>]
       [<code class="Fl">-r</code>
-      <var class="Ar">min</var>:<var class="Ar">max</var>]
+      <var class="Ar">min</var><code class="Li">:</code><var class="Ar">max</var>]
       [<code class="Fl">-T</code> <var class="Ar">max</var>]
+      [<code class="Fl">-S</code> <var class="Ar">authority</var>]
       [<code class="Fl">-s</code> <var class="Ar">authority</var>]
       [<code class="Fl">-a</code> <var class="Ar">addr</var>]
       [<code class="Fl">-p</code> <var class="Ar">port</var>]
@@ -123,26 +124,28 @@ SPDX-License-Identifier: 0BSD OR MIT-0
     <var class="Ar">interval</var></dt>
   <dd>Override SOA <b class="Sy">refresh</b> interval.</dd>
   <dt id="R~2"><a class="permalink" href="#R~2"><code class="Fl">-R</code></a>
-    <var class="Ar">min</var>:<var class="Ar">max</var></dt>
+    <var class="Ar">min</var><code class="Li">:</code><var class="Ar">max</var></dt>
   <dd>Restrict SOA <b class="Sy">refresh</b> intervals to be between
       <var class="Ar">min</var> and <var class="Ar">max</var>.</dd>
   <dt id="r"><a class="permalink" href="#r"><code class="Fl">-r</code></a>
     <var class="Ar">interval</var></dt>
   <dd>Override SOA <b class="Sy">retry</b> interval.</dd>
   <dt id="r~2"><a class="permalink" href="#r~2"><code class="Fl">-r</code></a>
-    <var class="Ar">min</var>:<var class="Ar">max</var></dt>
+    <var class="Ar">min</var><code class="Li">:</code><var class="Ar">max</var></dt>
   <dd>Restrict SOA <b class="Sy">retry</b> intervals to be between
       <var class="Ar">min</var> and <var class="Ar">max</var>.</dd>
-  <dt id="s"><a class="permalink" href="#s"><code class="Fl">-s</code></a>
+  <dt id="S"><a class="permalink" href="#S"><code class="Fl">-S</code></a>
     <var class="Ar">authority</var></dt>
-  <dd>Specify an authoritative server to use for zone SOA refresh queries. By
-      default <code class="Nm">nsnotifyd</code> does periodic refreshes using
-      the system recursive resolver, so its refresh queries may get stale cached
-      answers.
+  <dd>The authoritative server to use for SOA queries following NOTIFY messages
+      and for periodic zone refreshes.
     <p class="Pp">You can specify an IP address or hostname. A hostname is
         looked up using the system resolver, constrained by the
         <code class="Fl">-4</code> or <code class="Fl">-6</code> options.</p>
   </dd>
+  <dt id="s"><a class="permalink" href="#s"><code class="Fl">-s</code></a>
+    <var class="Ar">authority</var></dt>
+  <dd>Like the <code class="Fl">-S</code> option, but the authoritative server
+      is used for periodic zone refresh SOA queries only.</dd>
   <dt id="T"><a class="permalink" href="#T"><code class="Fl">-T</code></a>
     <var class="Ar">interval</var></dt>
   <dd>Set the read timeout for TCP connections.</dd>
@@ -166,8 +169,8 @@ SPDX-License-Identifier: 0BSD OR MIT-0
     seconds, or you can use a combination of the following time units, as in DNS
     master files. For example, <code class="Li">1h1m1s</code> is 3661
   seconds.</p>
-<p class="Pp">The usage message printed by <code class="Ic">nsnotifyd -?</code>
-    includes the default intervals.</p>
+<p class="Pp">The usage message printed by <code class="Ic">nsnotifyd</code>
+    <code class="Fl">-?</code> includes the default intervals.</p>
 <p class="Pp"></p>
 <div class="Bd-indent">
 <dl class="Bl-tag Bl-compact">
@@ -231,11 +234,12 @@ SPDX-License-Identifier: 0BSD OR MIT-0
 <section class="Ss">
 <h2 class="Ss" id="Zone_refresh"><a class="permalink" href="#Zone_refresh">Zone
   refresh</a></h2>
-<p class="Pp">When <code class="Nm">nsnotifyd</code> receives a NOTIFY, or when
-    a refresh or retry timer expires, it makes a SOA query to see if the zone
-    has changed. The SOA query is sent to the source of the NOTIFY or, if a
-    timer expired, to the server given in the <code class="Fl">-s</code>
-  option.</p>
+<p class="Pp">When <code class="Nm">nsnotifyd</code> receives a NOTIFY, it sends
+    a SOA query to the source of the NOTIFY to find out if the zone has changed.
+    When a refresh or retry timer expires, it makes a SOA query using the system
+    recursive resolver (which can return a cached response). Alternatively, the
+    <code class="Fl">-S</code> and <code class="Fl">-s</code> options specify
+    the authoritative server to use for notified and/or refresh queries.</p>
 <p class="Pp">If the NOTIFY message was accepted for an unknown zone because you
     used the <code class="Fl">-w</code> wildcard option,
     <code class="Nm">nsnotifyd</code> makes a SOA query to verify the zone
@@ -540,7 +544,7 @@ $ dnssec-keygen example.org</pre>
 </div>
 <table class="foot">
   <tr>
-    <td class="foot-date">December 5, 2024</td>
+    <td class="foot-date">February 24, 2026</td>
     <td class="foot-os">DNS</td>
   </tr>
 </table>
