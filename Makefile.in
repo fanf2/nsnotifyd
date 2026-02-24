@@ -84,7 +84,7 @@ manfiles_html = ${manfiles:=.html}
 manhtml = ${manfiles_html:%=html/%}
 
 manlint::
-	for man in ${manfiles}; do \
+	! for man in ${manfiles}; do \
 		mandoc -Werror -Tlint $$man; \
 	done 2>&1 | fgrep -v -f html/man-lint-ok
 
