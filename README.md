@@ -132,9 +132,9 @@ Contributing
 
 Please send bug reports or patches by email to me. I accept
 contributions made under the terms of [0BSD][] or [MIT-0][]. Thanks to
-Adam Augustine, Athanasius, Gavin Brown, Niels Haarbo, Jonathan
-Hewlett, Dan Langille, Lars-Johann Liman, JP Mens, and Richard James
-Salts for helpful feedback and encouragement.
+Adam Augustine, Athanasius, Gavin Brown, Mark Felder, Niels Haarbo,
+Jonathan Hewlett, Dan Langille, Lars-Johann Liman, JP Mens, and
+Richard James Salts for helpful feedback and encouragement.
 
 Many thanks to [DK Hostmaster](https://www.dk-hostmaster.dk/)
 for sponsoring the 2.0 release.

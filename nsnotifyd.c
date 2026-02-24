@@ -487,7 +487,7 @@ static int
 usage(void) {
 	fprintf(stderr,
 "usage: nsnotifyd [-46dtVw] [-l facility] [-P pidfile] [-u user] [-T max]\n"
-"		[-s addr] [-a addr] [-p port] command zone...\n"
+"		[-S addr] [-s addr] [-a addr] [-p port] command zone...\n"
 "	-4		listen on IPv4 only\n"
 "	-6		listen on IPv6 only\n"
 "	-a addr		listen on this IP address or host name\n"
@@ -500,6 +500,7 @@ usage(void) {
 "			(default 53)\n"
 "	-R min:max	limit SOA refresh times (default %d:%d)\n"
 "	-r min:max	limit SOA retry times (default %d:%d)\n"
+"	-S addr		authoritative server for all SOA queries\n"
 "	-s addr		authoritative server for refresh queries\n"
 "	-T max		TCP read timeout (default %d)\n"
 "	-t		accept NOTIFYs over TCP instead of UDP\n"
@@ -524,6 +525,7 @@ main(int argc, char *argv[]) {
 	const char *addr = "127.0.0.1";
 	const char *port = "domain";
 	const char *authority = NULL;
+	bool symmetric = true;
 	bool wild = false;
 	bool tcp = false;
 	char *cmd = NULL;
@@ -562,6 +564,10 @@ main(int argc, char *argv[]) {
 			continue;
 		case('r'):
 			ttl_pair(optarg, &retry_min, &retry_max);
+			continue;
+		case('S'):
+			authority = optarg;
+			symmetric = false;
 			continue;
 		case('s'):
 			authority = optarg;
@@ -644,6 +650,7 @@ main(int argc, char *argv[]) {
 	// don't open socket until everything else is ready
 	res_resetservers();
 	int s = listen_sock(tcp, family, addr, port);
+	if(!symmetric) soa_server_name(family, authority);
 
 	sigactions();
 
@@ -709,8 +716,10 @@ main(int argc, char *argv[]) {
 
 		if(timeout) {
 			timeout = false;
-			// keep refreshing until there is nothing to do
+			// periodically re-resolve authority address
+			// (not respecting TTL but better than nothing)
 			soa_server_name(family, authority);
+			// keep refreshing until there is nothing to do
 			bool refreshed = true;
 			while(refreshed) {
 				refreshed = false;
@@ -783,7 +792,7 @@ main(int argc, char *argv[]) {
 		// so it needs some work...
 
 		log_info("%s notify from %s", z->name, sockstr(sa, sa_len));
-		soa_server_addr(sa, sa_len);
+		if(symmetric) soa_server_addr(sa, sa_len);
 		zone_refresh(z, cmd, addrstr(sa, sa_len));
 		if(quit) goto quit;
 

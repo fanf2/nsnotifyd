@@ -13,6 +13,7 @@
 .Op Fl R Ar min Ns Li : Ns Ar max
 .Op Fl r Ar min Ns Li : Ns Ar max
 .Op Fl T Ar max
+.Op Fl S Ar authority
 .Op Fl s Ar authority
 .Op Fl a Ar addr
 .Op Fl p Ar port
@@ -126,14 +127,10 @@ to be between
 .Ar min
 and
 .Ar max .
-.It Fl s Ar authority
-Specify an authoritative server to
-use for zone SOA refresh queries.
-By default
-.Nm
-does periodic refreshes
-using the system recursive resolver,
-so its refresh queries may get stale cached answers.
+.It Fl S Ar authority
+The authoritative server to use for SOA queries
+following NOTIFY messages
+and for periodic zone refreshes.
 .Pp
 You can specify an IP address or hostname.
 A hostname is looked up using the system resolver,
@@ -142,6 +139,12 @@ constrained by the
 or
 .Fl 6
 options.
+.It Fl s Ar authority
+Like the
+.Fl S
+option,
+but the authoritative server is used for
+zone refresh SOA queries only.
 .It Fl T Ar interval
 Set the read timeout for TCP connections.
 .It Fl t
@@ -267,12 +270,18 @@ Messages are logged via
 When
 .Nm
 receives a NOTIFY,
-or when a refresh or retry timer expires,
-it makes a SOA query to see if the zone has changed.
-The SOA query is sent to the source of the NOTIFY
-or, if a timer expired, to the server given in the
+it sends a SOA query to the source of the NOTIFY
+to find out if the zone has changed.
+When a refresh or retry timer expires,
+it makes a SOA query
+using the system recursive resolver
+(which can return a cached response).
+The
+.Fl S
+and
 .Fl s
-option.
+options specify the authoritative server to
+use for notified and/or refresh queries.
 .Pp
 If the NOTIFY message was accepted for an unknown zone
 because you used the
