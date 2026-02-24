@@ -103,6 +103,8 @@ You can clone or browse the repository from:
 Articles about nsnotifyd
 ------------------------
 
+  * [https://dotat.at/@/2026-02-24](https://dotat.at/@/2026-02-24-nsnotifyd-2-4-released.html)
+    nsnotifyd-2.4 announcement
   * [https://dotat.at/@/2024-12-05](https://dotat.at/@/2024-12-05-nsnotifyd-2-3-released.html)
     nsnotifyd-2.3 announcement
   * [https://dotat.at/@/2024-11-28](https://dotat.at/@/2024-11-28-nsnotifyd-2-2-released.html)
