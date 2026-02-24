@@ -143,13 +143,13 @@ install: ${ALL}
 ################################################################
 
 clean:
-	rm -rf version/dirty-date ${EXE} ${RES} ${DOCS}
+	rm -rf version/dirty-date ${EXE} ${DOCS}
 
 cleaner: clean
-	rm -rf Makefile ${RESTGZ}
+	rm -rf Makefile ${RES}
 
 cleanest: cleaner
-	rm -rf version.h
+	rm -rf version.h ${RESTGZ}
 
 ################################################################
 
